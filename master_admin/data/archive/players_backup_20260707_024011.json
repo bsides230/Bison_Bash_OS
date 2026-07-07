@@ -1,0 +1,10 @@
+{
+  "players": {
+    "test_user": {
+      "balance": 150
+    },
+    "vip_user_99": {
+      "balance": 500
+    }
+  }
+}
