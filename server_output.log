@@ -1,0 +1,23 @@
+INFO:     Started server process [137151]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50700 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50700 - "GET /static/css/admin.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50702 - "GET /static/js/admin.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50700 - "GET /api/process/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50702 - "GET /api/global/logs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50704 - "GET /api/admin/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50704 - "GET /api/global/logs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50704 - "POST /api/admin/settings/update HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50704 - "GET /api/process/status HTTP/1.1" 403 Forbidden
+INFO:     127.0.0.1:50702 - "GET /api/global/logs HTTP/1.1" 403 Forbidden
+INFO:     127.0.0.1:50702 - "GET /api/global/logs HTTP/1.1" 403 Forbidden
+INFO:     127.0.0.1:50702 - "POST /api/admin/inject-tokens HTTP/1.1" 403 Forbidden
+INFO:     127.0.0.1:50702 - "GET /api/process/status HTTP/1.1" 403 Forbidden
+INFO:     127.0.0.1:50704 - "GET /api/global/logs HTTP/1.1" 403 Forbidden
+INFO:     127.0.0.1:50704 - "GET /api/global/logs HTTP/1.1" 403 Forbidden
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [137151]
