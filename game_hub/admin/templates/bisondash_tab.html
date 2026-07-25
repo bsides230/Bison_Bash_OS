@@ -82,13 +82,35 @@
             font-size: 0.8rem;
         }
         .force-retire-btn:hover { background: #ff5555; }
+
+        .server-config {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .server-config input {
+            padding: 8px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: white;
+            border-radius: 4px;
+        }
     </style>
+
+    <div class="server-config">
+        <label for="bd-server-url">Bison Dash Server URL (IP:Port):</label>
+        <input type="text" id="bd-server-url" value="http://127.0.0.1:8001" style="width: 250px;">
+    </div>
 
     <div class="bison-header">
         <div>
             <h2 style="margin:0;">BISON DASH CONTROL</h2>
-            <div id="bd-current-state" class="status-display">Betting_Open</div>
-            <div id="bd-time-elapsed" style="font-size:0.9rem; color:#888;">0s</div>
+            <div id="bd-current-state" class="status-display">Unknown</div>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
             <button id="bd-panic-btn" class="big-red-btn" style="background:#555; font-size: 0.9rem; padding: 10px 15px;" onclick="triggerPanicReset()">PANIC RESET</button>
@@ -134,11 +156,19 @@
     </div>
 
     <script>
-        let currentState = "Betting_Open";
+        let currentState = "Unknown";
+
+        function getBaseUrl() {
+            let url = document.getElementById('bd-server-url').value.trim();
+            if (url.endsWith('/')) {
+                url = url.slice(0, -1);
+            }
+            return url;
+        }
 
         async function fetchBisonDashState() {
             try {
-                const res = await fetch('/api/bisondash/state');
+                const res = await fetch(getBaseUrl() + '/api/bisondash/state');
                 const data = await res.json();
                 if (data.status === 'success' && data.state_data) {
                     currentState = data.state_data.state;
@@ -166,12 +196,15 @@
                         }
                     }
                 }
-            } catch(e) { console.error("Error fetching state", e); }
+            } catch(e) {
+                console.error("Error fetching state", e);
+                document.getElementById('bd-current-state').innerText = "Disconnected";
+            }
         }
 
         async function fetchBisonDashLineup() {
             try {
-                const res = await fetch('/api/bisondash/lineup');
+                const res = await fetch(getBaseUrl() + '/api/bisondash/lineup');
                 const data = await res.json();
                 if (data.status === 'success') {
                     const grid = document.getElementById('bd-lineup-grid');
@@ -194,7 +227,7 @@
 
         async function triggerSoftClosure() {
             if(confirm("Trigger Soft Closure phase now?")) {
-                await fetch('/api/bisondash/state/update', {
+                await fetch(getBaseUrl() + '/api/bisondash/state/update', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({state: 'Soft_Closure'})
@@ -205,9 +238,14 @@
 
         async function triggerPanicReset() {
             if(confirm("DANGER: Immediately reset game to Betting_Open?")) {
-                await fetch('/api/global/reset', {
+                await fetch(getBaseUrl() + '/api/local/reset', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'}
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: "GLOBAL_RESET",
+                        timestamp: Math.floor(Date.now() / 1000),
+                        target_state: "IDLE"
+                    })
                 });
                 fetchBisonDashState();
             }
@@ -215,7 +253,7 @@
 
         async function forceRetire(bisonId) {
             if(confirm("Retire this bison and generate a replacement?")) {
-                await fetch('/api/bisondash/lineup/retire', {
+                await fetch(getBaseUrl() + '/api/bisondash/lineup/retire', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({bison_id: bisonId})
@@ -237,7 +275,7 @@
                 results_payout: parseInt(document.getElementById('slider-Results_Payout').value)
             };
 
-            await fetch('/api/bisondash/timers/update', {
+            await fetch(getBaseUrl() + '/api/bisondash/timers/update', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)

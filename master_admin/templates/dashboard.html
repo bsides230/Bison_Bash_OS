@@ -10,12 +10,7 @@
 
     <header>
         <h1>Venue Command</h1>
-        <button class="panic-btn" onclick="globalReset()">Global Reset</button>
     </header>
-
-    <div class="grid" id="games-grid">
-        <!-- Rendered by JS -->
-    </div>
 
     <!-- Bison Dash Tab Injection -->
     <div style="margin-top: 30px;">
@@ -28,28 +23,6 @@
         <input type="text" id="player-id" placeholder="Player ID (e.g. user1)">
         <input type="number" id="token-amount" placeholder="Amount (e.g. 50)">
         <button class="action-btn" style="padding: 8px 15px; margin-left: 10px;" onclick="injectTokens()">Inject</button>
-    </div>
-
-    <div class="data-test" id="admin-settings-card">
-        <h3>Admin Settings</h3>
-        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:10px;">Dynamic configuration engine.</p>
-
-        <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-            <input type="checkbox" id="tailscale-enforcement-cb" style="width: 20px; height: 20px;">
-            <label for="tailscale-enforcement-cb">Enable Tailscale Production Gate</label>
-        </div>
-
-        <div style="margin-bottom: 10px;">
-            <label for="tailscale-ip-pool" style="display: block; margin-bottom: 5px;">Tailscale Allowed Operator IPs (e.g. 100.)</label>
-            <input type="text" id="tailscale-ip-pool" placeholder="100." style="width: 100%; max-width: 300px;">
-        </div>
-
-        <button class="action-btn" style="padding: 8px 15px; margin-top: 10px;" onclick="updateSettings()">Save Settings</button>
-    </div>
-
-    <h3 style="margin-top:20px; margin-bottom:10px; color:var(--text-secondary);">Health Monitor (Aggregated Logs)</h3>
-    <div class="logs-panel" id="logs-container">
-        <!-- Logs go here -->
     </div>
 
     <script src="/static/js/admin.js"></script>
