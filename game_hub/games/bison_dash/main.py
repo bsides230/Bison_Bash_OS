@@ -227,6 +227,10 @@ async def elastic_clock_loop():
 async def startup_event():
     asyncio.create_task(elastic_clock_loop())
 
+@app.get("/")
+def read_root():
+    return {"message": "Bison Dash Server Running", "status": "active"}
+
 @app.get("/projector", response_class=HTMLResponse)
 def serve_projector():
     with open(TEMPLATE_DIR / "projector.html", "r") as f:
