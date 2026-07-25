@@ -128,10 +128,19 @@ def get_bisondash_state():
 
 @app.post("/api/bisondash/state/update")
 def update_bisondash_state(payload: BisonDashStatePayload):
+    global current_telemetry_cache
     settings = read_data(SETTINGS_FILE)
     settings["state"] = payload.state
     settings["state_start_time"] = time.time()
     write_data(SETTINGS_FILE, settings)
+
+    # Also trigger telemetry cache updates when state is forced
+    if payload.state == "Closed_Intros":
+        lineup_data = read_data(LINEUP_FILE)
+        current_telemetry_cache = simulate_race(lineup_data.get("lineup", []))
+    elif payload.state == "Betting_Open":
+        current_telemetry_cache = {}
+
     return {"status": "success", "message": f"State set to {payload.state}"}
 
 @app.post("/api/bisondash/timers/update")

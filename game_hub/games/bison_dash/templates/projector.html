@@ -59,6 +59,16 @@
         function drawTrack() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Draw grass background (oval)
+            ctx.beginPath();
+            ctx.moveTo(waypoints[0].x, waypoints[0].y);
+            for(let i=1; i<waypoints.length; i++) {
+                ctx.lineTo(waypoints[i].x, waypoints[i].y);
+            }
+            ctx.fillStyle = '#2d5a27'; // Dark grass green
+            ctx.fill();
+
+
             // Draw Isometric Oval (Diamond)
             ctx.beginPath();
             ctx.moveTo(waypoints[0].x, waypoints[0].y);
@@ -91,8 +101,8 @@
             ctx.strokeStyle = '#ff0';
             ctx.lineWidth = 10;
             ctx.beginPath();
-            ctx.moveTo(850, 900);
-            ctx.lineTo(1070, 900);
+            ctx.moveTo(960, 775);
+            ctx.lineTo(960, 925);
             ctx.stroke();
         }
 
