@@ -235,3 +235,8 @@ def read_root():
 def serve_projector():
     with open(TEMPLATE_DIR / "projector.html", "r") as f:
         return f.read()
+
+@app.get("/admin", response_class=HTMLResponse)
+def serve_admin():
+    with open(TEMPLATE_DIR / "admin.html", "r") as f:
+        return f.read()
