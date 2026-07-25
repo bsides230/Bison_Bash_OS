@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bison Dash Projector</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        /* Scale 1920x1080 canvas down to fit viewport while maintaining aspect ratio */
+        canvas {
+            display: block;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #111;
+            /* Using standard isometric background grid look */
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: sans-serif;
+            font-size: 6rem;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 2px 2px 10px #000;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="1920" height="1080"></canvas>
+    <div id="overlay">WAITING FOR NEXT RACE...</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('overlay');
+
+        // Track boundaries
+        const waypoints = [
+            {x: 960, y: 900},   // Start
+            {x: 400, y: 400},   // Corner 1 Start
+            {x: 1520, y: 400},  // Corner 1 End
+            {x: 1300, y: 750},  // Home stretch end
+            {x: 960, y: 900}    // Finish
+        ];
+
+        let state = "Betting_Open";
+        let elapsed = 0;
+        let lineup = [];
+        let telemetry = {};
+
+        function drawTrack() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Isometric Oval (Diamond)
+            ctx.beginPath();
+            ctx.moveTo(waypoints[0].x, waypoints[0].y);
+            for(let i=1; i<waypoints.length; i++) {
+                ctx.lineTo(waypoints[i].x, waypoints[i].y);
+            }
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 150;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // Center dirt pattern
+            ctx.strokeStyle = '#533';
+            ctx.lineWidth = 130;
+            ctx.stroke();
+
+            // Track outlines
+            ctx.beginPath();
+            ctx.moveTo(waypoints[0].x, waypoints[0].y);
+            for(let i=1; i<waypoints.length; i++) {
+                ctx.lineTo(waypoints[i].x, waypoints[i].y);
+            }
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 20]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Start/Finish line
+            ctx.strokeStyle = '#ff0';
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.moveTo(850, 900);
+            ctx.lineTo(1070, 900);
+            ctx.stroke();
+        }
+
+        // Stubs for future sprite sheets
+        const spriteImages = {};
+        for(let i=1; i<=6; i++) {
+            const img = new Image();
+            img.src = `/static/bison_${i}_sheet.png`;
+            // If the image doesn't exist, it just won't render inside drawBison
+            // We use the colored box as the primary placeholder
+            spriteImages[`bison_${i}`] = img;
+        }
+
+        function drawBison(x, y, color, id, slotIndex) {
+            // Draw rectangular placeholder (Fallback)
+            ctx.fillStyle = color;
+            ctx.fillRect(x - 20, y - 20, 40, 40);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - 20, y - 20, 40, 40);
+
+            // Draw image if loaded
+            const img = spriteImages[`bison_${slotIndex}`];
+            if(img && img.complete && img.naturalHeight !== 0) {
+                // Adjust drawing rect if you actually have a valid sprite sheet loaded
+                ctx.drawImage(img, 0, 0, img.width, img.height, x - 20, y - 20, 40, 40);
+            }
+        }
+
+        // Interpolate telemetry
+        function getInterpolatedPosition(bisonId, t) {
+            const data = telemetry[bisonId];
+            if(!data || data.length === 0) return null;
+
+            // Clamp to max time (30s)
+            if(t >= 30.0) {
+                const last = data[data.length - 1];
+                return {x: last.x, y: last.y};
+            }
+            if(t <= 0.0) {
+                return {x: data[0].x, y: data[0].y};
+            }
+
+            for(let i=0; i<data.length-1; i++) {
+                if(t >= data[i].t && t <= data[i+1].t) {
+                    const progress = (t - data[i].t) / (data[i+1].t - data[i].t);
+                    const x = data[i].x + (data[i+1].x - data[i].x) * progress;
+                    const y = data[i].y + (data[i+1].y - data[i].y) * progress;
+                    return {x, y};
+                }
+            }
+            return {x: data[data.length-1].x, y: data[data.length-1].y};
+        }
+
+        function renderFrame() {
+            drawTrack();
+
+            if (state === "Betting_Open") {
+                overlay.innerText = "WAITING FOR NEXT RACE...\n\nPLACE YOUR BETS!";
+                // Draw bison lined up at start
+                lineup.forEach(b => {
+                    const slot_offset_x = (b.slot - 3.5) * 20;
+                    const slot_offset_y = (b.slot - 3.5) * 15;
+                    drawBison(waypoints[0].x + slot_offset_x, waypoints[0].y + slot_offset_y, b.color, b.id, b.slot);
+                });
+            }
+            else if (state === "Soft_Closure") {
+                const remaining = Math.max(0, 10 - elapsed);
+                overlay.innerText = `BETS CLOSING IN: ${Math.ceil(remaining)}s`;
+                lineup.forEach(b => {
+                    const slot_offset_x = (b.slot - 3.5) * 20;
+                    const slot_offset_y = (b.slot - 3.5) * 15;
+                    drawBison(waypoints[0].x + slot_offset_x, waypoints[0].y + slot_offset_y, b.color, b.id, b.slot);
+                });
+            }
+            else if (state === "Closed_Intros") {
+                overlay.innerText = "RACE STARTING SOON!";
+                lineup.forEach(b => {
+                    const slot_offset_x = (b.slot - 3.5) * 20;
+                    const slot_offset_y = (b.slot - 3.5) * 15;
+                    drawBison(waypoints[0].x + slot_offset_x, waypoints[0].y + slot_offset_y, b.color, b.id, b.slot);
+                });
+            }
+            else if (state === "Race_Sprint") {
+                overlay.innerText = ""; // Clear text
+                // Interpolate along the 30s telemetry array
+                const currentRaceTime = Math.min(elapsed, 30.0);
+
+                lineup.forEach(b => {
+                    const pos = getInterpolatedPosition(b.id, currentRaceTime);
+                    if(pos) {
+                        drawBison(pos.x, pos.y, b.color, b.id, b.slot);
+                    }
+                });
+            }
+            else if (state === "Results_Payout") {
+                overlay.innerText = "RACE FINISHED!\n\nPAYING OUT WINNERS";
+                // Show at finish line (t=30)
+                lineup.forEach(b => {
+                    const pos = getInterpolatedPosition(b.id, 30.0);
+                    if(pos) {
+                        drawBison(pos.x, pos.y, b.color, b.id, b.slot);
+                    }
+                });
+            }
+        }
+
+        async function pollState() {
+            try {
+                const res = await fetch('/api/current_race');
+                const data = await res.json();
+                if(data.status === 'success') {
+                    state = data.state;
+                    elapsed = data.elapsed_time;
+                    lineup = data.lineup;
+                    if(Object.keys(data.telemetry).length > 0) {
+                        telemetry = data.telemetry;
+                    }
+                }
+            } catch(e) {
+                console.error("Polling error", e);
+            }
+        }
+
+        // Animation loop
+        function loop() {
+            // Predict elapsed time locally between polls to make animation smooth
+            if (state === "Race_Sprint") {
+                elapsed += (1/60);
+            }
+            renderFrame();
+            requestAnimationFrame(loop);
+        }
+
+        setInterval(pollState, 1000);
+        pollState();
+        requestAnimationFrame(loop);
+
+        // Resize handler to maintain aspect ratio on any screen
+        function resize() {
+            const windowRatio = window.innerWidth / window.innerHeight;
+            const canvasRatio = 1920 / 1080;
+            if(windowRatio < canvasRatio) {
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = (window.innerWidth / canvasRatio) + 'px';
+            } else {
+                canvas.style.height = window.innerHeight + 'px';
+                canvas.style.width = (window.innerHeight * canvasRatio) + 'px';
+            }
+        }
+        window.addEventListener('resize', resize);
+        resize();
+    </script>
+</body>
+</html>

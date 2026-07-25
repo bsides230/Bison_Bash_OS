@@ -17,6 +17,11 @@
         <!-- Rendered by JS -->
     </div>
 
+    <!-- Bison Dash Tab Injection -->
+    <div style="margin-top: 30px;">
+        {% include 'game_hub/admin/templates/bisondash_tab.html' ignore missing %}
+    </div>
+
     <div class="data-test">
         <h3>Test Data Redundancy</h3>
         <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:10px;">Injecting tokens triggers an atomic write to players.json + timestamped archive backup.</p>

@@ -1,0 +1,76 @@
+{
+  "lineup": [
+    {
+      "id": "bison_1_c4f5bc",
+      "slot": 1,
+      "name": "Lightning Prairie",
+      "color": "#FF0000",
+      "stats": {
+        "jockey_reaction": 5,
+        "bison_speed": 92,
+        "bison_cornering": 3,
+        "bison_stamina": 17
+      }
+    },
+    {
+      "id": "bison_2_713ac8",
+      "slot": 2,
+      "name": "Stomper Dash",
+      "color": "#00FF00",
+      "stats": {
+        "jockey_reaction": 2,
+        "bison_speed": 109,
+        "bison_cornering": 3,
+        "bison_stamina": 4
+      }
+    },
+    {
+      "id": "bison_3_c3ed76",
+      "slot": 3,
+      "name": "Thunder Runner",
+      "color": "#0000FF",
+      "stats": {
+        "jockey_reaction": 7,
+        "bison_speed": 3,
+        "bison_cornering": 3,
+        "bison_stamina": 20
+      }
+    },
+    {
+      "id": "bison_4_189f05",
+      "slot": 4,
+      "name": "Shadow Sprint",
+      "color": "#FFFF00",
+      "stats": {
+        "jockey_reaction": 6,
+        "bison_speed": 135,
+        "bison_cornering": 1,
+        "bison_stamina": 3
+      }
+    },
+    {
+      "id": "bison_5_e16157",
+      "slot": 5,
+      "name": "Stomper Hooves",
+      "color": "#FF00FF",
+      "stats": {
+        "jockey_reaction": 7,
+        "bison_speed": 103,
+        "bison_cornering": 1,
+        "bison_stamina": 26
+      }
+    },
+    {
+      "id": "bison_6_54676b",
+      "slot": 6,
+      "name": "Blaze Sprint",
+      "color": "#00FFFF",
+      "stats": {
+        "jockey_reaction": 8,
+        "bison_speed": 21,
+        "bison_cornering": 3,
+        "bison_stamina": 1
+      }
+    }
+  ]
+}

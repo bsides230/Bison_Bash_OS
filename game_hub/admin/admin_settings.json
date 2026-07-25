@@ -1,0 +1,1 @@
+{"tailscale_enforcement": false, "tailscale_ip_pool": "100.", "bind_host": "127.0.0.1", "bind_port": 8000, "bison_dash": {"state": "Betting_Open", "timers": {"Soft_Closure": 10, "Closed_Intros": 60, "Race_Sprint": 30, "Results_Payout": 120}, "state_start_time": 1784998311.0364058}}
