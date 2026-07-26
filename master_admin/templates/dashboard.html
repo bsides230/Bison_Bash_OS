@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Master Admin Console</title>
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+
+    <header>
+        <h1>Venue Command</h1>
+    </header>
+
+    <!-- Bison Dash Tab Injection -->
+    <div style="margin-top: 30px;">
+        {% include 'game_hub/admin/templates/bisondash_tab.html' ignore missing %}
+    </div>
+
+    <div class="data-test">
+        <h3>Test Data Redundancy</h3>
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:10px;">Injecting tokens triggers an atomic write to players.json + timestamped archive backup.</p>
+        <input type="text" id="player-id" placeholder="Player ID (e.g. user1)">
+        <input type="number" id="token-amount" placeholder="Amount (e.g. 50)">
+        <button class="action-btn" style="padding: 8px 15px; margin-left: 10px;" onclick="injectTokens()">Inject</button>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>

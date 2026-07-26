@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="1920" height="1080" style="background:#111"></canvas>
+<script>
+    const ctx = document.getElementById('c').getContext('2d');
+    const waypoints = [
+        {x: 960, y: 900},
+        {x: 1600, y: 900}, // Bottom straight
+        {x: 1700, y: 700}, // Turn 1
+        {x: 1700, y: 500}, // Turn 2
+        {x: 1600, y: 300}, // Top straight start
+        {x: 320, y: 300},  // Top straight end
+        {x: 220, y: 500},  // Turn 3
+        {x: 220, y: 700},  // Turn 4
+        {x: 320, y: 900},  // Bottom straight start
+        {x: 960, y: 900}
+    ];
+
+    ctx.beginPath();
+    ctx.moveTo(waypoints[0].x, waypoints[0].y);
+    for(let i=1; i<waypoints.length; i++) {
+        ctx.lineTo(waypoints[i].x, waypoints[i].y);
+    }
+    ctx.strokeStyle = '#533';
+    ctx.lineWidth = 150;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([20, 20]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+</script>
+</body>
+</html>

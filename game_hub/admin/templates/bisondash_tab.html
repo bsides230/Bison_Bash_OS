@@ -1,0 +1,291 @@
+<div class="bison-dash-admin">
+    <style>
+        .bison-dash-admin {
+            font-family: monospace;
+            background: #121212;
+            color: #eee;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .bison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .big-red-btn {
+            background: #ff3333;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 51, 51, 0.4);
+            transition: transform 0.1s;
+        }
+        .big-red-btn:active { transform: scale(0.95); }
+        .big-red-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
+
+        .status-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .slider-group { margin-bottom: 15px; }
+        .slider-group label { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        input[type=range] { width: 100%; }
+
+        .lineup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .bison-card {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 5px solid #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .bison-card h4 { margin: 0 0 5px 0; font-size: 0.9rem; }
+        .bison-stats { font-size: 0.75rem; color: #aaa; margin-bottom: 8px; }
+        .force-retire-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .force-retire-btn:hover { background: #ff5555; }
+
+        .server-config {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .server-config input {
+            padding: 8px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: white;
+            border-radius: 4px;
+        }
+    </style>
+
+    <div class="server-config">
+        <label for="bd-server-url">Bison Dash Server URL (IP:Port):</label>
+        <input type="text" id="bd-server-url" value="http://127.0.0.1:8001" style="width: 250px;">
+    </div>
+
+    <div class="bison-header">
+        <div>
+            <h2 style="margin:0;">BISON DASH CONTROL</h2>
+            <div id="bd-current-state" class="status-display">Unknown</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="bd-panic-btn" class="big-red-btn" style="background:#555; font-size: 0.9rem; padding: 10px 15px;" onclick="triggerPanicReset()">PANIC RESET</button>
+            <button id="bd-trigger-btn" class="big-red-btn" onclick="triggerSoftClosure()">TRIGGER CLOSURE</button>
+        </div>
+    </div>
+
+    <div class="grid-2col">
+        <!-- Elastic Clock Sliders -->
+        <div class="card">
+            <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:5px;">Elastic Clock (Phase Durations)</h3>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:15px;">Adjustments take effect immediately.</p>
+
+            <div class="slider-group">
+                <label><span>Soft Closure:</span> <span id="val-Soft_Closure">10s</span></label>
+                <input type="range" id="slider-Soft_Closure" min="5" max="30" value="10" oninput="updateTimerVal('Soft_Closure')" onchange="saveTimers()">
+            </div>
+
+            <div class="slider-group">
+                <label><span>Closed Intros:</span> <span id="val-Closed_Intros">60s</span></label>
+                <input type="range" id="slider-Closed_Intros" min="10" max="180" value="60" oninput="updateTimerVal('Closed_Intros')" onchange="saveTimers()">
+            </div>
+
+            <div class="slider-group">
+                <label><span>Race Sprint (Fixed):</span> <span>30s</span></label>
+                <input type="range" disabled min="30" max="30" value="30">
+            </div>
+
+            <div class="slider-group">
+                <label><span>Results Payout:</span> <span id="val-Results_Payout">120s</span></label>
+                <input type="range" id="slider-Results_Payout" min="30" max="300" value="120" oninput="updateTimerVal('Results_Payout')" onchange="saveTimers()">
+            </div>
+        </div>
+
+        <!-- Lineup Override -->
+        <div class="card">
+            <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:5px;">Lineup Override Card</h3>
+            <p style="font-size:0.8rem; color:#888;">Force retire an entry to instantly spawn a rookie.</p>
+            <div id="bd-lineup-grid" class="lineup-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentState = "Unknown";
+
+        function getBaseUrl() {
+            let url = document.getElementById('bd-server-url').value.trim();
+            if (url.endsWith('/')) {
+                url = url.slice(0, -1);
+            }
+            return url;
+        }
+
+        async function fetchBisonDashState() {
+            try {
+                const res = await fetch(getBaseUrl() + '/api/bisondash/state');
+                const data = await res.json();
+                if (data.status === 'success' && data.state_data) {
+                    currentState = data.state_data.state;
+                    document.getElementById('bd-current-state').innerText = currentState;
+
+                    const btn = document.getElementById('bd-trigger-btn');
+                    if (currentState === "Betting_Open") {
+                        btn.disabled = false;
+                        btn.style.opacity = "1";
+                    } else {
+                        btn.disabled = true;
+                        btn.style.opacity = "0.5";
+                    }
+
+                    // Update sliders with backend state if they exist
+                    if(data.state_data.timers) {
+                        for(const k of ['Soft_Closure', 'Closed_Intros', 'Results_Payout']) {
+                            const val = data.state_data.timers[k];
+                            const s = document.getElementById('slider-' + k);
+                            const v = document.getElementById('val-' + k);
+                            if(s && document.activeElement !== s) {
+                                s.value = val;
+                                v.innerText = val + "s";
+                            }
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error("Error fetching state", e);
+                document.getElementById('bd-current-state').innerText = "Disconnected";
+            }
+        }
+
+        async function fetchBisonDashLineup() {
+            try {
+                const res = await fetch(getBaseUrl() + '/api/bisondash/lineup');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const grid = document.getElementById('bd-lineup-grid');
+                    grid.innerHTML = '';
+                    data.lineup.forEach(b => {
+                        grid.innerHTML += `
+                            <div class="bison-card" style="border-left-color: ${b.color}">
+                                <h4>Slot ${b.slot}: ${b.name}</h4>
+                                <div class="bison-stats">
+                                    Spd:${b.stats.bison_speed} | Stm:${b.stats.bison_stamina}<br>
+                                    Jck:${b.stats.jockey_reaction} | Crn:${b.stats.bison_cornering}
+                                </div>
+                                <button class="force-retire-btn" onclick="forceRetire('${b.id}')">Force Retire</button>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(e) { console.error("Error fetching lineup", e); }
+        }
+
+        async function triggerSoftClosure() {
+            if(confirm("Trigger Soft Closure phase now?")) {
+                await fetch(getBaseUrl() + '/api/bisondash/state/update', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({state: 'Soft_Closure'})
+                });
+                fetchBisonDashState();
+            }
+        }
+
+        async function triggerPanicReset() {
+            if(confirm("DANGER: Immediately reset game to Betting_Open?")) {
+                await fetch(getBaseUrl() + '/api/local/reset', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: "GLOBAL_RESET",
+                        timestamp: Math.floor(Date.now() / 1000),
+                        target_state: "IDLE"
+                    })
+                });
+                fetchBisonDashState();
+            }
+        }
+
+        async function forceRetire(bisonId) {
+            if(confirm("Retire this bison and generate a replacement?")) {
+                await fetch(getBaseUrl() + '/api/bisondash/lineup/retire', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({bison_id: bisonId})
+                });
+                fetchBisonDashLineup();
+            }
+        }
+
+        function updateTimerVal(timer) {
+            const val = document.getElementById('slider-' + timer).value;
+            document.getElementById('val-' + timer).innerText = val + "s";
+        }
+
+        async function saveTimers() {
+            const payload = {
+                soft_closure: parseInt(document.getElementById('slider-Soft_Closure').value),
+                closed_intros: parseInt(document.getElementById('slider-Closed_Intros').value),
+                race_sprint: 30, // Fixed
+                results_payout: parseInt(document.getElementById('slider-Results_Payout').value)
+            };
+
+            await fetch(getBaseUrl() + '/api/bisondash/timers/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+        }
+
+        // Pollers
+        setInterval(fetchBisonDashState, 1000);
+        setInterval(fetchBisonDashLineup, 5000); // Less frequent for lineup
+        fetchBisonDashState();
+        fetchBisonDashLineup();
+    </script>
+</div>
