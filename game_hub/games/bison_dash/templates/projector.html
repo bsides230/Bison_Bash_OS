@@ -180,10 +180,56 @@
         let elapsed = 0;
         let lineup = [];
         let telemetry = {};
+        let raceDuration = 90.0;
+
+        function getNormal(p1, p2) {
+            let dx = p2.x - p1.x;
+            let dy = p2.y - p1.y;
+            let dist = Math.hypot(dx, dy);
+            if (dist === 0) return {nx: 0, ny: 0};
+            return {nx: dy/dist, ny: -dx/dist};
+        }
+
+        function getLanePath(laneIndex) {
+            // Offset logic identically matching simulator.py
+            const offset = (laneIndex - 3.5) * 40;
+            const lanePath = [];
+
+            for(let i=0; i<waypoints.length; i++) {
+                let p_prev = i > 0 ? waypoints[i-1] : waypoints[waypoints.length-2];
+                let p_curr = waypoints[i];
+                let p_next = i < waypoints.length - 1 ? waypoints[i+1] : waypoints[1];
+
+                let n1 = getNormal(p_prev, p_curr);
+                let n2 = getNormal(p_curr, p_next);
+
+                let nx = n1.nx + n2.nx;
+                let ny = n1.ny + n2.ny;
+
+                let n_dist = Math.hypot(nx, ny);
+                if (n_dist !== 0) {
+                    nx /= n_dist;
+                    ny /= n_dist;
+                } else {
+                    nx = n1.nx;
+                    ny = n1.ny;
+                }
+
+                lanePath.push({
+                    x: p_curr.x + nx * offset,
+                    y: p_curr.y + ny * offset
+                });
+            }
+            if (waypoints[0].x === waypoints[waypoints.length-1].x && waypoints[0].y === waypoints[waypoints.length-1].y) {
+                lanePath[lanePath.length-1] = {x: lanePath[0].x, y: lanePath[0].y};
+            }
+            return lanePath;
+        }
 
         function drawTrack() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Draw field
             ctx.beginPath();
             ctx.moveTo(waypoints[0].x, waypoints[0].y);
             for(let i=1; i<waypoints.length; i++) {
@@ -192,33 +238,38 @@
             ctx.fillStyle = '#2d5a27'; // Dark grass green
             ctx.fill();
 
+            // Draw main track background
             ctx.beginPath();
             ctx.moveTo(waypoints[0].x, waypoints[0].y);
             for(let i=1; i<waypoints.length; i++) {
                 ctx.lineTo(waypoints[i].x, waypoints[i].y);
             }
             ctx.strokeStyle = '#6a4d3a';
-            ctx.lineWidth = 150;
+            ctx.lineWidth = 320; // Expanded for 6 full 40px lanes + padding
             ctx.lineJoin = 'round';
             ctx.stroke();
 
-            ctx.beginPath();
-            ctx.moveTo(waypoints[0].x, waypoints[0].y);
-            for(let i=1; i<waypoints.length; i++) {
-                ctx.lineTo(waypoints[i].x, waypoints[i].y);
+            // Draw 6 parallel lane lines
+            for (let lane = 1; lane <= 6; lane++) {
+                const lanePath = getLanePath(lane);
+                ctx.beginPath();
+                ctx.moveTo(lanePath[0].x, lanePath[0].y);
+                for(let i=1; i<lanePath.length; i++) {
+                    ctx.lineTo(lanePath[i].x, lanePath[i].y);
+                }
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([15, 15]);
+                ctx.stroke();
             }
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([20, 20]);
-            ctx.stroke();
             ctx.setLineDash([]);
 
-            // Draw Start/Finish line
+            // Draw Start/Finish line covering all lanes
             ctx.strokeStyle = '#ff0';
             ctx.lineWidth = 10;
             ctx.beginPath();
-            ctx.moveTo(960, 825);
-            ctx.lineTo(960, 975);
+            ctx.moveTo(960, 725);
+            ctx.lineTo(960, 1075);
             ctx.stroke();
         }
 
@@ -233,31 +284,36 @@
         }
 
         function drawBison(x, y, color, id, slotIndex) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x - 20, y - 20, 40, 40);
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x - 20, y - 20, 40, 40);
-
             if (id) loadSprite(id);
-
             const img = spriteImages[id];
-            if(img && img.complete && img.naturalHeight !== 0) {
-                ctx.drawImage(img, x - 30, y - 30, 60, 60);
-            }
 
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 20px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(slotIndex, x, y);
+            // Fixed top-down bounding box dimensions fitting within 40px lane
+            const size = 32;
+
+            if(img && img.complete && img.naturalHeight !== 0) {
+                // Render single static clean image directly
+                ctx.drawImage(img, x - size/2, y - size/2, size, size);
+            } else {
+                // Fallback colored rectangle only if image is missing
+                ctx.fillStyle = color;
+                ctx.fillRect(x - size/2, y - size/2, size, size);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - size/2, y - size/2, size, size);
+
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(slotIndex, x, y);
+            }
         }
 
         function getInterpolatedPosition(bisonId, t) {
             const data = telemetry[bisonId];
             if(!data || data.length === 0) return null;
 
-            if(t >= 30.0) {
+            if(t >= raceDuration) {
                 const last = data[data.length - 1];
                 return {x: last.x, y: last.y};
             }
@@ -323,9 +379,8 @@
                 winnerScreen.style.display = 'none';
                 overlay.innerText = "WAITING FOR NEXT RACE...\n\nPLACE YOUR BETS!";
                 lineup.forEach(b => {
-                    const slot_offset_x = (b.slot - 3.5) * 20;
-                    const slot_offset_y = (b.slot - 3.5) * 15;
-                    drawBison(waypoints[0].x + slot_offset_x, waypoints[0].y + slot_offset_y, b.color, b.id, b.slot);
+                    const lanePath = getLanePath(b.slot);
+                    drawBison(lanePath[0].x, lanePath[0].y, b.color, b.id, b.slot);
                 });
             }
             else if (state === "Soft_Closure") {
@@ -334,9 +389,8 @@
                 const remaining = Math.max(0, 10 - elapsed);
                 overlay.innerText = `BETS CLOSING IN: ${Math.ceil(remaining)}s`;
                 lineup.forEach(b => {
-                    const slot_offset_x = (b.slot - 3.5) * 20;
-                    const slot_offset_y = (b.slot - 3.5) * 15;
-                    drawBison(waypoints[0].x + slot_offset_x, waypoints[0].y + slot_offset_y, b.color, b.id, b.slot);
+                    const lanePath = getLanePath(b.slot);
+                    drawBison(lanePath[0].x, lanePath[0].y, b.color, b.id, b.slot);
                 });
             }
             else if (state === "Closed_Intros") {
@@ -344,9 +398,8 @@
                 winnerScreen.style.display = 'none';
                 overlay.innerText = "RACE STARTING SOON!";
                 lineup.forEach(b => {
-                    const slot_offset_x = (b.slot - 3.5) * 20;
-                    const slot_offset_y = (b.slot - 3.5) * 15;
-                    drawBison(waypoints[0].x + slot_offset_x, waypoints[0].y + slot_offset_y, b.color, b.id, b.slot);
+                    const lanePath = getLanePath(b.slot);
+                    drawBison(lanePath[0].x, lanePath[0].y, b.color, b.id, b.slot);
                 });
             }
             else if (state === "Race_Sprint") {
@@ -354,7 +407,7 @@
                 leaderboard.style.display = 'block';
                 winnerScreen.style.display = 'none';
 
-                const currentRaceTime = Math.min(elapsed, 30.0);
+                const currentRaceTime = Math.min(elapsed, raceDuration);
                 updateLeaderboard(currentRaceTime);
 
                 lineup.forEach(b => {
@@ -369,7 +422,7 @@
                 leaderboard.style.display = 'none';
 
                 lineup.forEach(b => {
-                    const pos = getInterpolatedPosition(b.id, 30.0);
+                    const pos = getInterpolatedPosition(b.id, raceDuration);
                     if(pos) {
                         drawBison(pos.x, pos.y, b.color, b.id, b.slot);
                     }
@@ -422,6 +475,9 @@
                     state = data.state;
                     elapsed = data.elapsed_time;
                     lineup = data.lineup;
+                    if (data.race_duration) {
+                        raceDuration = data.race_duration;
+                    }
                     if(Object.keys(data.telemetry).length > 0) {
                         telemetry = data.telemetry;
                     }

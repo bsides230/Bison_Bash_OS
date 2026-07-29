@@ -45,6 +45,9 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 SETTINGS_FILE = DATA_DIR / "bison_settings.json"
 LINEUP_FILE = DATA_DIR / "lineup.json"
 
+# Duration preset for the race (e.g. 90 or 120)
+RACE_DURATION = int(os.environ.get("RACE_DURATION", 90))
+
 def read_data(filepath: Path) -> dict:
     if not filepath.exists():
         return {}
@@ -64,7 +67,7 @@ if not SETTINGS_FILE.exists():
         "timers": {
             "Soft_Closure": 10,
             "Closed_Intros": 60,
-            "Race_Sprint": 30,
+            "Race_Sprint": RACE_DURATION,
             "Results_Payout": 120
         },
         "state_start_time": time.time()
@@ -177,7 +180,8 @@ def get_current_race():
         "state": state,
         "elapsed_time": elapsed,
         "lineup": _get_mapped_lineup(),
-        "telemetry": current_telemetry_cache
+        "telemetry": current_telemetry_cache,
+        "race_duration": settings.get("timers", {}).get("Race_Sprint", RACE_DURATION)
     }
 
 @app.get("/api/bisondash/state")
@@ -193,8 +197,10 @@ def update_bisondash_state(payload: BisonDashStatePayload):
     settings["state_start_time"] = time.time()
     write_data(SETTINGS_FILE, settings)
 
+    race_duration = settings.get("timers", {}).get("Race_Sprint", RACE_DURATION)
+
     if payload.state == "Closed_Intros":
-        current_telemetry_cache = simulate_race(_get_mapped_lineup())
+        current_telemetry_cache = simulate_race(_get_mapped_lineup(), race_duration)
     elif payload.state == "Betting_Open":
         current_telemetry_cache = {}
 
@@ -335,9 +341,11 @@ async def elastic_clock_loop():
                 write_data(SETTINGS_FILE, settings)
                 print(f"[Bison Dash] State transitioned to {new_state}")
 
+                race_duration = timers.get("Race_Sprint", RACE_DURATION)
+
                 # Triggers on specific state changes
                 if new_state == "Closed_Intros":
-                    current_telemetry_cache = simulate_race(_get_mapped_lineup())
+                    current_telemetry_cache = simulate_race(_get_mapped_lineup(), race_duration)
                     print(f"[Bison Dash] Telemetry calculated for upcoming race.")
 
                 if new_state == "Betting_Open":
