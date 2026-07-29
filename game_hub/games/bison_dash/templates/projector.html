@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <title>Bison Dash Projector</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        /* Scale 1920x1080 canvas down to fit viewport while maintaining aspect ratio */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
         canvas {
             display: block;
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: #111;
-            /* Using standard isometric background grid look */
             background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
             background-size: 50px 50px;
@@ -23,7 +21,6 @@
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             color: white;
-            font-family: sans-serif;
             font-size: 6rem;
             text-align: center;
             font-weight: bold;
@@ -31,23 +28,151 @@
             pointer-events: none;
             z-index: 10;
         }
+
+        #leaderboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #555;
+            border-radius: 10px;
+            color: white;
+            padding: 15px;
+            display: none;
+            z-index: 20;
+        }
+
+        .leaderboard-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #555;
+            padding-bottom: 10px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 10px solid;
+        }
+
+        #winner-screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            color: white;
+        }
+
+        #winner-title {
+            font-size: 8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #fff;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); text-shadow: 0 0 20px #fff; }
+            to { transform: scale(1.05); text-shadow: 0 0 40px #ffea00; color: #ffea00; }
+        }
+
+        #winner-image-container {
+            width: 500px;
+            height: 500px;
+            border: 15px solid #fff;
+            border-radius: 20px;
+            background: #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 0 0 50px rgba(255,255,255,0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #winner-sprite {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        #winner-fallback {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+        }
+
+        #winner-slot-indicator {
+            font-size: 6rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="1920" height="1080"></canvas>
+
     <div id="overlay">WAITING FOR NEXT RACE...</div>
+
+    <div id="leaderboard">
+        <div class="leaderboard-title">LEADERBOARD</div>
+        <div id="leaderboard-items"></div>
+    </div>
+
+    <div id="winner-screen">
+        <div id="winner-title">WINNER!</div>
+        <div id="winner-image-container">
+            <img id="winner-sprite" src="" alt="Winner">
+            <div id="winner-fallback">
+                SLOT <br><span id="winner-slot-indicator"></span>
+            </div>
+        </div>
+        <div id="winner-name" style="font-size: 5rem; font-weight: bold;"></div>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const overlay = document.getElementById('overlay');
+        const leaderboard = document.getElementById('leaderboard');
+        const leaderboardItems = document.getElementById('leaderboard-items');
 
-        // Track boundaries
+        const winnerScreen = document.getElementById('winner-screen');
+        const winnerNameDisplay = document.getElementById('winner-name');
+        const winnerImageContainer = document.getElementById('winner-image-container');
+        const winnerSprite = document.getElementById('winner-sprite');
+        const winnerFallbackText = document.getElementById('winner-fallback');
+        const winnerSlot = document.getElementById('winner-slot-indicator');
+
+        // Oval Track Boundaries (Counter-Clockwise)
         const waypoints = [
-            {x: 960, y: 900},   // Start
-            {x: 400, y: 400},   // Corner 1 Start
-            {x: 1520, y: 400},  // Corner 1 End
-            {x: 1300, y: 750},  // Home stretch end
+            {x: 960, y: 900},   // Start/Bottom Straight
+            {x: 1520, y: 900},  // Turn 1 Start
+            {x: 1720, y: 700},  // Turn 1 Apex
+            {x: 1720, y: 500},  // Turn 2 Apex
+            {x: 1520, y: 300},  // Back Straight Start
+            {x: 400, y: 300},   // Turn 3 Start
+            {x: 200, y: 500},   // Turn 3 Apex
+            {x: 200, y: 700},   // Turn 4 Apex
+            {x: 400, y: 900},   // Home Straight Start
             {x: 960, y: 900}    // Finish
         ];
 
@@ -59,7 +184,6 @@
         function drawTrack() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw grass background (oval)
             ctx.beginPath();
             ctx.moveTo(waypoints[0].x, waypoints[0].y);
             for(let i=1; i<waypoints.length; i++) {
@@ -68,24 +192,16 @@
             ctx.fillStyle = '#2d5a27'; // Dark grass green
             ctx.fill();
 
-
-            // Draw Isometric Oval (Diamond)
             ctx.beginPath();
             ctx.moveTo(waypoints[0].x, waypoints[0].y);
             for(let i=1; i<waypoints.length; i++) {
                 ctx.lineTo(waypoints[i].x, waypoints[i].y);
             }
-            ctx.strokeStyle = '#333';
+            ctx.strokeStyle = '#6a4d3a';
             ctx.lineWidth = 150;
             ctx.lineJoin = 'round';
             ctx.stroke();
 
-            // Center dirt pattern
-            ctx.strokeStyle = '#533';
-            ctx.lineWidth = 130;
-            ctx.stroke();
-
-            // Track outlines
             ctx.beginPath();
             ctx.moveTo(waypoints[0].x, waypoints[0].y);
             for(let i=1; i<waypoints.length; i++) {
@@ -101,43 +217,46 @@
             ctx.strokeStyle = '#ff0';
             ctx.lineWidth = 10;
             ctx.beginPath();
-            ctx.moveTo(960, 775);
-            ctx.lineTo(960, 925);
+            ctx.moveTo(960, 825);
+            ctx.lineTo(960, 975);
             ctx.stroke();
         }
 
-        // Stubs for future sprite sheets
         const spriteImages = {};
-        for(let i=1; i<=6; i++) {
-            const img = new Image();
-            img.src = `/static/bison_${i}_sheet.png`;
-            // If the image doesn't exist, it just won't render inside drawBison
-            // We use the colored box as the primary placeholder
-            spriteImages[`bison_${i}`] = img;
+
+        function loadSprite(bison_id) {
+            if (!spriteImages[bison_id]) {
+                const img = new Image();
+                img.src = `/static/bisons/${bison_id}.png`;
+                spriteImages[bison_id] = img;
+            }
         }
 
         function drawBison(x, y, color, id, slotIndex) {
-            // Draw rectangular placeholder (Fallback)
             ctx.fillStyle = color;
             ctx.fillRect(x - 20, y - 20, 40, 40);
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
             ctx.strokeRect(x - 20, y - 20, 40, 40);
 
-            // Draw image if loaded
-            const img = spriteImages[`bison_${slotIndex}`];
+            if (id) loadSprite(id);
+
+            const img = spriteImages[id];
             if(img && img.complete && img.naturalHeight !== 0) {
-                // Adjust drawing rect if you actually have a valid sprite sheet loaded
-                ctx.drawImage(img, 0, 0, img.width, img.height, x - 20, y - 20, 40, 40);
+                ctx.drawImage(img, x - 30, y - 30, 60, 60);
             }
+
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(slotIndex, x, y);
         }
 
-        // Interpolate telemetry
         function getInterpolatedPosition(bisonId, t) {
             const data = telemetry[bisonId];
             if(!data || data.length === 0) return null;
 
-            // Clamp to max time (30s)
             if(t >= 30.0) {
                 const last = data[data.length - 1];
                 return {x: last.x, y: last.y};
@@ -157,12 +276,52 @@
             return {x: data[data.length-1].x, y: data[data.length-1].y};
         }
 
+        function updateLeaderboard(currentRaceTime) {
+            let rankings = [];
+
+            lineup.forEach(b => {
+                const pos = getInterpolatedPosition(b.id, currentRaceTime);
+                if(pos) {
+                    const data = telemetry[b.id];
+                    let dist = 0;
+                    if (data) {
+                        for(let i=0; i<data.length-1; i++) {
+                            if(data[i].t <= currentRaceTime) {
+                                let x1 = data[i].x; let y1 = data[i].y;
+                                let x2 = (data[i+1].t <= currentRaceTime) ? data[i+1].x : pos.x;
+                                let y2 = (data[i+1].t <= currentRaceTime) ? data[i+1].y : pos.y;
+                                dist += Math.hypot(x2-x1, y2-y1);
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    rankings.push({bison: b, dist: dist});
+                }
+            });
+
+            rankings.sort((a, b) => b.dist - a.dist);
+
+            leaderboardItems.innerHTML = '';
+            rankings.forEach((r, idx) => {
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.style.borderColor = r.bison.color;
+                item.innerHTML = `
+                    <span>${idx + 1}. ${r.bison.name}</span>
+                    <span style="font-size: 1rem; opacity: 0.7;">Slot ${r.bison.slot}</span>
+                `;
+                leaderboardItems.appendChild(item);
+            });
+        }
+
         function renderFrame() {
             drawTrack();
 
             if (state === "Betting_Open") {
+                leaderboard.style.display = 'none';
+                winnerScreen.style.display = 'none';
                 overlay.innerText = "WAITING FOR NEXT RACE...\n\nPLACE YOUR BETS!";
-                // Draw bison lined up at start
                 lineup.forEach(b => {
                     const slot_offset_x = (b.slot - 3.5) * 20;
                     const slot_offset_y = (b.slot - 3.5) * 15;
@@ -170,6 +329,8 @@
                 });
             }
             else if (state === "Soft_Closure") {
+                leaderboard.style.display = 'none';
+                winnerScreen.style.display = 'none';
                 const remaining = Math.max(0, 10 - elapsed);
                 overlay.innerText = `BETS CLOSING IN: ${Math.ceil(remaining)}s`;
                 lineup.forEach(b => {
@@ -179,6 +340,8 @@
                 });
             }
             else if (state === "Closed_Intros") {
+                leaderboard.style.display = 'none';
+                winnerScreen.style.display = 'none';
                 overlay.innerText = "RACE STARTING SOON!";
                 lineup.forEach(b => {
                     const slot_offset_x = (b.slot - 3.5) * 20;
@@ -187,9 +350,12 @@
                 });
             }
             else if (state === "Race_Sprint") {
-                overlay.innerText = ""; // Clear text
-                // Interpolate along the 30s telemetry array
+                overlay.innerText = "";
+                leaderboard.style.display = 'block';
+                winnerScreen.style.display = 'none';
+
                 const currentRaceTime = Math.min(elapsed, 30.0);
+                updateLeaderboard(currentRaceTime);
 
                 lineup.forEach(b => {
                     const pos = getInterpolatedPosition(b.id, currentRaceTime);
@@ -199,14 +365,52 @@
                 });
             }
             else if (state === "Results_Payout") {
-                overlay.innerText = "RACE FINISHED!\n\nPAYING OUT WINNERS";
-                // Show at finish line (t=30)
+                overlay.innerText = "";
+                leaderboard.style.display = 'none';
+
                 lineup.forEach(b => {
                     const pos = getInterpolatedPosition(b.id, 30.0);
                     if(pos) {
                         drawBison(pos.x, pos.y, b.color, b.id, b.slot);
                     }
                 });
+
+                if (winnerScreen.style.display !== 'flex') {
+                    let winner = lineup[0];
+                    let maxDist = -Infinity;
+
+                    lineup.forEach(b => {
+                         const data = telemetry[b.id];
+                         let dist = 0;
+                         if (data) {
+                             for(let i=0; i<data.length-1; i++) {
+                                 dist += Math.hypot(data[i+1].x - data[i].x, data[i+1].y - data[i].y);
+                             }
+                         }
+                         if(dist > maxDist) {
+                             maxDist = dist;
+                             winner = b;
+                         }
+                    });
+
+                    if(winner) {
+                        winnerNameDisplay.innerText = winner.name;
+                        winnerImageContainer.style.borderColor = winner.color;
+                        winnerSlot.innerText = winner.slot;
+                        winnerSlot.style.color = winner.color;
+
+                        const img = spriteImages[winner.id];
+                        if (img && img.complete && img.naturalHeight !== 0) {
+                            winnerSprite.src = img.src;
+                            winnerSprite.style.display = 'block';
+                            winnerFallbackText.style.display = 'none';
+                        } else {
+                            winnerSprite.style.display = 'none';
+                            winnerFallbackText.style.display = 'block';
+                        }
+                    }
+                    winnerScreen.style.display = 'flex';
+                }
             }
         }
 
@@ -227,9 +431,7 @@
             }
         }
 
-        // Animation loop
         function loop() {
-            // Predict elapsed time locally between polls to make animation smooth
             if (state === "Race_Sprint") {
                 elapsed += (1/60);
             }
@@ -241,7 +443,6 @@
         pollState();
         requestAnimationFrame(loop);
 
-        // Resize handler to maintain aspect ratio on any screen
         function resize() {
             const windowRatio = window.innerWidth / window.innerHeight;
             const canvasRatio = 1920 / 1080;

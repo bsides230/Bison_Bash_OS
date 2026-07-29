@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bison Builder</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #222; color: #fff; display: flex; height: 100vh; margin: 0; box-sizing: border-box; }
+        #left-panel { width: 300px; border-right: 1px solid #555; padding-right: 20px; overflow-y: auto; }
+        #right-panel { flex-grow: 1; padding-left: 20px; display: flex; flex-direction: column; }
+        .bison-item { padding: 10px; background: #333; margin-bottom: 5px; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .bison-item:hover { background: #444; }
+        .bison-item.selected { border: 2px solid #4caf50; }
+        .delete-btn { background: #f44336; padding: 5px 10px; font-size: 0.8rem; border: none; color: white; border-radius: 3px; cursor: pointer; }
+        .delete-btn:hover { background: #d32f2f; }
+        .form-group { margin-bottom: 15px; }
+        label { display: inline-block; width: 100px; }
+        input[type="text"], input[type="color"], input[type="number"] { padding: 8px; width: 200px; border-radius: 4px; border: 1px solid #555; background: #444; color: white; }
+        button.action-btn { padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        button.action-btn:hover { background: #45a049; }
+        button.add-btn { width: 100%; margin-bottom: 15px; }
+        #preview-area { margin-top: 20px; flex-grow: 1; background: #111; border: 2px dashed #555; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
+        #sprite-preview { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+    </style>
+</head>
+<body>
+    <div id="left-panel">
+        <h2>Bison Roster</h2>
+        <button class="action-btn add-btn" onclick="createNewBison()">+ Create New Bison</button>
+        <div id="bison-list"></div>
+    </div>
+
+    <div id="right-panel">
+        <h2>Edit Bison</h2>
+        <div id="editor" style="display: none;">
+            <div class="form-group">
+                <label>ID:</label>
+                <input type="text" id="edit-id" readonly style="background: #222; border: none;" />
+            </div>
+            <div class="form-group">
+                <label>Name:</label>
+                <input type="text" id="edit-name" />
+            </div>
+            <div class="form-group">
+                <label>Color:</label>
+                <input type="color" id="edit-color" />
+            </div>
+            <div class="form-group">
+                <label>Speed Base:</label>
+                <input type="number" id="edit-speed" min="10" max="100" step="1" value="50" />
+            </div>
+
+            <div class="form-group">
+                <label>Sprite (PNG):</label>
+                <input type="file" id="edit-sprite-upload" accept="image/png" />
+            </div>
+
+            <div>
+                <button class="action-btn" onclick="saveCurrentBison()">Save</button>
+                <span id="save-status" style="margin-left:10px; color: #4caf50;"></span>
+            </div>
+
+            <div id="preview-area">
+                <span id="preview-placeholder" style="color: #666;">No Sprite Uploaded</span>
+                <img id="sprite-preview" src="" alt="Sprite Preview" />
+            </div>
+        </div>
+        <div id="no-selection" style="flex-grow: 1; display: flex; align-items: center; justify-content: center; color: #666;">
+            Select a bison from the roster or create a new one.
+        </div>
+    </div>
+
+    <script>
+        let currentBisons = [];
+        let selectedBisonId = null;
+
+        async function loadBisons() {
+            try {
+                const res = await fetch('/api/bisondash/bisons');
+                const data = await res.json();
+                if(data.status === 'success') {
+                    currentBisons = data.bisons;
+                    renderList();
+                }
+            } catch(e) { console.error("Failed to load bisons"); }
+        }
+
+        function renderList() {
+            const list = document.getElementById('bison-list');
+            list.innerHTML = '';
+            currentBisons.forEach(b => {
+                const item = document.createElement('div');
+                item.className = `bison-item ${b.id === selectedBisonId ? 'selected' : ''}`;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.innerText = b.name;
+                nameSpan.style.borderLeft = `5px solid ${b.color}`;
+                nameSpan.style.paddingLeft = '10px';
+
+                item.onclick = (e) => {
+                    if(!e.target.classList.contains('delete-btn')) {
+                        selectBison(b.id);
+                    }
+                };
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.innerText = 'Del';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteBison(b.id);
+                };
+
+                item.appendChild(nameSpan);
+                item.appendChild(delBtn);
+                list.appendChild(item);
+            });
+        }
+
+        function selectBison(id) {
+            selectedBisonId = id;
+            renderList();
+
+            const bison = currentBisons.find(b => b.id === id);
+            if(bison) {
+                document.getElementById('editor').style.display = 'block';
+                document.getElementById('no-selection').style.display = 'none';
+
+                document.getElementById('edit-id').value = bison.id;
+                document.getElementById('edit-name').value = bison.name;
+                document.getElementById('edit-color').value = bison.color;
+                document.getElementById('edit-speed').value = bison.speed_base || 50;
+
+                const previewImg = document.getElementById('sprite-preview');
+                const placeholder = document.getElementById('preview-placeholder');
+
+                const imgUrl = `/static/bisons/${bison.id}.png?t=${new Date().getTime()}`;
+
+                previewImg.onload = () => {
+                    previewImg.style.display = 'block';
+                    placeholder.style.display = 'none';
+                };
+                previewImg.onerror = () => {
+                    previewImg.style.display = 'none';
+                    placeholder.style.display = 'block';
+                };
+                previewImg.src = imgUrl;
+
+                document.getElementById('edit-sprite-upload').value = '';
+            }
+        }
+
+        async function createNewBison() {
+            const newId = 'bison_' + Math.random().toString(16).slice(2, 8);
+            const newBison = {
+                id: newId,
+                name: "New Bison",
+                color: "#ffffff",
+                speed_base: 50
+            };
+
+            try {
+                const res = await fetch('/api/bisondash/bisons/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newBison)
+                });
+                const data = await res.json();
+                if(data.status === 'success') {
+                    await loadBisons();
+                    selectBison(newId);
+                }
+            } catch(e) { console.error("Failed to create"); }
+        }
+
+        async function saveCurrentBison() {
+            if(!selectedBisonId) return;
+
+            const payload = {
+                id: document.getElementById('edit-id').value,
+                name: document.getElementById('edit-name').value,
+                color: document.getElementById('edit-color').value,
+                speed_base: parseInt(document.getElementById('edit-speed').value) || 50
+            };
+
+            const statusEl = document.getElementById('save-status');
+
+            try {
+                let res = await fetch('/api/bisondash/bisons/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                let data = await res.json();
+
+                if(data.status !== 'success') throw new Error("JSON save failed");
+
+                const fileInput = document.getElementById('edit-sprite-upload');
+                if(fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    formData.append('id', payload.id);
+
+                    res = await fetch('/api/bisondash/bisons/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    data = await res.json();
+                    if(data.status !== 'success') throw new Error("Upload failed");
+                }
+
+                statusEl.innerText = "Saved!";
+                setTimeout(() => statusEl.innerText = "", 2000);
+
+                await loadBisons();
+                selectBison(payload.id);
+
+            } catch(e) {
+                statusEl.innerText = "Error saving";
+                statusEl.style.color = "red";
+                setTimeout(() => { statusEl.innerText = ""; statusEl.style.color = "#4caf50"; }, 3000);
+            }
+        }
+
+        async function deleteBison(id) {
+            if(!confirm("Are you sure you want to delete this bison?")) return;
+
+            try {
+                const res = await fetch(`/api/bisondash/bisons/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if(data.status === 'success') {
+                    if(selectedBisonId === id) {
+                        selectedBisonId = null;
+                        document.getElementById('editor').style.display = 'none';
+                        document.getElementById('no-selection').style.display = 'flex';
+                    }
+                    loadBisons();
+                }
+            } catch(e) { console.error("Failed to delete"); }
+        }
+
+        window.onload = loadBisons;
+    </script>
+</body>
+</html>
