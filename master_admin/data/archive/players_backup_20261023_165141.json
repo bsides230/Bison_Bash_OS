@@ -1,0 +1,16 @@
+{
+  "players": {
+    "p_3fb9d7c5": {
+      "id": "p_3fb9d7c5",
+      "name": "Bash Master",
+      "email": "mattamac230@gmail.com",
+      "pin": "1838",
+      "balance": 585,
+      "created_at": 1792791730,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792792301.658584
+    }
+  }
+}

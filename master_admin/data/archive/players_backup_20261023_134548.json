@@ -1,0 +1,52 @@
+{
+  "players": {
+    "p_55ae49be": {
+      "id": "p_55ae49be",
+      "name": "Hank the Cow Dog",
+      "email": "mattamac230@gmail.com",
+      "pin": "5844",
+      "balance": 135,
+      "created_at": 1792736034,
+      "total_wagers": 0,
+      "total_winnings": 14,
+      "newsletter_opt_in": false,
+      "updated_at": 1792781148.2040977
+    },
+    "p_f3cdb8a5": {
+      "id": "p_f3cdb8a5",
+      "name": "Alice Walker",
+      "email": "alice@venue.com",
+      "pin": "6021",
+      "balance": 170,
+      "created_at": 1792778442,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792781013.8229306
+    },
+    "p_4bc529a6": {
+      "id": "p_4bc529a6",
+      "name": "Bob Builder",
+      "email": "bob@venue.com",
+      "pin": "2460",
+      "balance": 250,
+      "created_at": 1792778442,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792780718.2208786
+    },
+    "p_75985d16": {
+      "id": "p_75985d16",
+      "name": "Funnel Tester",
+      "email": "funnel_test@venue.com",
+      "pin": "8875",
+      "balance": 50,
+      "created_at": 1792779071,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792779071.8313422
+    }
+  }
+}

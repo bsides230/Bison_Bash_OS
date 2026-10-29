@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PresRemote">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#080c14">
+
+    <title>Bison Bash - Stage Slide Remote (PresRemote)</title>
+
+    <script>
+        const urlPrefix = (window.location.pathname.startsWith('/presremote') || window.location.pathname.startsWith('/presenter')) ? '/presremote' : '';
+        function resolveUrl(url) {
+            if (!url) return url;
+            if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//') || url.startsWith('data:')) {
+                return url;
+            }
+            const clean = url.startsWith('/') ? url : '/' + url;
+            if (clean.startsWith('/api/')) {
+                return clean;
+            }
+            if (urlPrefix && (clean === urlPrefix || clean.startsWith(urlPrefix + '/'))) {
+                return clean;
+            }
+            return urlPrefix ? (urlPrefix + clean) : clean;
+        }
+    </script>
+    <link rel="manifest" href="/presremote.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="/static/img/presremote-icon.svg">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+
+    <style>
+        :root {
+            --bg: #080c14;
+            --surface: #121927;
+            --border: #222d3d;
+            --accent: #00ffcc;
+            --text: #f0f6fc;
+            --muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            overscroll-behavior: none;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: calc(env(safe-area-inset-top, 8px) + 8px) 16px calc(env(safe-area-inset-bottom, 10px) + 12px) 16px;
+            justify-content: space-between;
+        }
+
+        /* Top Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .title span {
+            color: var(--accent);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slide-counter {
+            font-family: monospace;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--muted);
+        }
+
+        .slide-counter span {
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        .btn-fullscreen {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .btn-fullscreen:active {
+            transform: scale(0.92);
+            background: #1c2638;
+        }
+
+        /* 16:9 Slide Preview Canvas */
+        .preview-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            margin: 14px 0;
+        }
+
+        .preview-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            touch-action: pan-y;
+        }
+
+        .preview-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Clean Blank Screen Placeholder for Testing */
+        .blank-slide {
+            width: 100%;
+            height: 100%;
+            background: #0a0f18;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 6px;
+            color: #3b485d;
+        }
+
+        .blank-slide-num {
+            font-family: monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #556682;
+            letter-spacing: 1px;
+        }
+
+        .blank-slide-hint {
+            font-size: 0.75rem;
+            color: #313c4d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Uber Simple Giant Arrow Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            height: 130px;
+        }
+
+        .btn-arrow {
+            border: none;
+            border-radius: 18px;
+            font-size: 3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.08s ease, filter 0.08s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-arrow:active {
+            transform: scale(0.95);
+            filter: brightness(1.2);
+        }
+
+        .btn-prev {
+            background: #141c2b;
+            border: 1px solid var(--border);
+            color: #f0f6fc;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #00ffcc 0%, #00d2a8 100%);
+            color: #061018;
+            box-shadow: 0 0 24px rgba(0, 255, 204, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Top Bar: Title & Fullscreen -->
+        <div class="header">
+            <div class="title">
+                🎤 Pres<span>Remote</span>
+                <span style="display:none;">Stage Slide Remote</span>
+            </div>
+            <div class="header-right">
+                <div class="slide-counter">
+                    <span id="currentNum">1</span> / <span id="totalNum">3</span>
+                </div>
+                <button type="button" class="btn-fullscreen" onclick="toggleFullscreen()" title="Fullscreen">
+                    ⛶
+                </button>
+            </div>
+        </div>
+
+        <!-- Center: Slide Preview with Swipe -->
+        <div class="preview-container">
+            <div class="preview-frame" id="slidePreviewCard">
+                <img id="currentImage" src="" alt="Slide Preview" style="display: none;">
+                <div id="blankCard" class="blank-slide">
+                    <div class="blank-slide-num" id="blankSlideText">Slide 1</div>
+                    <div class="blank-slide-hint">Test Blank Screen</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom: Uber Simple Arrow Controls -->
+        <div class="controls">
+            <button type="button" class="btn-arrow btn-prev" id="btnPrev" onclick="stepSlide(-1)" aria-label="Previous Slide">
+                ⬅
+            </button>
+            <button type="button" class="btn-arrow btn-next" id="btnNext" onclick="stepSlide(1)" aria-label="Next Slide">
+                ➔
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Simple blank test slides if no custom presentation slides exist yet
+        const DEFAULT_TEST_SLIDES = [
+            { id: 'test_1', title: 'Slide 1', url: null },
+            { id: 'test_2', title: 'Slide 2', url: null },
+            { id: 'test_3', title: 'Slide 3', url: null }
+        ];
+        const DEFAULT_REHEARSAL_SLIDES = DEFAULT_TEST_SLIDES;
+
+        let slides = [];
+        let currentIndex = 0;
+        let isPolling = false;
+        let lastManifestVersion = 0;
+
+        // Fetch slides from backend
+        async function fetchSlides() {
+            try {
+                const res = await fetch(resolveUrl('/api/slides/presentation'));
+                const data = await res.json();
+                if (data.status === 'success' && data.slides && data.slides.length > 0) {
+                    slides = data.slides;
+                } else {
+                    slides = DEFAULT_TEST_SLIDES;
+                }
+                updateUI();
+            } catch (e) {
+                slides = DEFAULT_TEST_SLIDES;
+                updateUI();
+            }
+        }
+
+        // Poll presentation state (synced with admin cut-in)
+        async function pollState() {
+            if (isPolling) return;
+            isPolling = true;
+            try {
+                const res = await fetch(resolveUrl('/api/slideshow/state'));
+                const data = await res.json();
+                if (data.status === 'success' && data.state) {
+                    const state = data.state;
+                    const pres = state.presentation || {};
+                    const prevIndex = currentIndex;
+
+                    if (state.mode === 'presentation' || pres.active) {
+                        currentIndex = pres.current_index || 0;
+                    }
+
+                    if (state.manifest_updated_at && state.manifest_updated_at !== lastManifestVersion) {
+                        lastManifestVersion = state.manifest_updated_at;
+                        await fetchSlides();
+                    }
+
+                    if (prevIndex !== currentIndex) {
+                        updateUI();
+                    }
+                }
+            } catch (e) {
+            } finally {
+                isPolling = false;
+            }
+        }
+
+        function updateUI() {
+            const total = slides.length;
+            const validIdx = Math.max(0, Math.min(currentIndex, total - 1));
+            const current = slides[validIdx] || {};
+
+            document.getElementById('currentNum').innerText = validIdx + 1;
+            document.getElementById('totalNum').innerText = total;
+
+            const img = document.getElementById('currentImage');
+            const blank = document.getElementById('blankCard');
+            const blankText = document.getElementById('blankSlideText');
+
+            if (current.url) {
+                img.style.display = 'block';
+                const resolvedUrl = resolveUrl(current.url);
+                if (img.src !== resolvedUrl && !img.src.endsWith(resolvedUrl)) {
+                    img.src = resolvedUrl;
+                }
+                blank.style.display = 'none';
+            } else {
+                img.style.display = 'none';
+                blank.style.display = 'flex';
+                blankText.innerText = current.title || `Slide ${validIdx + 1}`;
+            }
+        }
+
+        function hapticFeedback() {
+            if (navigator.vibrate) {
+                try { navigator.vibrate(35); } catch(e) {}
+            }
+        }
+
+        async function stepSlide(delta) {
+            hapticFeedback();
+            const total = slides.length;
+            const newIndex = Math.max(0, Math.min(currentIndex + delta, total - 1));
+
+            try {
+                const res = await fetch(resolveUrl('/api/slideshow/presentation/step'), {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ delta: delta })
+                });
+                const data = await res.json();
+                if (data.status === 'success' && data.state && data.state.presentation) {
+                    currentIndex = data.state.presentation.current_index;
+                } else {
+                    currentIndex = newIndex;
+                }
+            } catch (e) {
+                currentIndex = newIndex;
+            }
+            updateUI();
+        }
+
+        async function jumpToSlide(index) {
+            hapticFeedback();
+            const total = slides.length;
+            const validIndex = Math.max(0, Math.min(index, total - 1));
+            try {
+                const res = await fetch(resolveUrl('/api/slideshow/presentation/set_index'), {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ index: validIndex })
+                });
+                const data = await res.json();
+                if (data.status === 'success' && data.state && data.state.presentation) {
+                    currentIndex = data.state.presentation.current_index;
+                } else {
+                    currentIndex = validIndex;
+                }
+            } catch (e) {
+                currentIndex = validIndex;
+            }
+            updateUI();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                }
+            }
+        }
+
+        // Swipe gestures on preview card
+        const previewCard = document.getElementById('slidePreviewCard');
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        previewCard.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        previewCard.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const diff = touchEndX - touchStartX;
+            if (Math.abs(diff) > 35) {
+                if (diff < 0) {
+                    stepSlide(1); // Swipe left -> Next
+                } else {
+                    stepSlide(-1); // Swipe right -> Prev
+                }
+            }
+        }
+
+        // Keyboard & clicker keys
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'ArrowRight' || e.code === 'Space' || e.code === 'Enter' || e.code === 'PageDown') {
+                e.preventDefault();
+                stepSlide(1);
+            } else if (e.code === 'ArrowLeft' || e.code === 'PageUp' || e.code === 'Backspace') {
+                e.preventDefault();
+                stepSlide(-1);
+            } else if (e.code === 'KeyF') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+
+        // Service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register(resolveUrl('/presremote-sw.js')).catch(() => {});
+            });
+        }
+
+        fetchSlides();
+        pollState();
+        setInterval(pollState, 600);
+    </script>
+</body>
+</html>

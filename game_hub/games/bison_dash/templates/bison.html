@@ -2,243 +2,1152 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bison Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bison Builder & Racer Workshop - Bison Dash</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #222; color: #fff; display: flex; height: 100vh; margin: 0; box-sizing: border-box; }
-        #left-panel { width: 300px; border-right: 1px solid #555; padding-right: 20px; overflow-y: auto; }
-        #right-panel { flex-grow: 1; padding-left: 20px; display: flex; flex-direction: column; }
-        .bison-item { padding: 10px; background: #333; margin-bottom: 5px; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-        .bison-item:hover { background: #444; }
-        .bison-item.selected { border: 2px solid #4caf50; }
-        .delete-btn { background: #f44336; padding: 5px 10px; font-size: 0.8rem; border: none; color: white; border-radius: 3px; cursor: pointer; }
-        .delete-btn:hover { background: #d32f2f; }
-        .form-group { margin-bottom: 15px; }
-        label { display: inline-block; width: 100px; }
-        input[type="text"], input[type="color"], input[type="number"] { padding: 8px; width: 200px; border-radius: 4px; border: 1px solid #555; background: #444; color: white; }
-        button.action-btn { padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-top: 10px; }
-        button.action-btn:hover { background: #45a049; }
-        button.add-btn { width: 100%; margin-bottom: 15px; }
-        #preview-area { margin-top: 20px; flex-grow: 1; background: #111; border: 2px dashed #555; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
-        #sprite-preview { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+        :root {
+            --bg-color: #0c1017;
+            --panel-bg: #141a24;
+            --card-bg: #1b2332;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.35);
+            --gold: #ffd700;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --border: #273347;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Command Header */
+        header {
+            background: #111722;
+            border-bottom: 2px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-brand h1 {
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-nav {
+            background: #212c3d;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-nav:hover {
+            background: var(--accent);
+            color: black;
+            border-color: var(--accent);
+        }
+
+        /* Active Lineup Strip */
+        .lineup-strip {
+            background: #10151f;
+            border-bottom: 1px solid var(--border);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow-x: auto;
+        }
+
+        .lineup-label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .slot-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .slot-pill.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.25);
+        }
+
+        .slot-num {
+            font-weight: 900;
+            color: var(--accent);
+        }
+
+        .slot-name {
+            font-weight: 700;
+        }
+
+        /* Main Workspace Layout */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: calc(100vh - 110px);
+        }
+
+        /* Left Roster Panel */
+        .roster-panel {
+            width: 320px;
+            background: var(--panel-bg);
+            border-right: 2px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .roster-header {
+            margin-bottom: 14px;
+        }
+
+        .roster-header h2 {
+            font-size: 1.05rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .btn-create {
+            width: 100%;
+            background: linear-gradient(135deg, #00ffcc 0%, #00b894 100%);
+            border: none;
+            color: black;
+            font-weight: 900;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.25);
+            margin-bottom: 8px;
+        }
+
+        .btn-random {
+            width: 100%;
+            background: #251e3e;
+            border: 1px solid #7c3aed;
+            color: #c084fc;
+            font-weight: 800;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-bottom: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-random:hover {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .roster-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .bison-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .bison-item:hover {
+            border-color: rgba(0, 255, 204, 0.5);
+            background: #232d3f;
+        }
+
+        .bison-item.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+            background: #1e2838;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .item-color-pip {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .item-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .item-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .btn-del {
+            background: rgba(255, 71, 87, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* Right Workshop Editor Panel */
+        .editor-panel {
+            flex: 1;
+            padding: 24px 32px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .empty-selection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 24px;
+        }
+
+        /* Avatar & Preview Deck */
+        .preview-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .canvas-container {
+            width: 260px;
+            height: 260px;
+            background: #080c12;
+            border: 2px dashed #273347;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #avatarCanvas {
+            image-rendering: pixelated;
+        }
+
+        .preview-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 255, 204, 0.15);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        .sprite-upload-box {
+            width: 100%;
+            margin-top: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+            text-align: center;
+        }
+
+        /* Forms & Stats */
+        .form-section {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gold);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input[type="text"] {
+            background: #090d14;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .form-group input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #090d14;
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        .color-input-wrapper input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+        }
+
+        /* Stat Sliders */
+        .stat-slider-row {
+            margin-bottom: 16px;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .stat-label {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .stat-value {
+            font-weight: 900;
+            color: var(--accent);
+            font-family: monospace;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        /* Slot Assignment Card */
+        .slot-assignment-box {
+            background: #0c1520;
+            border: 2px dashed var(--accent);
+            border-radius: 12px;
+            padding: 18px;
+            margin-top: 15px;
+        }
+
+        .slot-btn-group {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr) auto;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-slot-assign {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px 6px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .btn-slot-assign:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        .btn-slot-assign.assigned {
+            background: var(--accent);
+            color: black;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .btn-unassign {
+            background: rgba(255, 71, 87, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .btn-save-master {
+            background: linear-gradient(135deg, #ffd700 0%, #ff9900 100%);
+            border: none;
+            color: black;
+            font-weight: 900;
+            font-size: 1.1rem;
+            padding: 16px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.35);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.1s;
+        }
+
+        .btn-save-master:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
-    <div id="left-panel">
-        <h2>Bison Roster</h2>
-        <button class="action-btn add-btn" onclick="createNewBison()">+ Create New Bison</button>
-        <div id="bison-list"></div>
+
+    <header>
+        <div class="header-brand">
+            <h1>⚡ BISON DASH // RACER WORKSHOP</h1>
+            <span style="font-size: 0.8rem; color: var(--gold); background: rgba(255,215,0,0.1); border: 1px solid var(--gold); padding: 2px 8px; border-radius: 4px;">Roster & Mech Lab</span>
+        </div>
+        <div class="nav-actions">
+            <a href="/projector" target="_blank" class="btn-nav">🖥️ Projector Screen</a>
+            <a href="/admin" class="btn-nav">🕹️ MC Flight Deck</a>
+            <a href="http://127.0.0.1:8000/" target="_blank" class="btn-nav">💻 Master Admin</a>
+        </div>
+    </header>
+
+    <!-- Top Active Lineup Strip -->
+    <div class="lineup-strip" id="lineup-strip">
+        <span class="lineup-label">Live Track Lineup:</span>
+        <div id="lineup-slots-display" style="display: flex; gap: 8px;">
+            <!-- Loaded via JS -->
+        </div>
     </div>
 
-    <div id="right-panel">
-        <h2>Edit Bison</h2>
-        <div id="editor" style="display: none;">
-            <div class="form-group">
-                <label>ID:</label>
-                <input type="text" id="edit-id" readonly style="background: #222; border: none;" />
+    <div class="workspace">
+        <!-- Left Column: Roster -->
+        <aside class="roster-panel">
+            <div class="roster-header">
+                <h2>Racer Registry</h2>
+                <button class="btn-create" onclick="createNewBison()">+ Create Blank Racer</button>
+                <button class="btn-random" onclick="rollProceduralRacer()">🎲 Roll Random Cyber-Racer</button>
             </div>
-            <div class="form-group">
-                <label>Name:</label>
-                <input type="text" id="edit-name" />
+            <div class="roster-list" id="bison-list">
+                <!-- Bison cards rendered here -->
             </div>
-            <div class="form-group">
-                <label>Color:</label>
-                <input type="color" id="edit-color" />
-            </div>
-            <div class="form-group">
-                <label>Speed Base:</label>
-                <input type="number" id="edit-speed" min="10" max="100" step="1" value="50" />
+        </aside>
+
+        <!-- Right Column: Workshop Editor -->
+        <main class="editor-panel" id="editor-panel">
+            <div id="no-selection" class="empty-selection">
+                <div style="margin-bottom: 12px;"><img src="/static/img/bison_logo.png" style="width: 72px; height: 72px; vertical-align: middle; filter: drop-shadow(0 0 12px rgba(0,255,204,0.6));" alt="Bison" /></div>
+                <h3>Select a racer from the registry or roll a new cyber-bison!</h3>
+                <p style="margin-top: 6px;">Configure machine frame stats, robot jockey specs, and deploy directly to Track Slots 1–6.</p>
             </div>
 
-            <div class="form-group">
-                <label>Sprite (PNG):</label>
-                <input type="file" id="edit-sprite-upload" accept="image/png" />
-            </div>
+            <div id="editor-form" style="display: none;">
+                <div class="editor-grid">
+                    <!-- Left: Avatar Preview -->
+                    <div class="preview-card">
+                        <div class="canvas-container">
+                            <span class="preview-badge" id="preview-badge">SLOT UNASSIGNED</span>
+                            <canvas id="avatarCanvas" width="240" height="240"></canvas>
+                        </div>
 
-            <div>
-                <button class="action-btn" onclick="saveCurrentBison()">Save</button>
-                <span id="save-status" style="margin-left:10px; color: #4caf50;"></span>
-            </div>
+                        <div style="font-size: 1.15rem; font-weight: 900; margin-bottom: 4px;" id="card-name-title">Racer Name</div>
+                        <div style="font-size: 0.85rem; color: var(--accent); margin-bottom: 14px;" id="card-jockey-title">Jockey: Rider</div>
 
-            <div id="preview-area">
-                <span id="preview-placeholder" style="color: #666;">No Sprite Uploaded</span>
-                <img id="sprite-preview" src="" alt="Sprite Preview" />
+                        <div style="display: flex; gap: 8px; width: 100%;">
+                            <button class="btn-nav" style="flex: 1; font-size: 0.75rem;" onclick="downloadSpritePNG()">💾 Export PNG</button>
+                            <button class="btn-nav" style="flex: 1; font-size: 0.75rem;" onclick="triggerUploadClick()">📁 Upload PNG</button>
+                            <input type="file" id="sprite-file-input" accept="image/png" style="display:none;" onchange="handleSpriteUpload(event)">
+                        </div>
+
+                        <div class="sprite-upload-box">
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                Custom sprites override procedural rendering on the 1080p projector track.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Specs & Sliders -->
+                    <div>
+                        <!-- Section 1: Machine Frame -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span>🦾 Machine Frame (Bison Mech)</span>
+                            </div>
+
+                            <div class="input-row">
+                                <div class="form-group">
+                                    <label>Racer ID</label>
+                                    <input type="text" id="edit-id" readonly style="color: var(--text-muted); background: #070a0f;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Mech Name</label>
+                                    <input type="text" id="edit-name" placeholder="e.g. Thunder Stampede" maxlength="28" oninput="updateCanvasPreview()">
+                                </div>
+                            </div>
+
+                            <div class="input-row">
+                                <div class="form-group">
+                                    <label>Frame Primary Color</label>
+                                    <div class="color-input-wrapper">
+                                        <input type="color" id="edit-color" value="#00ffcc" onchange="updateCanvasPreview()">
+                                        <span id="color-hex-label" style="font-family: monospace; font-size: 0.85rem;">#00ffcc</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cyber Visor / Eye Glow</label>
+                                    <div class="color-input-wrapper">
+                                        <input type="color" id="edit-visor-color" value="#ffd700" onchange="updateCanvasPreview()">
+                                        <span id="visor-hex-label" style="font-family: monospace; font-size: 0.85rem;">#ffd700</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stat Sliders -->
+                            <div class="stat-slider-row">
+                                <div class="stat-header">
+                                    <span class="stat-label">⚡ Base Speed (Straightaway D1000 modifier)</span>
+                                    <span class="stat-value" id="val-speed">50</span>
+                                </div>
+                                <input type="range" id="stat-speed" min="10" max="150" value="50" oninput="syncStatDisplay('speed')">
+                            </div>
+
+                            <div class="stat-slider-row">
+                                <div class="stat-header">
+                                    <span class="stat-label">🔄 Cornering Torque (Curved Apex D6 modifier)</span>
+                                    <span class="stat-value" id="val-cornering">5</span>
+                                </div>
+                                <input type="range" id="stat-cornering" min="1" max="10" value="5" oninput="syncStatDisplay('cornering')">
+                            </div>
+
+                            <div class="stat-slider-row">
+                                <div class="stat-header">
+                                    <span class="stat-label">🔋 Frame Stamina (Home Stretch D100 modifier)</span>
+                                    <span class="stat-value" id="val-stamina">50</span>
+                                </div>
+                                <input type="range" id="stat-stamina" min="10" max="100" value="50" oninput="syncStatDisplay('stamina')">
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Algorithmic Jockey -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span>🤖 Algorithmic Jockey Rider</span>
+                            </div>
+
+                            <div class="input-row">
+                                <div class="form-group">
+                                    <label>Jockey Name / Call-Sign</label>
+                                    <input type="text" id="edit-jockey-name" placeholder="e.g. Jockey Jax" oninput="updateCanvasPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Jockey Helmet Color</label>
+                                    <div class="color-input-wrapper">
+                                        <input type="color" id="edit-jockey-color" value="#ff4757" onchange="updateCanvasPreview()">
+                                        <span id="jockey-hex-label" style="font-family: monospace; font-size: 0.85rem;">#ff4757</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stat-slider-row">
+                                <div class="stat-header">
+                                    <span class="stat-label">🎯 Reaction Time (Starting Gate Launch D20 modifier)</span>
+                                    <span class="stat-value" id="val-reaction">8</span>
+                                </div>
+                                <input type="range" id="stat-reaction" min="1" max="15" value="8" oninput="syncStatDisplay('reaction')">
+                            </div>
+
+                            <div class="stat-slider-row">
+                                <div class="stat-header">
+                                    <span class="stat-label">💥 Lane Aggression (Pass maneuver bias)</span>
+                                    <span class="stat-value" id="val-aggression">5</span>
+                                </div>
+                                <input type="range" id="stat-aggression" min="1" max="10" value="5" oninput="syncStatDisplay('aggression')">
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Live Track Assignment (Slots 1-6) -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span>🏁 Deploy to Live Track Slot</span>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+                                Assigning a racer directly maps them into the live 1080p projector race and tablet betting kiosk terminals.
+                            </p>
+
+                            <div class="slot-btn-group">
+                                <button type="button" class="btn-slot-assign" id="btn-slot-1" onclick="selectSlot(1)">Slot 1</button>
+                                <button type="button" class="btn-slot-assign" id="btn-slot-2" onclick="selectSlot(2)">Slot 2</button>
+                                <button type="button" class="btn-slot-assign" id="btn-slot-3" onclick="selectSlot(3)">Slot 3</button>
+                                <button type="button" class="btn-slot-assign" id="btn-slot-4" onclick="selectSlot(4)">Slot 4</button>
+                                <button type="button" class="btn-slot-assign" id="btn-slot-5" onclick="selectSlot(5)">Slot 5</button>
+                                <button type="button" class="btn-slot-assign" id="btn-slot-6" onclick="selectSlot(6)">Slot 6</button>
+                                <button type="button" class="btn-unassign" onclick="selectSlot(null)">Bench / Standby</button>
+                            </div>
+                        </div>
+
+                        <!-- Save Action -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                            <span id="save-feedback" style="font-weight: 800; font-size: 0.95rem;"></span>
+                            <button type="button" class="btn-save-master" onclick="saveActiveBison()">
+                                <span>💾 Save Racer Profile & Deploy</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div id="no-selection" style="flex-grow: 1; display: flex; align-items: center; justify-content: center; color: #666;">
-            Select a bison from the roster or create a new one.
-        </div>
+        </main>
     </div>
 
     <script>
-        let currentBisons = [];
-        let selectedBisonId = null;
+        let roster = [];
+        let activeLineup = [];
+        let selectedBison = null;
+        let selectedSlotIndex = null;
 
-        async function loadBisons() {
+        const FIRST_NAMES = ["Volt", "Cyber", "Thunder", "Quantum", "Apex", "Titan", "Neon", "Rogue", "Hyper", "Blaze", "Iron", "Vortex", "Matrix", "Phantom"];
+        const LAST_NAMES = ["Stampede", "Hooves", "Charger", "Runner", "Strider", "Overdrive", "Torque", "Crusher", "Circuit", "Sprint", "Velocity", "Glitch"];
+        const JOCKEY_NAMES = ["Jockey Jax", "Nova-7", "Pixel Pete", "Dash Donna", "Zero-Cool", "Ada Byte", "Turing", "Rusty Bolt", "Vector", "Circuit Sam"];
+
+        // Init
+        window.addEventListener('load', async () => {
+            await refreshAll();
+        });
+
+        async function refreshAll() {
+            await loadLineup();
+            await loadRoster();
+        }
+
+        async function loadLineup() {
+            try {
+                const res = await fetch('/api/bisondash/lineup');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    activeLineup = data.lineup;
+                    renderLineupStrip();
+                }
+            } catch(e) { console.error("Lineup load failed", e); }
+        }
+
+        async function loadRoster() {
             try {
                 const res = await fetch('/api/bisondash/bisons');
                 const data = await res.json();
-                if(data.status === 'success') {
-                    currentBisons = data.bisons;
-                    renderList();
+                if (data.status === 'success') {
+                    roster = data.bisons;
+                    renderRosterList();
+                    if (selectedBison) {
+                        const updated = roster.find(b => b.id === selectedBison.id);
+                        if (updated) selectBison(updated.id);
+                    }
                 }
-            } catch(e) { console.error("Failed to load bisons"); }
+            } catch(e) { console.error("Roster load failed", e); }
         }
 
-        function renderList() {
-            const list = document.getElementById('bison-list');
-            list.innerHTML = '';
-            currentBisons.forEach(b => {
-                const item = document.createElement('div');
-                item.className = `bison-item ${b.id === selectedBisonId ? 'selected' : ''}`;
+        function renderLineupStrip() {
+            const strip = document.getElementById('lineup-slots-display');
+            strip.innerHTML = '';
 
-                const nameSpan = document.createElement('span');
-                nameSpan.innerText = b.name;
-                nameSpan.style.borderLeft = `5px solid ${b.color}`;
-                nameSpan.style.paddingLeft = '10px';
+            for (let i = 1; i <= 6; i++) {
+                const item = activeLineup.find(b => b.slot === i);
+                const pill = document.createElement('div');
+                pill.className = `slot-pill ${(selectedBison && selectedSlotIndex === i) ? 'active' : ''}`;
+                const name = item && item.name ? item.name : 'Empty Slot';
+                const color = item && item.color ? item.color : '#555';
 
-                item.onclick = (e) => {
-                    if(!e.target.classList.contains('delete-btn')) {
-                        selectBison(b.id);
+                pill.innerHTML = `
+                    <span class="slot-num">#${i}</span>
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${color};"></span>
+                    <span class="slot-name">${name}</span>
+                `;
+                pill.onclick = () => {
+                    if (item && item.id) {
+                        selectBison(item.id);
+                    } else if (selectedBison) {
+                        selectSlot(i);
                     }
                 };
+                strip.appendChild(pill);
+            }
+        }
 
-                const delBtn = document.createElement('button');
-                delBtn.className = 'delete-btn';
-                delBtn.innerText = 'Del';
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    deleteBison(b.id);
-                };
+        function renderRosterList() {
+            const list = document.getElementById('bison-list');
+            list.innerHTML = '';
 
-                item.appendChild(nameSpan);
-                item.appendChild(delBtn);
-                list.appendChild(item);
+            roster.forEach(b => {
+                const assignedSlot = activeLineup.find(l => l.id === b.id);
+                const slotText = assignedSlot ? `Slot ${assignedSlot.slot}` : 'Standby';
+
+                const card = document.createElement('div');
+                card.className = `bison-item ${(selectedBison && selectedBison.id === b.id) ? 'selected' : ''}`;
+                card.onclick = () => selectBison(b.id);
+
+                card.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-color-pip" style="background:${b.color}"></div>
+                        <div>
+                            <div class="item-name">${b.name}</div>
+                            <div class="item-meta">${slotText} &bull; Spd ${b.stats ? b.stats.bison_speed : (b.speed_base || 50)}</div>
+                        </div>
+                    </div>
+                    <button class="btn-del" onclick="deleteBison('${b.id}', event)">Del</button>
+                `;
+                list.appendChild(card);
             });
         }
 
         function selectBison(id) {
-            selectedBisonId = id;
-            renderList();
+            const bison = roster.find(b => b.id === id);
+            if (!bison) return;
 
-            const bison = currentBisons.find(b => b.id === id);
-            if(bison) {
-                document.getElementById('editor').style.display = 'block';
-                document.getElementById('no-selection').style.display = 'none';
+            selectedBison = bison;
+            document.getElementById('no-selection').style.display = 'none';
+            document.getElementById('editor-form').style.display = 'block';
 
-                document.getElementById('edit-id').value = bison.id;
-                document.getElementById('edit-name').value = bison.name;
-                document.getElementById('edit-color').value = bison.color;
-                document.getElementById('edit-speed').value = bison.speed_base || 50;
+            // Populate Form
+            document.getElementById('edit-id').value = bison.id;
+            document.getElementById('edit-name').value = bison.name;
+            document.getElementById('edit-color').value = bison.color;
+            document.getElementById('color-hex-label').innerText = bison.color;
 
-                const previewImg = document.getElementById('sprite-preview');
-                const placeholder = document.getElementById('preview-placeholder');
+            const stats = bison.stats || {};
+            document.getElementById('stat-speed').value = stats.bison_speed || bison.speed_base || 50;
+            document.getElementById('stat-cornering').value = stats.bison_cornering || 5;
+            document.getElementById('stat-stamina').value = stats.bison_stamina || 50;
+            document.getElementById('stat-reaction').value = stats.jockey_reaction || 8;
+            document.getElementById('stat-aggression').value = stats.jockey_aggression || 5;
 
-                const imgUrl = `/static/bisons/${bison.id}.png?t=${new Date().getTime()}`;
+            document.getElementById('edit-jockey-name').value = bison.jockey_name || "Rider";
+            document.getElementById('edit-jockey-color').value = bison.jockey_color || "#ff4757";
+            document.getElementById('jockey-hex-label').innerText = bison.jockey_color || "#ff4757";
 
-                previewImg.onload = () => {
-                    previewImg.style.display = 'block';
-                    placeholder.style.display = 'none';
-                };
-                previewImg.onerror = () => {
-                    previewImg.style.display = 'none';
-                    placeholder.style.display = 'block';
-                };
-                previewImg.src = imgUrl;
+            syncAllStatDisplays();
 
-                document.getElementById('edit-sprite-upload').value = '';
+            // Detect current slot
+            const curSlot = activeLineup.find(l => l.id === bison.id);
+            selectSlot(curSlot ? curSlot.slot : null, false);
+
+            renderRosterList();
+            renderLineupStrip();
+            updateCanvasPreview();
+        }
+
+        function selectSlot(slotNum, triggerRerender = true) {
+            selectedSlotIndex = slotNum;
+            for (let i = 1; i <= 6; i++) {
+                const btn = document.getElementById(`btn-slot-1`);
+                const el = document.getElementById(`btn-slot-${i}`);
+                if (el) {
+                    if (i === slotNum) {
+                        el.classList.add('assigned');
+                    } else {
+                        el.classList.remove('assigned');
+                    }
+                }
+            }
+
+            const badge = document.getElementById('preview-badge');
+            if (badge) {
+                badge.innerText = slotNum ? `DEPLOYED TO SLOT ${slotNum}` : 'STANDBY / BENCH';
+                badge.style.color = slotNum ? 'var(--gold)' : 'var(--accent)';
+                badge.style.borderColor = slotNum ? 'var(--gold)' : 'var(--accent)';
+            }
+
+            if (triggerRerender) {
+                renderLineupStrip();
             }
         }
 
-        async function createNewBison() {
+        function syncStatDisplay(stat) {
+            const val = document.getElementById(`stat-${stat}`).value;
+            document.getElementById(`val-${stat}`).innerText = val;
+        }
+
+        function syncAllStatDisplays() {
+            ['speed', 'cornering', 'stamina', 'reaction', 'aggression'].forEach(syncStatDisplay);
+            document.getElementById('color-hex-label').innerText = document.getElementById('edit-color').value;
+            document.getElementById('jockey-hex-label').innerText = document.getElementById('edit-jockey-color').value;
+        }
+
+        // Procedural Bison Generator
+        function rollProceduralRacer() {
+            const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+            const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+            const jockey = JOCKEY_NAMES[Math.floor(Math.random() * JOCKEY_NAMES.length)];
+
+            // Random vibrant retro hex color
+            const palette = ["#00ffcc", "#ff007f", "#ffd700", "#7928ca", "#0070f3", "#ff4d4d", "#00dfd8", "#f5a623"];
+            const color = palette[Math.floor(Math.random() * palette.length)];
+            const jockeyColor = palette[Math.floor(Math.random() * palette.length)];
+
             const newId = 'bison_' + Math.random().toString(16).slice(2, 8);
+            const speed = Math.floor(Math.random() * 50) + 40; // 40-90
+
             const newBison = {
                 id: newId,
-                name: "New Bison",
-                color: "#ffffff",
-                speed_base: 50
+                name: `${first} ${last}`,
+                color: color,
+                speed_base: speed,
+                stats: {
+                    jockey_reaction: Math.floor(Math.random() * 8) + 4,
+                    bison_speed: speed,
+                    bison_cornering: Math.floor(Math.random() * 5) + 3,
+                    bison_stamina: Math.floor(Math.random() * 40) + 40,
+                    jockey_aggression: Math.floor(Math.random() * 6) + 3,
+                    jockey_luck: Math.floor(Math.random() * 6) + 2
+                },
+                jockey_name: jockey,
+                jockey_color: jockeyColor
+            };
+
+            roster.unshift(newBison);
+            selectBison(newId);
+            saveActiveBison();
+        }
+
+        function createNewBison() {
+            const newId = 'bison_' + Math.random().toString(16).slice(2, 8);
+            const blank = {
+                id: newId,
+                name: "Racer " + newId.slice(-4).toUpperCase(),
+                color: "#00ffcc",
+                speed_base: 50,
+                stats: {
+                    jockey_reaction: 8,
+                    bison_speed: 50,
+                    bison_cornering: 5,
+                    bison_stamina: 50,
+                    jockey_aggression: 5,
+                    jockey_luck: 5
+                },
+                jockey_name: "Rider",
+                jockey_color: "#ff4757"
+            };
+            roster.unshift(blank);
+            selectBison(newId);
+        }
+
+        // Procedural Sprite Drawing on Canvas
+        function updateCanvasPreview() {
+            const canvas = document.getElementById('avatarCanvas');
+            const ctx = canvas.getContext('2d');
+            const color = document.getElementById('edit-color').value;
+            const visorColor = document.getElementById('edit-visor-color').value;
+            const jockeyColor = document.getElementById('edit-jockey-color').value;
+            const name = document.getElementById('edit-name').value || 'Racer';
+            const jockeyName = document.getElementById('edit-jockey-name').value || 'Rider';
+
+            document.getElementById('card-name-title').innerText = name;
+            document.getElementById('card-jockey-title').innerText = `Jockey: ${jockeyName}`;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw stylized Cyber-Bison Mech
+            const cx = 120, cy = 130;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(cx, cy + 65, 75, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Legs (4 chunky mechanical pistons)
+            ctx.fillStyle = '#1b2332';
+            ctx.fillRect(cx - 50, cy + 20, 14, 40);
+            ctx.fillRect(cx - 25, cy + 25, 14, 38);
+            ctx.fillRect(cx + 15, cy + 25, 14, 38);
+            ctx.fillRect(cx + 38, cy + 20, 14, 40);
+
+            // Main Bison Hull / Torso
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(cx - 65, cy - 25, 130, 60, [20, 30, 15, 15]);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Heavy Shoulder Hump (Bison Silhouette)
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(cx - 20, cy - 30, 42, Math.PI, 0);
+            ctx.fill();
+            ctx.stroke();
+
+            // Armored Head
+            ctx.fillStyle = '#111822';
+            ctx.beginPath();
+            ctx.roundRect(cx + 40, cy - 35, 45, 45, [10, 15, 15, 10]);
+            ctx.fill();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Horns (Aggressive forward curve)
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(cx + 55, cy - 35);
+            ctx.quadraticCurveTo(cx + 70, cy - 65, cx + 90, cy - 50);
+            ctx.stroke();
+
+            // Cyber Visor / Eye
+            ctx.fillStyle = visorColor;
+            ctx.shadowColor = visorColor;
+            ctx.shadowBlur = 10;
+            ctx.fillRect(cx + 65, cy - 22, 18, 6);
+            ctx.shadowBlur = 0;
+
+            // Robot Jockey Rider on Back
+            ctx.fillStyle = '#0a0e14';
+            ctx.fillRect(cx - 15, cy - 45, 20, 25); // Jockey Body
+
+            // Jockey Helmet
+            ctx.fillStyle = jockeyColor;
+            ctx.beginPath();
+            ctx.arc(cx - 5, cy - 52, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Exhaust Thruster / Tail
+            ctx.fillStyle = '#ff4757';
+            ctx.fillRect(cx - 72, cy - 10, 8, 12);
+        }
+
+        async function saveActiveBison() {
+            if (!selectedBison) return;
+
+            const feedback = document.getElementById('save-feedback');
+            feedback.innerText = "Saving...";
+            feedback.style.color = "var(--gold)";
+
+            const id = document.getElementById('edit-id').value;
+            const name = document.getElementById('edit-name').value.trim();
+            const color = document.getElementById('edit-color').value;
+
+            const payload = {
+                id: id,
+                name: name || "Unnamed Racer",
+                color: color,
+                speed_base: parseInt(document.getElementById('stat-speed').value) || 50,
+                stats: {
+                    jockey_reaction: parseInt(document.getElementById('stat-reaction').value) || 8,
+                    bison_speed: parseInt(document.getElementById('stat-speed').value) || 50,
+                    bison_cornering: parseInt(document.getElementById('stat-cornering').value) || 5,
+                    bison_stamina: parseInt(document.getElementById('stat-stamina').value) || 50,
+                    jockey_aggression: parseInt(document.getElementById('stat-aggression').value) || 5,
+                    jockey_luck: 5
+                },
+                jockey_name: document.getElementById('edit-jockey-name').value.trim() || "Rider",
+                jockey_color: document.getElementById('edit-jockey-color').value,
+                slot: selectedSlotIndex
             };
 
             try {
                 const res = await fetch('/api/bisondash/bisons/save', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newBison)
-                });
-                const data = await res.json();
-                if(data.status === 'success') {
-                    await loadBisons();
-                    selectBison(newId);
-                }
-            } catch(e) { console.error("Failed to create"); }
-        }
-
-        async function saveCurrentBison() {
-            if(!selectedBisonId) return;
-
-            const payload = {
-                id: document.getElementById('edit-id').value,
-                name: document.getElementById('edit-name').value,
-                color: document.getElementById('edit-color').value,
-                speed_base: parseInt(document.getElementById('edit-speed').value) || 50
-            };
-
-            const statusEl = document.getElementById('save-status');
-
-            try {
-                let res = await fetch('/api/bisondash/bisons/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)
                 });
-                let data = await res.json();
-
-                if(data.status !== 'success') throw new Error("JSON save failed");
-
-                const fileInput = document.getElementById('edit-sprite-upload');
-                if(fileInput.files.length > 0) {
-                    const formData = new FormData();
-                    formData.append('file', fileInput.files[0]);
-                    formData.append('id', payload.id);
-
-                    res = await fetch('/api/bisondash/bisons/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    data = await res.json();
-                    if(data.status !== 'success') throw new Error("Upload failed");
+                const data = await res.json();
+                if (data.status === 'success') {
+                    feedback.innerText = "✅ Saved & Deployed to Track!";
+                    feedback.style.color = "var(--success)";
+                    setTimeout(() => feedback.innerText = "", 3000);
+                    await refreshAll();
+                } else {
+                    throw new Error(data.message);
                 }
-
-                statusEl.innerText = "Saved!";
-                setTimeout(() => statusEl.innerText = "", 2000);
-
-                await loadBisons();
-                selectBison(payload.id);
-
             } catch(e) {
-                statusEl.innerText = "Error saving";
-                statusEl.style.color = "red";
-                setTimeout(() => { statusEl.innerText = ""; statusEl.style.color = "#4caf50"; }, 3000);
+                feedback.innerText = "❌ Error saving racer";
+                feedback.style.color = "var(--danger)";
             }
         }
 
-        async function deleteBison(id) {
-            if(!confirm("Are you sure you want to delete this bison?")) return;
+        async function deleteBison(id, e) {
+            e.stopPropagation();
+            if (!confirm("Are you sure you want to decommission this racer?")) return;
 
             try {
                 const res = await fetch(`/api/bisondash/bisons/${id}`, { method: 'DELETE' });
                 const data = await res.json();
-                if(data.status === 'success') {
-                    if(selectedBisonId === id) {
-                        selectedBisonId = null;
-                        document.getElementById('editor').style.display = 'none';
+                if (data.status === 'success') {
+                    if (selectedBison && selectedBison.id === id) {
+                        selectedBison = null;
+                        document.getElementById('editor-form').style.display = 'none';
                         document.getElementById('no-selection').style.display = 'flex';
                     }
-                    loadBisons();
+                    await refreshAll();
                 }
-            } catch(e) { console.error("Failed to delete"); }
+            } catch(e) { alert("Error deleting"); }
         }
 
-        window.onload = loadBisons;
+        function downloadSpritePNG() {
+            const canvas = document.getElementById('avatarCanvas');
+            const a = document.createElement('a');
+            const name = document.getElementById('edit-name').value || 'Bison';
+            a.download = `${name.replace(/\s+/g, '_')}_sprite.png`;
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        }
+
+        function triggerUploadClick() {
+            document.getElementById('sprite-file-input').click();
+        }
+
+        async function handleSpriteUpload(e) {
+            const file = e.target.files[0];
+            if (!file || !selectedBison) return;
+
+            const formData = new FormData();
+            formData.append('id', selectedBison.id);
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/bisondash/bisons/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    alert("Sprite uploaded! It will be utilized on the live track.");
+                } else {
+                    alert("Upload failed: " + data.message);
+                }
+            } catch(err) {
+                alert("Upload error.");
+            }
+        }
     </script>
 </body>
 </html>

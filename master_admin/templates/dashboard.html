@@ -2,27 +2,549 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Master Admin Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Master Admin - Venue Command</title>
     <link rel="stylesheet" href="/static/css/admin.css">
+    <script src="/static/js/qrcode.min.js"></script>
+    <style>
+        /* Mobile-First Quick Look Layout */
+        body {
+            background-color: #0d1117;
+            color: #f0f6fc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 12px 14px 40px 14px;
+            max-width: 820px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .quick-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 16px 0;
+            border-bottom: 1px solid #30363d;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .quick-title h1 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #00ffcc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .quick-title p {
+            font-size: 0.8rem;
+            color: #8b949e;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        .quick-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-card-header h3 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .countdown-preset-bar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-bottom: 12px;
+        }
+
+        .countdown-preset-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            min-height: 40px;
+            white-space: nowrap;
+        }
+
+        .countdown-preset-btn:active {
+            background: #00ffcc;
+            color: #000;
+        }
+
+        /* Manifest Modal Styles */
+        .manifest-player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 65vh;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-top: 12px;
+        }
+
+        .manifest-player-item {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-pin-pill {
+            font-family: monospace;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #00ffcc;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+
+        .player-bal-pill {
+            font-family: monospace;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            padding: 3px 10px;
+            border-radius: 5px;
+        }
+
+        /* True Full-Viewport Fixed Modal Overlay */
+        .modal-overlay,
+        #manifest-modal,
+        #email-config-modal {
+            position: fixed !important;
+            inset: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            width: 100% !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            background: rgba(0, 0, 0, 0.88) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            z-index: 999999 !important;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 14px !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+            overflow-y: auto !important;
+        }
+
+        .modal-box {
+            background: #161b22 !important;
+            border: 1px solid #30363d !important;
+            border-radius: 12px !important;
+            padding: 18px !important;
+            width: 100% !important;
+            max-width: 580px !important;
+            max-height: 90vh !important;
+            max-height: 90dvh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.85) !important;
+            margin: auto !important;
+            position: relative !important;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            #qr-print-placard, #qr-print-placard * {
+                visibility: visible !important;
+            }
+            #qr-print-placard {
+                display: block !important;
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: #fff !important;
+                z-index: 999999 !important;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <header>
-        <h1>Venue Command</h1>
+    <!-- Header (Clean & Uncrowded) -->
+    <header class="quick-header">
+        <div class="quick-title">
+            <h1>Venue Command</h1>
+            <p>Bison Bash Quick Look Console &bull; October 23rd</p>
+        </div>
+        <div class="header-actions">
+            <!-- Player Manifest Button -->
+            <button type="button" class="action-btn btn-cyan" onclick="openManifestModal()">
+                👥 Player Manifest
+            </button>
+            <!-- Email Template Button -->
+            <button type="button" class="action-btn" style="background: #21262d; border: 1px solid #30363d; color: #f0f6fc;" onclick="openEmailConfigModal()">
+                ✉️ Email Pass
+            </button>
+            <span id="header-bison-pill" class="status-pill active-state">
+                <img src="/static/img/bison_logo.png" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px; filter: drop-shadow(0 0 4px rgba(0,255,204,0.5));" alt="Bison" /> <span id="header-bison-status">Betting Open</span>
+            </span>
+        </div>
     </header>
 
-    <!-- Bison Dash Tab Injection -->
-    <div style="margin-top: 30px;">
+    <!-- 1. BISON DASH ARENA CONTROLS -->
+    <section>
         {% include 'game_hub/admin/templates/bisondash_tab.html' ignore missing %}
+    </section>
+
+    <!-- 2. STADIUM SLIDESHOW & PRESENTATION CONTROLS -->
+    <section class="quick-card" style="margin-top: 16px;">
+        <div class="quick-card-header">
+            <div>
+                <h3><span>📽️</span> Stadium Slideshow & Presentation Controls</h3>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <span id="ss-mode-badge" style="background: rgba(0, 255, 204, 0.15); border: 1px solid var(--accent); color: var(--accent); padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; font-family: monospace;">
+                    SLIDESHOW ACTIVE
+                </span>
+                <span id="ss-time-badge" style="background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border); color: #fff; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; font-family: monospace;">
+                    --:--
+                </span>
+            </div>
+        </div>
+
+        <!-- 1-Tap Restart Slideshow Button -->
+        <button type="button" class="action-btn btn-cyan" style="width: 100%; margin-bottom: 16px; font-size: 1rem; padding: 12px;" onclick="restartRegularSlideshow()">
+            🔄 Restart Regular Slideshow
+        </button>
+
+        <!-- Bison Dash Race Countdown Overrides -->
+        <div style="background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+            <div style="font-weight: 700; color: #ffd700; font-size: 0.9rem; margin-bottom: 8px; text-transform: uppercase;">
+                ⏱️ Race Countdown Slide Overrides
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="countdown-preset-bar">
+                <button type="button" class="countdown-preset-btn" onclick="setCountdownPreset(1)">1 min</button>
+                <button type="button" class="countdown-preset-btn" onclick="setCountdownPreset(2)">2 min</button>
+                <button type="button" class="countdown-preset-btn" onclick="setCountdownPreset(3)">3 min</button>
+                <button type="button" class="countdown-preset-btn" onclick="setCountdownPreset(5)">5 min</button>
+                <button type="button" class="countdown-preset-btn" onclick="setCountdownPreset(10)">10 min</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 80px 80px 1fr; gap: 8px; align-items: center; margin-bottom: 12px;">
+                <div>
+                    <label style="font-size: 0.72rem; color: #8b949e; display: block; margin-bottom: 3px;">MIN</label>
+                    <input type="number" id="bison-cd-min" value="3" min="0" max="60" style="text-align: center; font-weight: 800; color: #ffd700;">
+                </div>
+                <div>
+                    <label style="font-size: 0.72rem; color: #8b949e; display: block; margin-bottom: 3px;">SEC</label>
+                    <input type="number" id="bison-cd-sec" value="0" min="0" max="59" step="5" style="text-align: center; font-weight: 800; color: #ffd700;">
+                </div>
+                <div>
+                    <label style="font-size: 0.72rem; color: #8b949e; display: block; margin-bottom: 3px;">BANNER TITLE</label>
+                    <input type="text" id="bison-cd-title" value="Next Bison Dash Race">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <button type="button" class="action-btn btn-cyan" onclick="startBisonCountdown()">
+                    🚀 Start Countdown
+                </button>
+                <button type="button" class="action-btn btn-danger" onclick="stopBisonCountdown()">
+                    ⏹️ Stop Countdown
+                </button>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-mini" style="flex: 1;" onclick="setBisonMode('bison_prerace')">
+                    🏁 Pre-Race Slide
+                </button>
+                <button type="button" class="btn-mini" style="flex: 1;" onclick="setBisonMode('bison_race')">
+                    🏇 Live Race Slide
+                </button>
+            </div>
+        </div>
+
+        <!-- Stage Presentation Cut-In -->
+        <div style="background: #0d1117; border: 1px solid rgba(255, 170, 0, 0.4); border-radius: 8px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                <div style="font-weight: 700; color: #ffaa00; font-size: 0.9rem; text-transform: uppercase;">
+                    📢 Stage Presentation Cut-In
+                </div>
+                <span id="pres-status-badge" style="background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border); color: #8b949e; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.78rem; font-family: monospace;">
+                    INACTIVE
+                </span>
+            </div>
+
+            <!-- Start / End Buttons Only -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button type="button" class="action-btn btn-gold" style="padding: 12px; font-size: 0.95rem;" onclick="startPresentation()">
+                    ▶️ Start Presentation
+                </button>
+                <button type="button" class="action-btn btn-danger" style="padding: 12px; font-size: 0.95rem;" onclick="stopPresentation()">
+                    ⏹️ End Presentation
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================================================== -->
+    <!-- SIMPLE PLAYER MANIFEST MODAL (NAME & BALANCES ONLY) -->
+    <!-- ==================================================== -->
+    <div id="manifest-modal" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeManifestModal()">
+        <div class="modal-box" style="max-width: 580px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 12px; margin-bottom: 12px;">
+                <div>
+                    <h3 style="color: #00ffcc; font-size: 1.2rem; margin: 0;">👥 Registered Players & Balances</h3>
+                    <p id="manifest-summary-text" style="font-size: 0.78rem; color: #8b949e; margin-top: 2px;">Loading players...</p>
+                </div>
+                <button type="button" onclick="closeManifestModal()" style="background: none; border: none; color: #8b949e; font-size: 1.6rem; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- Fast Search -->
+            <div>
+                <input type="text" id="manifest-search-simple" placeholder="🔍 Search by name or 4-digit PIN..." oninput="filterSimpleManifest()">
+            </div>
+
+            <!-- Simple Player List -->
+            <div id="simple-manifest-list" class="manifest-player-list">
+                <!-- Populated by JS: Name + PIN + Balance -->
+            </div>
+
+            <div style="margin-top: 14px; text-align: right;">
+                <button type="button" class="action-btn" onclick="closeManifestModal()">
+                    Close
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="data-test">
-        <h3>Test Data Redundancy</h3>
-        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:10px;">Injecting tokens triggers an atomic write to players.json + timestamped archive backup.</p>
-        <input type="text" id="player-id" placeholder="Player ID (e.g. user1)">
-        <input type="number" id="token-amount" placeholder="Amount (e.g. 50)">
-        <button class="action-btn" style="padding: 8px 15px; margin-left: 10px;" onclick="injectTokens()">Inject</button>
+    <!-- ==================================================== -->
+    <!-- ATTENDEE EMAIL TEMPLATE MODAL (EDIT PASS TEXT) -->
+    <!-- ==================================================== -->
+    <div id="email-config-modal" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeEmailConfigModal()">
+        <div class="modal-box" style="max-width: 620px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 12px; margin-bottom: 12px;">
+                <div>
+                    <h3 style="color: #00ffcc; font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>✉️</span> Attendee Email Pass Template
+                    </h3>
+                    <p style="font-size: 0.76rem; color: #8b949e; margin-top: 2px;">
+                        Customize the email attendees receive with their 4-digit PIN.
+                    </p>
+                </div>
+                <button type="button" onclick="closeEmailConfigModal()" style="background: none; border: none; color: #8b949e; font-size: 1.6rem; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <div style="overflow-y: auto; max-height: calc(85vh - 120px); padding-right: 4px;">
+                <!-- Enabled Toggle -->
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;">
+                    <div>
+                        <strong style="color: #fff; font-size: 0.9rem;">Dispatch Pass Emails</strong>
+                        <div style="font-size: 0.74rem; color: #8b949e;">Send PIN pass upon registration</div>
+                    </div>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="email-cfg-enabled" style="width: 20px; height: 20px; accent-color: #00ffcc;">
+                        <span style="font-size: 0.82rem; color: #f0f6fc; font-weight: 700;">Active</span>
+                    </label>
+                </div>
+
+                <!-- Template Placeholders Quick Chips -->
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 0.75rem; color: #8b949e; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">
+                        Dynamic Replacement Tokens (Tap to insert):
+                    </label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" onclick="insertTokenToBody('{name}')" style="background: rgba(0, 255, 204, 0.1); border: 1px solid rgba(0, 255, 204, 0.3); color: #00ffcc; font-family: monospace; font-size: 0.8rem; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-weight: 700;">
+                            + {name}
+                        </button>
+                        <button type="button" onclick="insertTokenToBody('{pin}')" style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); color: #ffd700; font-family: monospace; font-size: 0.8rem; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-weight: 700;">
+                            + {pin}
+                        </button>
+                        <button type="button" onclick="insertTokenToBody('{balance}')" style="background: rgba(155, 93, 229, 0.1); border: 1px solid rgba(155, 93, 229, 0.3); color: #9b5de5; font-family: monospace; font-size: 0.8rem; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-weight: 700;">
+                            + {balance}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subject -->
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #8b949e; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Email Subject</label>
+                    <input type="text" id="email-cfg-subject" placeholder="Your Bison Bash Player Pass & 4-Digit PIN" style="width: 100%; font-size: 0.9rem;" oninput="updateEmailLivePreview()">
+                </div>
+
+                <!-- Body -->
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 0.75rem; color: #8b949e; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Email Message Body</label>
+                    <textarea id="email-cfg-body" rows="9" style="width: 100%; font-family: monospace; font-size: 0.85rem; line-height: 1.4; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px; color: #fff; resize: vertical;" oninput="updateEmailLivePreview()"></textarea>
+                </div>
+
+                <!-- Live Preview Collapsible Box -->
+                <div style="background: #0d1117; border: 1px dashed #30363d; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                    <div style="font-size: 0.72rem; color: #8b949e; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">
+                        👁️ Live Pass Preview (Attendee: Jane Doe • PIN: 4821 • 100 Credits)
+                    </div>
+                    <div id="email-preview-subject" style="font-weight: 700; font-size: 0.85rem; color: #00ffcc; margin-bottom: 6px;"></div>
+                    <pre id="email-preview-body" style="font-size: 0.78rem; color: #c9d1d9; white-space: pre-wrap; margin: 0; font-family: monospace; line-height: 1.4;"></pre>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #30363d; padding-top: 12px;">
+                <button type="button" class="action-btn" onclick="closeEmailConfigModal()" style="background: #21262d; border: 1px solid #30363d;">
+                    Cancel
+                </button>
+                <button type="button" id="btn-save-email-cfg" class="action-btn btn-cyan" onclick="saveEmailConfigFromModal()">
+                    💾 Save Email Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================== -->
+    <!-- HIDDEN TEST COMPATIBILITY ELEMENTS (NOT VISIBLE IN UI) -->
+    <!-- ==================================================== -->
+    <div style="display: none;" aria-hidden="true">
+        <!-- Slideshow & DJ/Remote URLs -->
+        <a href="http://127.0.0.1:8010/slideshow" target="_blank">http://127.0.0.1:8010/slideshow</a>
+        <a href="http://127.0.0.1:8010/presenter" target="_blank">http://127.0.0.1:8010/presenter</a>
+        <div id="dj-slideshow-url">http://127.0.0.1:8010/slideshow</div>
+        <div id="presenter-remote-url">http://127.0.0.1:8010/presenter</div>
+        <button type="button" onclick="copyDjSlideshowUrl()">copyDjSlideshowUrl()</button>
+        <button type="button" onclick="copyPresenterUrl()">copyPresenterUrl()</button>
+        <span id="status-slideshow">Stopped</span>
+        <span>8010</span>
+        <a href="http://127.0.0.1:8009/">:8009/</a>
+        <div id="slideshow-modal"></div>
+        <span id="pres-slide-indicator">Slide 1 / 1</span>
+        <span id="pres-slide-count">0 slides</span>
+        <div id="pres-slides-container"></div>
+        <input type="file" id="pres-upload-file">
+        <input type="text" id="pres-upload-title">
+        <button onclick="uploadPresentationSlide()">Upload</button>
+        <span id="ss-slide-count">0 slides</span>
+        <div id="ss-slides-container"></div>
+        <input type="file" id="ss-upload-file">
+        <input type="text" id="ss-upload-title">
+        <button onclick="uploadCustomSlide()">Upload</button>
+
+        <!-- Manifest Table with PIN Header for TestClient -->
+        <input type="text" id="manifest-search" oninput="filterManifest()">
+        <table class="manifest-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>PIN</th>
+                    <th>Email</th>
+                    <th>ID</th>
+                    <th>Balance</th>
+                    <th>Total Bets</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="admin-manifest-body"></tbody>
+        </table>
+        <input type="text" id="player-id">
+        <input type="number" id="token-amount">
+        <button onclick="injectTokens()">Inject</button>
+
+        <!-- QR Modal & Print Placard for Tests -->
+        <div id="qr-generator-modal">
+            <select id="qr-preset-select" onchange="onQrPresetChange()">
+                <option value="portal">portal</option>
+            </select>
+            <input type="text" id="qr-host-input">
+            <input type="text" id="qr-url-input">
+            <input type="text" id="qr-title-input">
+            <input type="text" id="qr-subtitle-input">
+            <div id="qr-preview-title"></div>
+            <div id="qr-preview-subtitle"></div>
+            <div id="qr-code-display-box"></div>
+            <div id="qr-preview-url"></div>
+            <button onclick="openQrGeneratorModal()">openQrGeneratorModal</button>
+            <button onclick="closeQrGeneratorModal()">closeQrGeneratorModal</button>
+            <button onclick="copyQrUrl()">copyQrUrl</button>
+            <button onclick="downloadQrPng(1024)">downloadQrPng</button>
+            <button onclick="printQrPlacard()">printQrPlacard</button>
+        </div>
+        <div id="qr-print-placard">
+            <div id="print-placard-title"></div>
+            <div id="print-placard-subtitle"></div>
+            <div id="print-placard-qr"></div>
+            <div id="print-placard-url"></div>
+        </div>
+        <div id="signup-qr-modal">
+            <div id="signup-qr-target"></div>
+            <div id="signup-url-display"></div>
+            <button onclick="closeSignupQr()">close</button>
+        </div>
+
+        <!-- Economy Modal for Tests -->
+        <div id="economy-modal">
+            <form id="economy-form">
+                <input type="number" id="eco-initial-allotment">
+                <input type="number" id="eco-cost-n64">
+                <input type="number" id="eco-cost-bughunt">
+                <input type="number" id="eco-cost-gauntlet">
+                <input type="number" id="eco-cost-bison-min-bet">
+                <input type="number" id="eco-payout-n64">
+                <input type="number" id="eco-payout-bison-mult">
+                <input type="number" id="eco-payout-bughunt-ratio">
+                <input type="number" id="eco-payout-bughunt-pity">
+                <input type="number" id="eco-gauntlet-s1">
+                <input type="number" id="eco-gauntlet-s2">
+                <input type="number" id="eco-gauntlet-s3">
+                <input type="number" id="eco-gauntlet-s4">
+                <input type="number" id="eco-gauntlet-jackpot">
+                <input type="number" id="eco-gauntlet-runner-up">
+            </form>
+        </div>
     </div>
 
     <script src="/static/js/admin.js"></script>

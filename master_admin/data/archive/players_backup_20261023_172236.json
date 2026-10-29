@@ -1,0 +1,64 @@
+{
+  "players": {
+    "p_ca68a7af": {
+      "id": "p_ca68a7af",
+      "name": "Bash Master",
+      "email": "mattamac230@gmail.com",
+      "pin": "4407",
+      "balance": 0,
+      "created_at": 1792793258,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792793258.327736
+    },
+    "p_76397f05": {
+      "id": "p_76397f05",
+      "name": "Birdwell",
+      "email": "jbirdwell34@gmail.com",
+      "pin": "1842",
+      "balance": 0,
+      "created_at": 1792793473,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792793473.6901526
+    },
+    "p_3cae576c": {
+      "id": "p_3cae576c",
+      "name": "LilHumanBean",
+      "email": "bgnsinger@gmail.com",
+      "pin": "5986",
+      "balance": 0,
+      "created_at": 1792793510,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792793510.4107275
+    },
+    "p_1c92d0fb": {
+      "id": "p_1c92d0fb",
+      "name": "Bryan Rigsby",
+      "email": "bryanrigsby@att.net",
+      "pin": "6063",
+      "balance": 7,
+      "created_at": 1792793564,
+      "total_wagers": 0,
+      "total_winnings": 2,
+      "newsletter_opt_in": false,
+      "updated_at": 1792794156.1141043
+    },
+    "p_eadf739f": {
+      "id": "p_eadf739f",
+      "name": "EthanNoble",
+      "email": "tech.reentry916@passmail.net",
+      "pin": "4794",
+      "balance": 0,
+      "created_at": 1792793650,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792793650.4065878
+    }
+  }
+}

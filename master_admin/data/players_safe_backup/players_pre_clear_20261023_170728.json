@@ -1,0 +1,16 @@
+{
+  "players": {
+    "p_caf80fe0": {
+      "id": "p_caf80fe0",
+      "name": "Bash Master",
+      "email": "mattamac230@gmail.com",
+      "pin": "1684",
+      "balance": 0,
+      "created_at": 1792792672,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792792672.7270205
+    }
+  }
+}

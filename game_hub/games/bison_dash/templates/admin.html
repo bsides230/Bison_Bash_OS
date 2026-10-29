@@ -2,58 +2,583 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bison Dash Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MC Flight Deck - Bison Dash Race Command</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #222; color: #fff; }
-        .panel { border: 1px solid #555; padding: 15px; margin-bottom: 15px; background: #333; border-radius: 8px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .bison-card { border: 1px solid #777; padding: 10px; margin-top: 10px; background: #2a2a2a; border-radius: 5px; }
-        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
-        .btn-green { background: #4CAF50; color: white; }
-        .btn-red { background: #F44336; color: white; }
-        .btn-blue { background: #2196F3; color: white; margin-bottom: 10px;}
-        input[type="number"] { width: 60px; }
-        .timer-row { margin-bottom: 10px; }
+        :root {
+            --bg-color: #0c1017;
+            --panel-bg: #141a24;
+            --card-bg: #1b2332;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.35);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.4);
+            --danger: #ff4757;
+            --danger-glow: rgba(255, 71, 87, 0.45);
+            --success: #2ed573;
+            --border: #273347;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: #111722;
+            border-bottom: 2px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .brand h1 {
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: var(--gold);
+            text-transform: uppercase;
+            text-shadow: 0 0 12px var(--gold-glow);
+        }
+
+        .header-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-nav {
+            background: #212c3d;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-nav:hover {
+            background: var(--accent);
+            color: black;
+            border-color: var(--accent);
+        }
+
+        main {
+            flex: 1;
+            padding: 24px;
+            max-width: 1300px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Hero Trigger Row: The Big Red Button & Current State */
+        .hero-command-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .hero-command-grid { grid-template-columns: 1fr; }
+        }
+
+        .hero-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        /* The Big Red Button */
+        .btn-big-red {
+            width: 100%;
+            background: radial-gradient(circle at 50% 30%, #ff6b81, #d63031 70%, #b71540);
+            border: 4px solid #ff4757;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 26px 16px;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 8px 35px var(--danger-glow), inset 0 3px 6px rgba(255,255,255,0.4);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-big-red:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 15px var(--danger-glow);
+        }
+
+        /* State Badge & Elastic Clock HUD */
+        .state-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .state-pill {
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid var(--accent);
+            background: rgba(0, 255, 204, 0.12);
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .elapsed-box {
+            font-size: 2.2rem;
+            font-weight: 900;
+            font-family: monospace;
+            color: var(--gold);
+        }
+
+        /* Phase Progression Overrides */
+        .phase-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .btn-phase {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .btn-phase:hover {
+            border-color: var(--accent);
+            background: rgba(0,255,204,0.1);
+        }
+
+        .btn-phase.current-phase {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: black;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* Soundboard & Timer Panels */
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .two-col-grid { grid-template-columns: 1fr; }
+        }
+
+        .panel-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gold);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .soundboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-sfx {
+            background: #1b2332;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.15s;
+        }
+
+        .btn-sfx:hover {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        /* Elastic Clock Inputs */
+        .timer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: #0d121a;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .timer-row span {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .timer-row input[type="number"] {
+            width: 70px;
+            background: #1b2332;
+            border: 1px solid var(--border);
+            color: var(--accent);
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        /* Live Wagering Pool Breakdown */
+        .betting-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 800px) {
+            .betting-stats-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .bison-bet-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .bison-bet-slot {
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .bison-bet-name {
+            font-size: 0.85rem;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 8px;
+        }
+
+        .bison-bet-tokens {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--gold);
+            font-family: monospace;
+        }
+
+        .bison-bet-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Lineup Roster Manager */
+        .lineup-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .lineup-item-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .lineup-item-card select {
+            background: #090d14;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+            max-width: 150px;
+        }
     </style>
 </head>
 <body>
-    <h1>Bison Dash Admin Control</h1>
 
-    <div class="grid">
-        <div class="panel">
-            <h2>Current State: <span id="current-state" style="color: #4CAF50;">Unknown</span></h2>
-            <p>Elapsed Time: <span id="elapsed-time">0</span>s</p>
-            <hr>
-            <button class="btn-green" onclick="forceState('Betting_Open')">Force Betting_Open</button>
-            <button class="btn-green" onclick="forceState('Soft_Closure')">Force Soft_Closure</button>
-            <button class="btn-green" onclick="forceState('Closed_Intros')">Force Closed_Intros</button>
-            <button class="btn-green" onclick="forceState('Race_Sprint')">Force Race_Sprint</button>
-            <button class="btn-green" onclick="forceState('Results_Payout')">Force Results_Payout</button>
+    <header>
+        <div class="brand">
+            <h1>🕹️ MC Flight Deck &bull; Bison Dash</h1>
+        </div>
+        <div class="header-links">
+            <a href="/projector" target="_blank" class="btn-nav">🖥️ Projector Screen</a>
+            <a href="/bison" class="btn-nav" style="border-color: #ffd700; color: #ffd700;"><img src="/static/img/bison_logo.png" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;" alt="Bison" /> Racer Workshop</a>
+            <a href="/kiosk" target="_blank" class="btn-nav">🎰 Betting Kiosk</a>
+            <a href="http://127.0.0.1:8000/" target="_blank" class="btn-nav">💻 Master Admin</a>
+        </div>
+    </header>
 
-            <hr>
-            <h3>Game Controls</h3>
-            <button class="btn-red" onclick="panicReset()">Panic Reset Game</button>
-            <br><br>
-            <button class="btn-blue" onclick="window.location.href='/bison'">Go to Bison Builder</button>
+    <main>
+        <!-- Top Hero Row: State & Big Red Trigger -->
+        <div class="hero-command-grid">
+            <!-- Left: Master Status & Big Red Trigger -->
+            <div class="hero-card">
+                <div>
+                    <div class="state-hud">
+                        <div class="state-pill" id="current-state-pill">Betting Open</div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">State Clock:</span>
+                            <div class="elapsed-box"><span id="elapsed-time">0</span>s</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-big-red" onclick="triggerSoftClosure()">
+                        <span>🚨</span>
+                        <span>TRIGGER RACE CLOSURE (10s)</span>
+                    </button>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 10px;">
+                        Locks new betting terminal scans and begins 10s countdown to Closed Intros & Race Telemetry.
+                    </p>
+                </div>
+
+                <!-- Phase Direct Overrides -->
+                <div style="margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px;">
+                    <span style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
+                        Manual Phase Jumps:
+                    </span>
+                    <div class="phase-buttons-grid">
+                        <button class="btn-phase" onclick="forceState('Betting_Open')">1. Open Bets</button>
+                        <button class="btn-phase" onclick="forceState('Soft_Closure')">2. Soft Closure</button>
+                        <button class="btn-phase" onclick="forceState('Closed_Intros')">3. Closed Intros</button>
+                        <button class="btn-phase" onclick="forceState('Race_Sprint')">4. Race Sprint</button>
+                        <button class="btn-phase" onclick="forceState('Results_Payout')">5. Results / Payout</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Live Wagering Pot & Soundboard -->
+            <div class="hero-card">
+                <div>
+                    <div class="panel-title">
+                        <span>🪙 Live Wagering Pool</span>
+                        <span id="pool-total" style="color: var(--gold); font-size: 1.4rem; margin-left: auto;">0 Tokens</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+                        <span>Total Wagers Placed: <strong id="bets-count" style="color:white;">0</strong></span>
+                        <span>Multi-Payout: <strong style="color:var(--accent);">2.0x</strong></span>
+                    </div>
+
+                    <div class="betting-stats-grid" id="betting-slots-grid">
+                        <!-- Slots 1 to 6 bets -->
+                    </div>
+                </div>
+
+                <!-- Audio SFX Soundboard -->
+                <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 14px;">
+                    <div class="panel-title">
+                        <span>🔊 Live Venue Audio Cues</span>
+                    </div>
+                    <div class="soundboard-grid">
+                        <button class="btn-sfx" onclick="playTrumpetCharge()">🎺 Trumpet Charge</button>
+                        <button class="btn-sfx" onclick="playAirHorn()">📢 Starting Air Horn</button>
+                        <button class="btn-sfx" onclick="playGallopRumble()">🐎 Gallop Rumble</button>
+                        <button class="btn-sfx" onclick="playVictoryFanfare()">🏆 Victory Fanfare</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="panel">
-            <h2>Elastic Clock Timers (Seconds)</h2>
-            <div class="timer-row">Soft Closure: <input type="number" id="t-soft" value="10"></div>
-            <div class="timer-row">Closed Intros: <input type="number" id="t-intros" value="60"></div>
-            <div class="timer-row">Race Sprint: <input type="number" id="t-sprint" value="30"></div>
-            <div class="timer-row">Results Payout: <input type="number" id="t-payout" value="120"></div>
-            <button class="btn-blue" onclick="saveTimers()">Save Timers</button>
-        </div>
-    </div>
+        <!-- Middle Row: Elastic Clock & Lineup Quick-Swap -->
+        <div class="two-col-grid">
+            <!-- Elastic Clock Settings -->
+            <div class="panel-card">
+                <div class="panel-title">
+                    <span>⏱️ Elastic Phase Durations</span>
+                </div>
+                <div class="timer-row">
+                    <span>Soft Closure Warning:</span>
+                    <div><input type="number" id="t-soft" value="10"> s</div>
+                </div>
+                <div class="timer-row">
+                    <span>Closed Intros (Carousel):</span>
+                    <div><input type="number" id="t-intros" value="60"> s</div>
+                </div>
+                <div class="timer-row">
+                    <span>Race Sprint (Canvas Track):</span>
+                    <div><input type="number" id="t-sprint" value="30"> s</div>
+                </div>
+                <div class="timer-row">
+                    <span>Results & Payout Settlement:</span>
+                    <div><input type="number" id="t-payout" value="120"> s</div>
+                </div>
 
-    <div class="panel">
-        <h2>Current Lineup (6 Slots)</h2>
-        <div id="lineup-container">Loading...</div>
-    </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+                    <button class="btn-nav" style="background: var(--accent); color: black;" onclick="saveTimers()">
+                        Save Timer Preset
+                    </button>
+                    <button class="btn-nav" style="border-color: var(--danger); color: var(--danger);" onclick="panicReset()">
+                        ⚠️ Panic Reset Game & Refund
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Track Lineup Quick-Assignment -->
+            <div class="panel-card">
+                <div class="panel-title">
+                    <span>🏁 Track Slots Lineup (Slots 1–6)</span>
+                    <a href="/bison" class="btn-nav" style="font-size: 0.75rem; margin-left: auto;">Open Full Workshop ↗</a>
+                </div>
+
+                <div class="lineup-cards-container" id="lineup-cards-container">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </div>
+    </main>
 
     <script>
+        // Web Audio Synthesizer for MC sound cues
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playTone(freq, type, duration, delay = 0, gainVal = 0.25) {
+                this.init();
+                setTimeout(() => {
+                    try {
+                        const now = this.ctx.currentTime;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = type;
+                        osc.frequency.setValueAtTime(freq, now);
+                        gain.gain.setValueAtTime(gainVal, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + duration);
+                    } catch(e) {}
+                }, delay * 1000);
+            }
+        }
+
+        const sfx = new SoundFX();
+
+        function playTrumpetCharge() {
+            // First Call / Charge: G4, C5, E5, G5, E5, G5
+            const notes = [
+                {f: 392.00, d: 0.15, t: 0.0},
+                {f: 523.25, d: 0.15, t: 0.18},
+                {f: 659.25, d: 0.15, t: 0.36},
+                {f: 783.99, d: 0.45, t: 0.54},
+                {f: 659.25, d: 0.15, t: 1.05},
+                {f: 783.99, d: 0.60, t: 1.25}
+            ];
+            notes.forEach(n => sfx.playTone(n.f, 'triangle', n.d, n.t, 0.35));
+        }
+
+        function playAirHorn() {
+            // Twin blast air horn
+            sfx.playTone(466.16, 'sawtooth', 0.6, 0.0, 0.4);
+            sfx.playTone(370.0, 'sawtooth', 0.6, 0.0, 0.3);
+            sfx.playTone(466.16, 'sawtooth', 0.8, 0.7, 0.4);
+            sfx.playTone(370.0, 'sawtooth', 0.8, 0.7, 0.3);
+        }
+
+        function playGallopRumble() {
+            // Rhythmic low thump
+            for (let i = 0; i < 8; i++) {
+                sfx.playTone(85, 'sine', 0.08, i * 0.15, 0.5);
+                sfx.playTone(110, 'triangle', 0.06, i * 0.15 + 0.04, 0.3);
+            }
+        }
+
+        function playVictoryFanfare() {
+            const fanfare = [
+                {f: 523.25, d: 0.12, t: 0.0},
+                {f: 523.25, d: 0.12, t: 0.15},
+                {f: 523.25, d: 0.12, t: 0.30},
+                {f: 659.25, d: 0.35, t: 0.45},
+                {f: 587.33, d: 0.15, t: 0.85},
+                {f: 659.25, d: 0.15, t: 1.05},
+                {f: 783.99, d: 0.80, t: 1.25}
+            ];
+            fanfare.forEach(n => sfx.playTone(n.f, 'triangle', n.d, n.t, 0.35));
+        }
+
         let availableBisons = [];
+        let currentState = "Betting_Open";
 
         async function fetchBisons() {
             try {
@@ -65,39 +590,116 @@
 
         async function updateAdmin() {
             try {
-                // Fetch state
-                let res = await fetch('/api/current_race');
-                let data = await res.json();
-                document.getElementById('current-state').innerText = data.state;
+                const res = await fetch('/api/current_race');
+                const data = await res.json();
+
+                currentState = data.state;
+                const pill = document.getElementById('current-state-pill');
+                pill.innerText = data.state.replace('_', ' ');
+
+                if (data.state === 'Betting_Open') {
+                    pill.style.borderColor = 'var(--success)';
+                    pill.style.color = 'var(--success)';
+                    pill.style.background = 'rgba(46, 213, 115, 0.12)';
+                } else if (data.state === 'Soft_Closure') {
+                    pill.style.borderColor = 'var(--danger)';
+                    pill.style.color = 'var(--danger)';
+                    pill.style.background = 'rgba(255, 71, 87, 0.15)';
+                } else if (data.state === 'Race_Sprint') {
+                    pill.style.borderColor = 'var(--gold)';
+                    pill.style.color = 'var(--gold)';
+                    pill.style.background = 'rgba(255, 215, 0, 0.15)';
+                } else {
+                    pill.style.borderColor = 'var(--accent)';
+                    pill.style.color = 'var(--accent)';
+                    pill.style.background = 'rgba(0, 255, 204, 0.12)';
+                }
+
                 document.getElementById('elapsed-time').innerText = Math.floor(data.elapsed_time);
+                document.getElementById('pool-total').innerText = `${data.total_pot || 0} Tokens`;
+                document.getElementById('bets-count').innerText = data.active_wagers_count || 0;
 
-                // Fetch lineup
-                let lineupHtml = '';
-                data.lineup.forEach(b => {
-                    let selectOptions = `<option value="">-- Empty / Procedural --</option>`;
-                    availableBisons.forEach(ab => {
-                        let sel = (ab.id === b.id) ? 'selected' : '';
-                        selectOptions += `<option value="${ab.id}" ${sel}>${ab.name}</option>`;
-                    });
-
-                    lineupHtml += `
-                        <div class="bison-card" style="border-left: 5px solid ${b.color}">
-                            <strong>Slot ${b.slot}: ${b.name}</strong> (Speed: ${b.stats.bison_speed})<br>
-                            Assign: <select id="assign-${b.slot}" onchange="assignBison(${b.slot}, this.value)">
-                                ${selectOptions}
-                            </select>
-                        </div>
-                    `;
+                // Highlight active phase button
+                document.querySelectorAll('.btn-phase').forEach(b => {
+                    if (b.innerText.toLowerCase().includes(data.state.toLowerCase().replace('_', ' '))) {
+                        b.classList.add('current-phase');
+                    } else {
+                        b.classList.remove('current-phase');
+                    }
                 });
-                document.getElementById('lineup-container').innerHTML = lineupHtml;
+
+                // Fetch current wagers for breakdown
+                fetchWagerBreakdown(data.lineup);
+
+                // Render lineup cards
+                renderLineupEditor(data.lineup);
+
             } catch (e) {
                 console.error("Admin fetch error", e);
             }
         }
 
+        async function fetchWagerBreakdown(lineup) {
+            try {
+                const res = await fetch('/api/bisondash/wagers');
+                const data = await res.json();
+                const wagers = data.wagers || [];
+
+                const grid = document.getElementById('betting-slots-grid');
+                grid.innerHTML = '';
+
+                for (let i = 1; i <= 6; i++) {
+                    const bison = lineup.find(b => b.slot === i);
+                    const slotWagers = wagers.filter(w => w.slot === i);
+                    const slotTokens = slotWagers.reduce((sum, w) => sum + (w.amount || 0), 0);
+
+                    const card = document.createElement('div');
+                    card.className = 'bison-bet-card';
+                    card.style.borderTop = `4px solid ${bison ? bison.color : '#555'}`;
+                    card.innerHTML = `
+                        <div class="bison-bet-slot" style="color:${bison ? bison.color : '#888'}">Slot ${i}</div>
+                        <div class="bison-bet-name">${bison ? bison.name : 'Empty'}</div>
+                        <div class="bison-bet-tokens">${slotTokens}</div>
+                        <div class="bison-bet-count">${slotWagers.length} bets</div>
+                    `;
+                    grid.appendChild(card);
+                }
+            } catch(e) {}
+        }
+
+        function renderLineupEditor(lineup) {
+            const container = document.getElementById('lineup-cards-container');
+            container.innerHTML = '';
+
+            lineup.forEach(b => {
+                let options = `<option value="">-- Procedural Wildcard --</option>`;
+                availableBisons.forEach(ab => {
+                    const sel = (ab.id === b.id) ? 'selected' : '';
+                    options += `<option value="${ab.id}" ${sel}>${ab.name}</option>`;
+                });
+
+                const card = document.createElement('div');
+                card.className = 'lineup-item-card';
+                card.style.borderLeft = `5px solid ${b.color}`;
+                card.innerHTML = `
+                    <div>
+                        <div style="font-weight: 800; font-size: 0.9rem;">Slot ${b.slot}: ${b.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Spd: ${b.stats ? b.stats.bison_speed : 50} &bull; Jockey: ${b.jockey_name || 'Rider'}</div>
+                    </div>
+                    <select onchange="assignBison(${b.slot}, this.value)">
+                        ${options}
+                    </select>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function triggerSoftClosure() {
+            playAirHorn();
+            await forceState('Soft_Closure');
+        }
+
         async function assignBison(slot, bisonId) {
-            // Because we don't have a direct endpoint for slot assignment yet, we need to read/write lineup.json manually via a new endpoint.
-            // Let's add that logic.
             try {
                 await fetch('/api/bisondash/lineup/assign', {
                     method: 'POST',
@@ -109,21 +711,27 @@
         }
 
         async function forceState(state) {
-            await fetch('/api/bisondash/state/update', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({state: state})
-            });
-            updateAdmin();
+            try {
+                await fetch('/api/bisondash/state/update', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({state: state})
+                });
+                updateAdmin();
+            } catch(e) {}
         }
 
         async function panicReset() {
-            await fetch('/api/local/reset', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'reset', timestamp: Date.now(), target_state: 'Betting_Open'})
-            });
-            updateAdmin();
+            if (!confirm("⚠️ PANIC RESET: This will cancel the current race, return to Betting_Open, and automatically REFUND all active wagers. Continue?")) return;
+            try {
+                await fetch('/api/local/reset', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'reset', timestamp: Date.now(), target_state: 'Betting_Open'})
+                });
+                alert("Game reset. All wagers refunded to players.");
+                updateAdmin();
+            } catch(e) {}
         }
 
         async function saveTimers() {
@@ -133,12 +741,16 @@
                 race_sprint: parseInt(document.getElementById('t-sprint').value),
                 results_payout: parseInt(document.getElementById('t-payout').value)
             };
-            await fetch('/api/bisondash/timers/update', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            alert("Timers saved!");
+            try {
+                await fetch('/api/bisondash/timers/update', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                alert("Timer presets saved and applied to Elastic Clock!");
+            } catch(e) {
+                alert("Error saving timers.");
+            }
         }
 
         async function init() {

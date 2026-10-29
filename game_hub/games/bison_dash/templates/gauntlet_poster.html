@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The AI Gauntlet - Official Rules Poster</title>
+    <style>
+        :root {
+            --bg-page: #f1f5f9;
+            --bg-poster: #ffffff;
+            --text-dark: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --border-dark: #cbd5e1;
+            --brand-purple: #6d28d9;
+            --brand-cyan: #0284c7;
+            --brand-gold: #b45309;
+            --gold-bg: #fef3c7;
+            --gold-border: #f59e0b;
+            --cyan-bg: #e0f2fe;
+            --purple-bg: #f3e8ff;
+            --danger-red: #dc2626;
+            --danger-bg: #fee2e2;
+            --success-green: #15803d;
+            --success-bg: #dcfce7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 24px 0 40px 0;
+        }
+
+        /* Screen-only Print Bar */
+        .print-toolbar {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-print {
+            background: #0f172a;
+            color: #ffffff;
+            border: 2px solid #334155;
+            padding: 12px 26px;
+            border-radius: 30px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-print:hover {
+            background: #1e293b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Scalable High-Res Poster Container (Standard 8.5x11 aspect ratio, scales to 18x24 or 24x36 at FedEx/Kinko's) */
+        .poster-canvas {
+            width: 8.5in;
+            min-height: 11in;
+            background: var(--bg-poster);
+            border: 1px solid var(--border-dark);
+            border-radius: 8px;
+            box-shadow: 0 15px 45px rgba(15, 23, 42, 0.12);
+            padding: 0.55in 0.6in 0.55in 0.6in;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        /* Decorative Top & Bottom Brand Accent Bands */
+        .poster-canvas::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #0284c7 0%, #6d28d9 50%, #b45309 100%);
+            border-radius: 8px 8px 0 0;
+        }
+
+        /* HEADER */
+        .poster-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 18px;
+            margin-bottom: 20px;
+        }
+
+        .brand-block {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .bison-logo-frame {
+            width: 82px;
+            height: 82px;
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .bison-logo-frame img {
+            width: 66px;
+            height: 66px;
+            object-fit: contain;
+        }
+
+        .header-text h1 {
+            font-size: 2.7rem;
+            font-weight: 950;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #0f172a;
+            line-height: 1.05;
+        }
+
+        .header-text h1 span {
+            color: var(--brand-cyan);
+        }
+
+        .header-subtext {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            color: var(--brand-purple);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .event-tag {
+            text-align: right;
+        }
+
+        .event-badge {
+            background: var(--gold-bg);
+            border: 1.5px solid var(--gold-border);
+            color: #92400e;
+            padding: 7px 18px;
+            border-radius: 30px;
+            font-size: 0.92rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .terminal-code {
+            font-family: Consolas, monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* HERO ENTRY COST & PRIZE BANNER */
+        .cost-banner {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 26px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+        }
+
+        .cost-item {
+            text-align: center;
+        }
+
+        .cost-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .cost-value {
+            font-size: 2.3rem;
+            font-weight: 950;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .cost-value.entry {
+            color: #b45309;
+        }
+
+        .cost-value.jackpot {
+            color: #047857;
+        }
+
+        .cost-divider {
+            width: 2px;
+            height: 54px;
+            background: var(--border-dark);
+        }
+
+        /* SECTION HEADERS */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: #0f172a;
+        }
+
+        .section-line {
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, #cbd5e1, transparent);
+        }
+
+        /* 4-STEP INSTRUCTIONS */
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .step-card {
+            background: #ffffff;
+            border: 1.5px solid var(--border-dark);
+            border-radius: 14px;
+            padding: 18px 14px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .step-num-pill {
+            position: absolute;
+            top: -12px;
+            background: var(--brand-purple);
+            color: #ffffff;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-size: 0.85rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(109, 40, 217, 0.4);
+        }
+
+        .step-icon {
+            font-size: 2.3rem;
+            margin: 6px 0 10px 0;
+        }
+
+        .step-name {
+            font-size: 0.98rem;
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+
+        .step-desc {
+            font-size: 0.82rem;
+            color: var(--text-body);
+            line-height: 1.45;
+        }
+
+        .step-desc strong {
+            color: #0f172a;
+            font-weight: 800;
+        }
+
+        /* STAGE PAYOUT SCHEDULE TABLE */
+        .payout-container {
+            background: #ffffff;
+            border: 2px solid #0f172a;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.06);
+            margin-bottom: 20px;
+        }
+
+        .stage-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .stage-table th {
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 900;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            padding: 12px 14px;
+        }
+
+        .stage-table td {
+            font-size: 0.94rem;
+            font-weight: 700;
+            padding: 14px 14px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-dark);
+            vertical-align: middle;
+        }
+
+        .stage-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        .stage-badge {
+            background: #f1f5f9;
+            border: 1.5px solid #cbd5e1;
+            color: #0f172a;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: Consolas, monospace;
+            font-size: 0.84rem;
+            font-weight: 900;
+            display: inline-block;
+        }
+
+        .token-tag {
+            color: #b45309;
+            font-weight: 950;
+            font-size: 1.15rem;
+            font-family: Consolas, monospace;
+        }
+
+        .glitch-tag {
+            font-size: 0.82rem;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .glitch-low {
+            background: var(--success-bg);
+            color: var(--success-green);
+        }
+
+        .glitch-mod {
+            background: var(--gold-bg);
+            color: #b45309;
+        }
+
+        .glitch-high {
+            background: var(--danger-bg);
+            color: var(--danger-red);
+        }
+
+        .vault-row td {
+            background: #fffbeb !important;
+            border-top: 2px solid #f59e0b;
+        }
+
+        .vault-badge {
+            background: #fef3c7;
+            border: 1.5px solid #f59e0b;
+            color: #92400e;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-weight: 950;
+            letter-spacing: 1px;
+        }
+
+        .vault-jackpot-token {
+            color: #047857;
+            font-weight: 950;
+            font-size: 1.3rem;
+            font-family: Consolas, monospace;
+        }
+
+        /* PRINT STYLES FOR FEDEX/KINKOS FULL RES PRINTING */
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .print-toolbar {
+                display: none !important;
+            }
+
+            .poster-canvas {
+                width: 100% !important;
+                height: 100vh !important;
+                max-width: 100% !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0.5in 0.6in !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            @page {
+                size: auto;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN PRINT TOOLBAR -->
+    <div class="print-toolbar">
+        <button class="btn-print" onclick="window.print()">
+            <span>🖨️</span> Print Poster / Save PDF
+        </button>
+    </div>
+
+    <!-- MAIN PRINTABLE POSTER -->
+    <div class="poster-canvas" id="poster">
+        
+        <!-- HEADER -->
+        <header class="poster-header">
+            <div class="brand-block">
+                <div class="bison-logo-frame">
+                    <img src="/static/img/bison_logo.png" alt="Bison Bash Logo" onerror="this.onerror=null; this.src='/slides/bison_logo.png';" />
+                </div>
+                <div class="header-text">
+                    <h1>The AI <span>Gauntlet</span></h1>
+                    <div class="header-subtext">Touchscreen Neural Gateway Challenge</div>
+                </div>
+            </div>
+            <div class="event-tag">
+                <span class="event-badge">Bison Bash '26</span>
+                <div class="terminal-code">STATION // AI-GAUNTLET</div>
+            </div>
+        </header>
+
+        <!-- TOKEN COST & JACKPOT HERO BANNER -->
+        <div class="cost-banner">
+            <div class="cost-item">
+                <div class="cost-label">Entry Token Cost</div>
+                <div class="cost-value entry">🪙 4 TOKENS</div>
+            </div>
+            <div class="cost-divider"></div>
+            <div class="cost-item">
+                <div class="cost-label">Breach Stage 5 Vault</div>
+                <div class="cost-value jackpot">🏆 25 TOKEN JACKPOT</div>
+            </div>
+        </div>
+
+        <!-- HOW TO PLAY: 4 STEP SEQUENCE -->
+        <div style="margin-bottom: 10px;">
+            <div class="section-header">
+                <span class="section-title">How To Play &bull; 4 Simple Steps</span>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="instructions-grid">
+                <!-- Step 1 -->
+                <div class="step-card">
+                    <div class="step-num-pill">1</div>
+                    <div class="step-icon">🔢</div>
+                    <div class="step-name">Check-In PIN</div>
+                    <div class="step-desc">Enter your <strong>4-digit attendee PIN</strong> on the touchscreen keypad. Deducts <strong>4 tokens</strong> on confirm.</div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-card">
+                    <div class="step-num-pill">2</div>
+                    <div class="step-icon">🚪</div>
+                    <div class="step-name">Pick A Door</div>
+                    <div class="step-desc">Choose <strong>1 of 4 doors</strong> at each stage. Find tokens or safe passage to push deeper into the neural net.</div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-card">
+                    <div class="step-num-pill">3</div>
+                    <div class="step-icon">🚨</div>
+                    <div class="step-name">Avoid AI Glitches</div>
+                    <div class="step-desc">Beware fatal traps: <strong>CUDA OOM</strong>, <strong>429 Rate Limits</strong>, and <strong>Safety Tripwires</strong>!</div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step-card">
+                    <div class="step-num-pill">4</div>
+                    <div class="step-icon">🏆</div>
+                    <div class="step-name">Breach The Vault</div>
+                    <div class="step-desc">Survive to Stage 5 to unlock the <strong>Superalignment Vault</strong> and win the <strong>25 Token Grand Jackpot</strong>!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE PAYOUT SCHEDULE TABLE -->
+        <div>
+            <div class="section-header">
+                <span class="section-title">Stage Progression & Payout Schedule</span>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="payout-container">
+                <table class="stage-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 16%;">Stage</th>
+                            <th style="width: 30%;">Neural Stage</th>
+                            <th style="width: 28%;">Gateway Door Distribution</th>
+                            <th style="width: 14%;">Win Payout</th>
+                            <th style="width: 12%;">Glitch Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="stage-badge">STAGE 1</span></td>
+                            <td>Input Embeddings</td>
+                            <td>1 Token Door &bull; 2 Safe Doors &bull; 1 Glitch</td>
+                            <td><span class="token-tag">+2 🪙</span></td>
+                            <td><span class="glitch-tag glitch-low">LOW (25%)</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="stage-badge">STAGE 2</span></td>
+                            <td>Multi-Head Attention</td>
+                            <td>1 Token Door &bull; 2 Safe Doors &bull; 1 Glitch</td>
+                            <td><span class="token-tag">+3 🪙</span></td>
+                            <td><span class="glitch-tag glitch-low">LOW (25%)</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="stage-badge">STAGE 3</span></td>
+                            <td>Quantization Layer</td>
+                            <td>1 Big Token &bull; 1 Small Token &bull; 1 Safe &bull; 1 Glitch</td>
+                            <td><span class="token-tag">+5 🪙 / +2 🪙</span></td>
+                            <td><span class="glitch-tag glitch-mod">MOD (25%)</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="stage-badge">STAGE 4</span></td>
+                            <td>RLHF Alignment Gates</td>
+                            <td>1 Big Token &bull; 1 Safe Door &bull; 2 Glitches</td>
+                            <td><span class="token-tag">+8 🪙</span></td>
+                            <td><span class="glitch-tag glitch-high">HIGH (50%)</span></td>
+                        </tr>
+                        <tr class="vault-row">
+                            <td><span class="vault-badge">FINAL STAGE</span></td>
+                            <td><strong>Superalignment Vault</strong></td>
+                            <td>1 Grand Jackpot &bull; 1 High Weight &bull; 2 Glitches</td>
+                            <td><span class="vault-jackpot-token">+25 🪙 / +10 🪙</span></td>
+                            <td><span class="glitch-tag glitch-high">50% DANGER</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bug Bounty: Alpha Critical - Attendant Station</title>
+    <script src="/static/js/pin_auth_flow.js?v=20261023_03"></script>
+    <style>
+        :root {
+            --bg-color: #080c14;
+            --card-bg: #121927;
+            --accent-green: #00ff66;
+            --accent-glow: rgba(0, 255, 102, 0.35);
+            --amber: #ffb703;
+            --amber-glow: rgba(255, 183, 3, 0.4);
+            --danger: #ff4757;
+            --border: #233044;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(0, 255, 102, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 50% 90%, rgba(255, 183, 3, 0.06) 0%, transparent 60%);
+        }
+
+        /* Compact Header */
+        header {
+            background: #0f1622;
+            border-bottom: 2px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand h1 {
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent-green);
+        }
+
+        .header-cost-pill {
+            background: rgba(0, 255, 102, 0.12);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        /* Main View Container */
+        main {
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            max-width: 440px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* STAGE 1: SCAN CARD */
+        #stage-scan {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .instruction-box {
+            background: rgba(0, 255, 102, 0.08);
+            border-left: 4px solid var(--accent-green);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #d1fae5;
+        }
+
+        .scan-action-card {
+            background: var(--card-bg);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-scan-main {
+            width: 100%;
+            background: linear-gradient(135deg, #00ff66 0%, #00b894 100%);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 18px var(--accent-glow);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-scan-main:active {
+            transform: scale(0.98);
+        }
+
+        /* STAGE 2: HUNT TIMER */
+        #stage-timer {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .parent-badge-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .parent-info h3 {
+            font-size: 1.05rem;
+            color: white;
+            font-weight: 800;
+        }
+
+        .parent-info span {
+            font-size: 0.78rem;
+            color: var(--accent-green);
+            font-family: monospace;
+            font-weight: 700;
+        }
+
+        .parent-wallet-pill {
+            background: #090d14;
+            border: 1px solid var(--amber);
+            color: var(--amber);
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        /* Compact Digital Timer Card */
+        .timer-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-clock {
+            font-size: 4.6rem;
+            font-weight: 950;
+            letter-spacing: -2px;
+            color: #fff;
+            text-shadow: 0 0 25px rgba(0, 255, 102, 0.4);
+            line-height: 1;
+            font-family: Consolas, monospace;
+        }
+
+        .timer-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #090d16;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .timer-progress-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #00b894, var(--accent-green));
+            transition: width 1s linear, background 0.3s;
+        }
+
+        .timer-status-badge {
+            font-size: 0.8rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent-green);
+        }
+
+        .timer-actions {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-finish-early {
+            background: #192334;
+            color: var(--amber);
+            border: 1.5px solid var(--amber);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-cancel-game {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px;
+            font-size: 0.82rem;
+            cursor: pointer;
+        }
+
+        /* STAGE 3: VOLUNTEER BUG ENTRY */
+        #stage-tally {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tally-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tally-header h2 {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+
+        .tally-header p {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            margin-top: 2px;
+        }
+
+        /* Large Bug Count Display Box */
+        .tally-input-wrap {
+            background: #090e18;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tally-val {
+            font-size: 3.4rem;
+            font-weight: 950;
+            color: var(--accent-green);
+            font-family: Consolas, monospace;
+            line-height: 1;
+        }
+
+        .tally-reward-preview {
+            text-align: right;
+        }
+
+        .tally-reward-tokens {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--amber);
+        }
+
+        .tally-reward-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Chunky On-Screen Stepper Touchpad */
+        .stepper-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .btn-step {
+            background: #192233;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px 0;
+            border-radius: 10px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .btn-step:active {
+            background: var(--accent-green);
+            color: #000;
+            transform: scale(0.96);
+        }
+
+        .btn-step.danger {
+            background: #2a1518;
+            color: #ff6b81;
+            border-color: rgba(255, 71, 87, 0.4);
+        }
+
+        .btn-step.preset {
+            background: #0f1624;
+            color: #94a3b8;
+            font-size: 1.05rem;
+        }
+
+        /* Toddler Pity Credit Checkbox */
+        .pity-checkbox-container {
+            background: rgba(255, 183, 3, 0.08);
+            border: 1.5px dashed var(--amber);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .pity-checkbox-container input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--amber);
+            cursor: pointer;
+        }
+
+        .pity-label h4 {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--amber);
+        }
+
+        .pity-label p {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+        }
+
+        /* Celebration Payout Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 7, 13, 0.94);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 16px;
+        }
+
+        .modal-card {
+            background: #121927;
+            border: 2px solid var(--accent-green);
+            border-radius: 18px;
+            padding: 22px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 0 50px var(--accent-glow);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <span style="font-size: 1.3rem;">🧲</span>
+        <h1>Bug Bounty</h1>
+    </div>
+    <div id="header-cost-tag" class="header-cost-pill">1 🪙 TO PLAY</div>
+</header>
+
+<main>
+    <!-- STAGE 1: SCAN PARENT PASS -->
+    <div id="stage-scan">
+        <div class="instruction-box">
+            🛡️ <strong>Parent Check-In:</strong> Enter the parent's 4-digit PIN to begin. Tokens won credit directly into the parent's wallet!
+        </div>
+
+        <div class="scan-action-card">
+            <div style="font-size: 3.5rem;">🔢</div>
+            <h2 style="color: white; font-size: 1.25rem; font-weight: 800;">Parent Check-In</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Tap below to enter the 4-digit attendee PIN</p>
+            
+            <button class="btn-scan-main" onclick="openPinKeypad()">
+                🔢 Enter 4-Digit PIN
+            </button>
+        </div>
+    </div>
+
+    <!-- STAGE 2: COUNTDOWN TIMER (THE HUNT) -->
+    <div id="stage-timer">
+        <!-- Parent Info Bar -->
+        <div class="parent-badge-card">
+            <div class="parent-info">
+                <h3 id="timer-parent-name">Parent Name</h3>
+                <span id="timer-parent-pin">PIN: —</span>
+            </div>
+            <div class="parent-wallet-pill">
+                🪙 <span id="timer-parent-balance">100</span>
+            </div>
+        </div>
+
+        <!-- Digital Timer Card -->
+        <div class="timer-card">
+            <div id="timer-status-text" class="timer-status-badge">READY TO HUNT</div>
+            <div id="countdown-display" class="timer-clock">60</div>
+            
+            <div class="timer-progress-bar">
+                <div id="timer-progress-fill" class="timer-progress-fill"></div>
+            </div>
+
+            <div class="timer-actions">
+                <button id="btn-timer-trigger" class="btn-scan-main" onclick="startTimer()">
+                    ⚡ START HUNT (<span id="hunt-btn-seconds">60</span>s)
+                </button>
+                <button id="btn-finish-early" class="btn-finish-early" style="display: none;" onclick="finishTimerEarly()">
+                    🏁 Stop / Count Bugs Now
+                </button>
+                <button class="btn-cancel-game" onclick="resetToScan()">
+                    Cancel / Switch Attendee
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAGE 3: VOLUNTEER BUG ENTRY -->
+    <div id="stage-tally">
+        <!-- Parent Info Bar -->
+        <div class="parent-badge-card">
+            <div class="parent-info">
+                <h3 id="tally-parent-name">Parent Name</h3>
+                <span id="tally-parent-pin">PIN: —</span>
+            </div>
+            <div class="parent-wallet-pill">
+                🪙 <span id="tally-parent-balance">100</span>
+            </div>
+        </div>
+
+        <div class="tally-card">
+            <div class="tally-header">
+                <h2>Bugs Retrieved</h2>
+                <p>Enter the number of physical bugs retrieved from the bin:</p>
+            </div>
+
+            <!-- Bug Count & Live Token Calculation Display -->
+            <div class="tally-input-wrap">
+                <div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Bugs Caught</div>
+                    <div class="tally-val" id="tally-display-num">0</div>
+                </div>
+                <div class="tally-reward-preview">
+                    <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Reward Payout</div>
+                    <div class="tally-reward-tokens">+<span id="preview-tokens-amt">0</span> 🪙</div>
+                    <div id="tally-ratio-note" class="tally-reward-sub">(3 bugs = 1 token)</div>
+                </div>
+            </div>
+
+            <!-- On-Screen Stepper Touchpad (No soft keyboard needed!) -->
+            <div class="stepper-grid">
+                <button type="button" class="btn-step" onclick="adjustTally(1)">+1</button>
+                <button type="button" class="btn-step" onclick="adjustTally(2)">+2</button>
+                <button type="button" class="btn-step" onclick="adjustTally(5)">+5</button>
+                <button type="button" class="btn-step" onclick="adjustTally(10)">+10</button>
+            </div>
+
+            <div class="stepper-grid">
+                <button type="button" class="btn-step preset" onclick="setExactTally(5)">5</button>
+                <button type="button" class="btn-step preset" onclick="setExactTally(10)">10</button>
+                <button type="button" class="btn-step preset" onclick="setExactTally(15)">15</button>
+                <button type="button" class="btn-step preset" onclick="setExactTally(20)">20</button>
+            </div>
+
+            <div class="stepper-grid">
+                <button type="button" class="btn-step danger" onclick="adjustTally(-1)">-1</button>
+                <button type="button" class="btn-step danger" onclick="adjustTally(-5)">-5</button>
+                <button type="button" class="btn-step danger" style="grid-column: span 2;" onclick="setExactTally(0)">CLEAR (0)</button>
+            </div>
+
+            <!-- Toddler Pity Credit Checkbox -->
+            <label id="pity-wrap" class="pity-checkbox-container" for="pity-checkbox" style="display: none;">
+                <input type="checkbox" id="pity-checkbox" onchange="updateTokenCalculation()">
+                <div class="pity-label">
+                    <h4>👶 Toddler Pity Credit</h4>
+                    <p id="pity-desc-text">Guarantees 1 token if child caught at least 1 bug</p>
+                </div>
+            </label>
+
+            <button class="btn-scan-main" onclick="submitBugPayout()">
+                SUBMIT PAYOUT 🪙
+            </button>
+        </div>
+    </div>
+
+    <!-- STANDARDIZED 3-STEP PIN AUTHENTICATION -->
+    <div id="bughunt-pin-container"></div>
+
+    <!-- CELEBRATION PAYOUT MODAL -->
+    <div id="celebration-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="font-size: 3.5rem; margin-bottom: 6px;">🎉</div>
+            <h2 id="payout-parent-name" style="color: var(--accent-green); font-size: 1.6rem; letter-spacing: 0.5px;">Parent Name</h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 14px;">Bug Bounty Payout Succeeded!</p>
+            
+            <div style="background: rgba(0, 255, 102, 0.1); border: 2px solid var(--accent-green); border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Wallet Credited</div>
+                <div style="font-size: 2.4rem; font-weight: 900; color: var(--accent-green);">+<span id="final-tokens-amt">0</span> 🪙 TOKENS</div>
+                <div style="font-size: 0.88rem; color: #fff; margin-top: 4px;">New Balance: <strong id="payout-new-balance" style="color: var(--amber);">0</strong> Tokens</div>
+            </div>
+
+            <button class="btn-scan-main" style="width: 100%; padding: 12px;" onclick="resetToScan()">
+                NEXT ATTENDEE &bull; <span id="auto-reset-timer">3</span>s
+            </button>
+        </div>
+    </div>
+
+    <!-- INSUFFICIENT TOKENS ERROR MODAL -->
+    <div id="insufficient-tokens-modal" class="modal-overlay">
+        <div class="modal-card" style="border-color: #ff4757; box-shadow: 0 0 50px rgba(255, 71, 87, 0.4);">
+            <div style="font-size: 3.5rem; margin-bottom: 6px;">⚠️</div>
+            <h2 style="color: #ff4757; font-size: 1.6rem; letter-spacing: 0.5px; text-transform: uppercase; margin: 0 0 4px;">Insufficient Tokens</h2>
+            <p id="insufficient-modal-msg" style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 16px;">
+                You do not have enough tokens to play Bug Bounty.
+            </p>
+            
+            <div style="background: rgba(255, 71, 87, 0.08); border: 2px solid #ff4757; border-radius: 12px; padding: 14px; margin-bottom: 18px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Attendee:</span>
+                    <strong id="insufficient-player-name" style="color: #fff; font-size: 0.95rem;">-</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Current Balance:</span>
+                    <strong style="color: #ffd700; font-size: 1.1rem; font-family: Consolas, monospace;">🪙 <span id="insufficient-player-bal">0</span> Tokens</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                    <span style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Entry Fee Required:</span>
+                    <strong style="color: #ff4757; font-size: 1.1rem; font-family: Consolas, monospace;">🪙 <span id="insufficient-cost-req">1</span> Token</strong>
+                </div>
+            </div>
+
+            <p style="font-size: 0.82rem; color: #8b949e; margin-bottom: 16px;">
+                Please visit the <strong>Token Bank / Cashier Desk</strong> to purchase or claim tokens for your pass.
+            </p>
+
+            <button class="btn-scan-main" style="width: 100%; padding: 14px; background: #21262d; border: 1px solid #30363d; color: #fff; font-weight: bold; border-radius: 10px; cursor: pointer;" onclick="closeInsufficientModal()">
+                ⌫ Return to PIN Pad
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    // --- SYNTHESIZER SOUND ENGINE ---
+    class BugHuntSound {
+        constructor() { this.ctx = null; }
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        playTick() {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.04);
+            } catch(e) {}
+        }
+        playBuzzer() {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(110, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.8);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.8);
+            } catch(e) {}
+        }
+        playFanfare() {
+            try {
+                this.init();
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.08);
+                    osc.stop(this.ctx.currentTime + idx * 0.08 + 0.35);
+                });
+            } catch(e) {}
+        }
+    }
+    const audio = new BugHuntSound();
+
+    // Economy & Timer variables
+    let bughuntCost = 1;
+    let bugsPerToken = 5;
+    let pityTokens = 1;
+    let configuredDuration = 60;
+
+    let activeParent = null;
+    let timerRemaining = 60;
+    let timerInterval = null;
+    let bugCount = 0;
+    let autoResetInterval = null;
+
+    function showInsufficientTokensModal(player, cost, customMsg) {
+        if (pinAuth) {
+            pinAuth.hideStep2Modal();
+            pinAuth.close();
+        }
+        const name = (player && (player.name || player.display_name)) || 'Attendee';
+        const bal = (player && player.balance !== undefined) ? Number(player.balance) : 0;
+        const requiredCost = cost || bughuntCost || 1;
+
+        const nameEl = document.getElementById('insufficient-player-name');
+        const balEl = document.getElementById('insufficient-player-bal');
+        const costEl = document.getElementById('insufficient-cost-req');
+        const msgEl = document.getElementById('insufficient-modal-msg');
+
+        if (nameEl) nameEl.innerText = name;
+        if (balEl) balEl.innerText = bal;
+        if (costEl) costEl.innerText = requiredCost;
+        if (msgEl) {
+            if (customMsg) {
+                msgEl.innerText = customMsg;
+            } else {
+                msgEl.innerText = `Bug Bounty requires ${requiredCost} token(s), but your current balance is ${bal} tokens.`;
+            }
+        }
+        const modal = document.getElementById('insufficient-tokens-modal');
+        if (modal) modal.style.display = 'flex';
+        audio.playBuzzer();
+    }
+
+    function closeInsufficientModal() {
+        const modal = document.getElementById('insufficient-tokens-modal');
+        if (modal) modal.style.display = 'none';
+        resetToScan();
+    }
+
+    async function loadBugHuntConfig() {
+        try {
+            const res = await fetch('/api/bughunt/config');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.cost !== undefined) bughuntCost = Math.max(1, parseInt(data.cost) || 1);
+                if (data.bugs_per_token !== undefined) bugsPerToken = Math.max(1, parseInt(data.bugs_per_token) || 5);
+                if (data.pity_tokens !== undefined) pityTokens = parseInt(data.pity_tokens) || 1;
+                if (data.timer_seconds !== undefined) configuredDuration = Math.max(10, parseInt(data.timer_seconds) || 60);
+
+                if (pinAuth) {
+                    pinAuth.setTokenCost(bughuntCost);
+                }
+                updateBugHuntLabels();
+            }
+        } catch (e) {
+            console.warn("Could not load bughunt config:", e);
+        }
+    }
+
+    function updateBugHuntLabels() {
+        const costTag = document.getElementById('header-cost-tag');
+        if (costTag) {
+            costTag.innerText = bughuntCost > 0 ? `${bughuntCost} 🪙 TO PLAY` : `FREE TO PLAY`;
+        }
+        const huntBtnSec = document.getElementById('hunt-btn-seconds');
+        if (huntBtnSec) huntBtnSec.innerText = configuredDuration;
+
+        const countdownDisplay = document.getElementById('countdown-display');
+        if (countdownDisplay && (!timerInterval || timerRemaining === configuredDuration)) {
+            countdownDisplay.innerText = configuredDuration;
+        }
+
+        const ratioNote = document.getElementById('tally-ratio-note');
+        if (ratioNote) ratioNote.innerText = `(${bugsPerToken} bugs = 1 token)`;
+
+        const pityWrap = document.getElementById('pity-wrap');
+        if (pityWrap) {
+            pityWrap.style.display = pityTokens > 0 ? 'flex' : 'none';
+        }
+        const pityDesc = document.getElementById('pity-desc-text');
+        if (pityDesc) {
+            pityDesc.innerText = `Guarantees at least ${pityTokens} token(s) if child caught 1–${Math.max(1, bugsPerToken - 1)} bugs`;
+        }
+    }
+
+    // --- STANDARDIZED 3-STEP PIN AUTHENTICATION FLOW ---
+    let pinAuth = null;
+
+    function initPinAuth() {
+        if (pinAuth) return;
+        pinAuth = new PinAuthFlow({
+            containerId: 'bughunt-pin-container',
+            isModal: true,
+            title: 'BUG BOUNTY CHECK-IN',
+            subtitle: "Enter 4-digit attendee PIN to begin the Hunt",
+            tokenCost: bughuntCost,
+            onInsufficientTokens: (attendee, cost) => {
+                showInsufficientTokensModal(attendee, cost);
+            },
+            onConfirmed: async (attendee) => {
+                if (!attendee) return;
+                activeParent = {
+                    id: attendee.id || attendee.player_id || attendee.pin || '',
+                    name: attendee.display_name || attendee.name || 'Attendee',
+                    email: attendee.email || '',
+                    balance: Number(attendee.balance !== undefined ? attendee.balance : 0),
+                    pin: attendee.pin || ''
+                };
+
+                const currentCost = Math.max(1, bughuntCost);
+
+                // STRICT TOKEN CHECK: Stop immediately if attendee has insufficient tokens
+                if ((activeParent.balance || 0) < currentCost) {
+                    showInsufficientTokensModal(activeParent, currentCost);
+                    return;
+                }
+
+                // Call /api/bughunt/play to deduct the entry cost
+                try {
+                    const pidToSend = activeParent.id || activeParent.pin || '';
+                    const res = await fetch('/api/bughunt/play', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            player_id: pidToSend,
+                            id: pidToSend,
+                            pin: activeParent.pin || ''
+                        })
+                    });
+                    const data = await res.json();
+                    if (!res.ok || data.status !== 'success') {
+                        showInsufficientTokensModal(activeParent, currentCost, data.message || data.error || data.detail);
+                        return;
+                    }
+                    activeParent.balance = data.balance;
+                } catch (err) {
+                    showInsufficientTokensModal(activeParent, currentCost, "Network error verifying token balance. Please try again.");
+                    return;
+                }
+
+                audio.playFanfare();
+
+                // Populate Parent Info Bar on Stage 2 Timer & Stage 3 Tally
+                document.getElementById('timer-parent-name').innerText = activeParent.name;
+                document.getElementById('timer-parent-pin').innerText = `PIN: ${activeParent.pin}`;
+                document.getElementById('timer-parent-balance').innerText = activeParent.balance;
+
+                document.getElementById('tally-parent-name').innerText = activeParent.name;
+                document.getElementById('tally-parent-pin').innerText = `PIN: ${activeParent.pin}`;
+                document.getElementById('tally-parent-balance').innerText = activeParent.balance;
+
+                // Setup Timer
+                timerRemaining = configuredDuration;
+                document.getElementById('countdown-display').innerText = timerRemaining;
+                document.getElementById('timer-status-text').innerText = 'READY TO HUNT';
+                document.getElementById('timer-status-text').style.color = 'var(--accent-green)';
+                document.getElementById('timer-progress-fill').style.width = '100%';
+                document.getElementById('timer-progress-fill').style.background = 'linear-gradient(90deg, #00b894, var(--accent-green))';
+
+                // Transition directly to Stage 2 Timer
+                document.getElementById('stage-scan').style.display = 'none';
+                document.getElementById('stage-tally').style.display = 'none';
+                document.getElementById('stage-timer').style.display = 'flex';
+                document.getElementById('btn-timer-trigger').style.display = 'block';
+                document.getElementById('btn-finish-early').style.display = 'none';
+            },
+            onCancel: () => {
+                // Cancelled
+            }
+        });
+    }
+
+    function openPinKeypad() {
+        if (!pinAuth) initPinAuth();
+        if (pinAuth) {
+            pinAuth.resetToStep1();
+            pinAuth.open();
+        }
+    }
+
+    // --- STAGE 2: COUNTDOWN TIMER ENGINE ---
+    function startTimer() {
+        if (!activeParent) {
+            openPinKeypad();
+            return;
+        }
+
+        document.getElementById('btn-timer-trigger').style.display = 'none';
+        document.getElementById('btn-finish-early').style.display = 'block';
+        document.getElementById('timer-status-text').innerText = 'HUNT IN PROGRESS!';
+        document.getElementById('timer-status-text').style.color = 'var(--accent-green)';
+
+        timerRemaining = configuredDuration;
+        document.getElementById('countdown-display').innerText = timerRemaining;
+        updateTimerProgress();
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timerRemaining--;
+            document.getElementById('countdown-display').innerText = timerRemaining;
+            updateTimerProgress();
+
+            if (timerRemaining > 0 && timerRemaining <= 10) {
+                audio.playTick();
+            }
+
+            if (timerRemaining <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('timer-status-text').innerText = 'TIME UP!';
+                document.getElementById('timer-status-text').style.color = 'var(--danger)';
+                audio.playBuzzer();
+                setTimeout(() => goToTallyStage(), 800);
+            }
+        }, 1000);
+    }
+
+    function updateTimerProgress() {
+        const pct = Math.max(0, (timerRemaining / configuredDuration) * 100);
+        const fill = document.getElementById('timer-progress-fill');
+        if (fill) {
+            fill.style.width = `${pct}%`;
+            if (timerRemaining <= 10) {
+                fill.style.background = 'var(--danger)';
+            } else if (timerRemaining <= Math.floor(configuredDuration / 2)) {
+                fill.style.background = 'var(--amber)';
+            } else {
+                fill.style.background = 'linear-gradient(90deg, #00b894, var(--accent-green))';
+            }
+        }
+    }
+
+    function finishTimerEarly() {
+        clearInterval(timerInterval);
+        document.getElementById('timer-status-text').innerText = 'HUNT STOPPED';
+        audio.playBuzzer();
+        setTimeout(() => goToTallyStage(), 400);
+    }
+
+    // --- STAGE 3: VOLUNTEER BUG ENTRY ---
+    function goToTallyStage() {
+        document.getElementById('stage-timer').style.display = 'none';
+        document.getElementById('stage-tally').style.display = 'flex';
+
+        bugCount = 0;
+        const pityBox = document.getElementById('pity-checkbox');
+        if (pityBox) pityBox.checked = false;
+        updateTallyDisplay();
+    }
+
+    function adjustTally(delta) {
+        bugCount = Math.max(0, bugCount + delta);
+        updateTallyDisplay();
+    }
+
+    function setExactTally(amt) {
+        bugCount = Math.max(0, amt);
+        updateTallyDisplay();
+    }
+
+    function updateTallyDisplay() {
+        document.getElementById('tally-display-num').innerText = bugCount;
+        updateTokenCalculation();
+    }
+
+    function updateTokenCalculation() {
+        const pityBox = document.getElementById('pity-checkbox');
+        const pityChecked = pityBox ? pityBox.checked : false;
+
+        let tokens = Math.floor(bugCount / bugsPerToken);
+        if (pityChecked && tokens === 0 && bugCount > 0 && pityTokens > 0) {
+            tokens = pityTokens;
+        }
+
+        document.getElementById('preview-tokens-amt').innerText = tokens;
+    }
+
+    // --- STAGE 4: PAYOUT & AUTO-RESET TO KEYPAD ---
+    async function submitBugPayout() {
+        if (!activeParent) return;
+
+        const pityBox = document.getElementById('pity-checkbox');
+        const pityChecked = pityBox ? pityBox.checked : false;
+
+        try {
+            const pidToSend = activeParent.id || activeParent.pin || '';
+            const res = await fetch('/api/bughunt/payout', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    player_id: pidToSend,
+                    id: pidToSend,
+                    pin: activeParent.pin || '',
+                    bugs: bugCount,
+                    pity_credit: pityChecked
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok || data.status !== 'success') {
+                alert(data.message || data.error || data.detail || "Error submitting bug payout.");
+                return;
+            }
+
+            audio.playFanfare();
+
+            const wonTokens = data.tokens_awarded !== undefined ? data.tokens_awarded : (data.tokens || 0);
+            document.getElementById('payout-parent-name').innerText = activeParent.name;
+            document.getElementById('final-tokens-amt').innerText = wonTokens;
+            document.getElementById('payout-new-balance').innerText = data.new_balance;
+            document.getElementById('celebration-modal').style.display = 'flex';
+
+            // 3-Second Auto-Reset back to fresh PIN Keypad
+            let secondsLeft = 3;
+            document.getElementById('auto-reset-timer').innerText = secondsLeft;
+            clearInterval(autoResetInterval);
+            autoResetInterval = setInterval(() => {
+                secondsLeft--;
+                document.getElementById('auto-reset-timer').innerText = secondsLeft;
+                if (secondsLeft <= 0) {
+                    clearInterval(autoResetInterval);
+                    resetToScan();
+                }
+            }, 1000);
+
+        } catch(e) {
+            console.error("Payout error:", e);
+            alert("Network error processing payout. Please check connection.");
+        }
+    }
+
+    function resetToScan() {
+        clearInterval(timerInterval);
+        clearInterval(autoResetInterval);
+
+        document.getElementById('celebration-modal').style.display = 'none';
+        const insModal = document.getElementById('insufficient-tokens-modal');
+        if (insModal) insModal.style.display = 'none';
+
+        document.getElementById('stage-timer').style.display = 'none';
+        document.getElementById('stage-tally').style.display = 'none';
+        document.getElementById('stage-scan').style.display = 'flex';
+
+        activeParent = null;
+        bugCount = 0;
+        updateBugHuntLabels();
+
+        // Refresh config in background to always stay synced with economy settings
+        loadBugHuntConfig();
+
+        // Immediately open the fresh PIN keypad for the next attendee
+        openPinKeypad();
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+        initPinAuth();
+        loadBugHuntConfig();
+        // Immediately show PIN keypad on page launch
+        openPinKeypad();
+    });
+</script>
+
+</body>
+</html>

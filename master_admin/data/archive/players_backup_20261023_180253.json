@@ -1,0 +1,136 @@
+{
+  "players": {
+    "p_ca68a7af": {
+      "id": "p_ca68a7af",
+      "name": "Bash Master",
+      "email": "mattamac230@gmail.com",
+      "pin": "4407",
+      "balance": 0,
+      "created_at": 1792793258,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792793258.327736
+    },
+    "p_76397f05": {
+      "id": "p_76397f05",
+      "name": "Birdwell",
+      "email": "jbirdwell34@gmail.com",
+      "pin": "1842",
+      "balance": 0,
+      "created_at": 1792793473,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792793473.6901526
+    },
+    "p_3cae576c": {
+      "id": "p_3cae576c",
+      "name": "LilHumanBean",
+      "email": "bgnsinger@gmail.com",
+      "pin": "5986",
+      "balance": 124,
+      "created_at": 1792793510,
+      "total_wagers": 0,
+      "total_winnings": 28,
+      "newsletter_opt_in": false,
+      "updated_at": 1792795392.4992557
+    },
+    "p_1c92d0fb": {
+      "id": "p_1c92d0fb",
+      "name": "Bryan Rigsby",
+      "email": "bryanrigsby@att.net",
+      "pin": "6063",
+      "balance": 5,
+      "created_at": 1792793564,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792794313.9568791
+    },
+    "p_eadf739f": {
+      "id": "p_eadf739f",
+      "name": "EthanNoble",
+      "email": "tech.reentry916@passmail.net",
+      "pin": "4794",
+      "balance": 0,
+      "created_at": 1792793650,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792793650.4065878
+    },
+    "p_2065a615": {
+      "id": "p_2065a615",
+      "name": "Michelle D",
+      "email": "michelle.day@cox.net",
+      "pin": "8211",
+      "balance": 80,
+      "created_at": 1792794522,
+      "total_wagers": 0,
+      "total_winnings": 146,
+      "newsletter_opt_in": false,
+      "updated_at": 1792796367.8914564
+    },
+    "p_124bac5f": {
+      "id": "p_124bac5f",
+      "name": "Misty",
+      "email": "mistyldurham@gmail.com",
+      "pin": "6580",
+      "balance": 17,
+      "created_at": 1792795275,
+      "total_wagers": 0,
+      "total_winnings": 13,
+      "newsletter_opt_in": false,
+      "updated_at": 1792795802.043045
+    },
+    "p_dafbd74f": {
+      "id": "p_dafbd74f",
+      "name": "Hoeggs",
+      "email": "ryan@hoegg.software",
+      "pin": "2908",
+      "balance": 66,
+      "created_at": 1792795417,
+      "total_wagers": 0,
+      "total_winnings": 20,
+      "newsletter_opt_in": false,
+      "updated_at": 1792796573.1347282
+    },
+    "p_6f82bdcf": {
+      "id": "p_6f82bdcf",
+      "name": "Brandy Hoegg",
+      "email": "brandy.hoegg@gmail.com",
+      "pin": "4797",
+      "balance": 0,
+      "created_at": 1792795703,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792795703.7244968
+    },
+    "p_f53fbe60": {
+      "id": "p_f53fbe60",
+      "name": "GauntletChamp",
+      "email": "tester_gauntlet@venue.com",
+      "pin": "6544",
+      "balance": 206,
+      "created_at": 1792796184,
+      "total_wagers": 0,
+      "total_winnings": 94,
+      "newsletter_opt_in": false,
+      "updated_at": 1792796401.1737807
+    },
+    "p_8f0d5596": {
+      "id": "p_8f0d5596",
+      "name": "BrokeAttendee",
+      "email": "broke_attendee@venue.com",
+      "pin": "6806",
+      "balance": 2,
+      "created_at": 1792796184,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792796184.991544
+    }
+  }
+}

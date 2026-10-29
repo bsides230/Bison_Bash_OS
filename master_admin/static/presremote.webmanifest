@@ -1,0 +1,31 @@
+{
+  "name": "PresRemote - Stage Slide Controller",
+  "short_name": "PresRemote",
+  "description": "Mobile presenter remote and slide clicker for Bison Bash arena presentations.",
+  "start_url": "/presremote",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#080c14",
+  "theme_color": "#080c14",
+  "icons": [
+    {
+      "src": "/static/img/presremote-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/presremote-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/presremote-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

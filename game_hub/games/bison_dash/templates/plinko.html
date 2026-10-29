@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Port Hop Plinko - Packet Routing Simulator</title>
+    <script src="/static/js/html5-qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #05050a;
+            --panel-bg: #0d1117;
+            --border: #21262d;
+            --cyan: #00ffcc;
+            --cyan-glow: rgba(0, 255, 204, 0.45);
+            --magenta: #ff007f;
+            --magenta-glow: rgba(255, 0, 127, 0.45);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.5);
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 50% 15%, rgba(0, 255, 204, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 50% 85%, rgba(255, 0, 127, 0.08) 0%, transparent 60%);
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 24px;
+            background: #090d14;
+            border-bottom: 2px solid var(--border);
+            z-index: 10;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-title h1 {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            text-shadow: 0 0 12px var(--cyan-glow);
+        }
+
+        .badge-sub {
+            font-size: 0.75rem;
+            color: var(--magenta);
+            border: 1px solid var(--magenta);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .player-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .player-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #161b22;
+            border: 1px solid var(--border);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .player-tokens {
+            color: var(--gold);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Main Game Layout */
+        main {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        /* Left/Right Control Dock (or Top/Bottom) */
+        #game-area {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            max-height: 940px;
+            width: 100%;
+            max-width: 720px;
+        }
+
+        /* Port Selector Bar */
+        .port-nav {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 12px 12px 0 0;
+            padding: 6px 12px;
+            gap: 6px;
+        }
+
+        .ports-container {
+            display: flex;
+            flex: 1;
+            justify-content: space-between;
+            gap: 4px;
+        }
+
+        .port-btn {
+            flex: 1;
+            background: #161b22;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 6px;
+            padding: 8px 2px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+
+        .port-btn.selected {
+            background: rgba(0, 255, 204, 0.15);
+            border-color: var(--cyan);
+            color: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan-glow);
+            transform: translateY(-2px);
+        }
+
+        .nav-arrow-btn {
+            background: #21262d;
+            border: 1px solid var(--border);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 900;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .nav-arrow-btn:active {
+            background: var(--cyan);
+            color: black;
+        }
+
+        /* Canvas Frame */
+        #canvas-wrapper {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            background: #06080e;
+            border-left: 2px solid var(--border);
+            border-right: 2px solid var(--border);
+            border-bottom: 2px solid var(--border);
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 40px rgba(0, 255, 204, 0.03);
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Bottom Action Bar */
+        .action-dock {
+            width: 100%;
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .btn-drop {
+            flex: 2;
+            background: linear-gradient(135deg, #00ffcc 0%, #00b894 100%);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--cyan-glow);
+            transition: all 0.15s;
+        }
+
+        .btn-drop:disabled {
+            background: #21262d;
+            color: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: #161b22;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #21262d;
+        }
+
+        /* Modals & Overlays */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(5, 5, 10, 0.92);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: #0d1117;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        /* ARCADE 4-DIGIT PIN KEYPAD */
+        .pin-pad-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .pin-display {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 4px 0;
+        }
+
+        .pin-digit-box {
+            width: 58px;
+            height: 68px;
+            background: #06090e;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: monospace;
+            color: var(--cyan);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+            transition: all 0.15s ease;
+        }
+
+        .pin-digit-box.filled {
+            border-color: var(--cyan);
+            box-shadow: 0 0 16px var(--cyan-glow), inset 0 0 10px rgba(0, 255, 204, 0.2);
+            color: #fff;
+        }
+
+        .pin-digit-box.active {
+            border-color: var(--cyan);
+            box-shadow: 0 0 18px var(--cyan-glow);
+            animation: pinPulse 1s infinite alternate;
+        }
+
+        @keyframes pinPulse {
+            from { border-color: rgba(0, 255, 204, 0.4); }
+            to { border-color: rgba(0, 255, 204, 1); box-shadow: 0 0 22px var(--cyan-glow); }
+        }
+
+        .pin-keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .pin-key-btn {
+            background: #141b26;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 14px 0;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-key-btn:active {
+            transform: scale(0.94);
+            background: #1f2a3a;
+        }
+
+        .pin-key-btn.btn-action-key {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .pin-status-msg {
+            min-height: 22px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .shake {
+            animation: shakeKeypad 0.4s ease-in-out;
+        }
+
+        @keyframes shakeKeypad {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        /* Payout Splash */
+        .payout-popup {
+            animation: bounceIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-color: var(--gold);
+            box-shadow: 0 0 50px var(--gold-glow);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .token-win-display {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 25px var(--gold-glow);
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand-title">
+        <span style="font-size: 1.5rem;">⚡</span>
+        <div>
+            <h1>Port Hop Plinko</h1>
+            <span class="badge-sub">VPN Packet Routing Engine</span>
+        </div>
+    </div>
+
+    <div class="player-bar">
+        <div id="player-status-pill" class="player-pill">
+            <span id="player-name-display">Guest Operator</span>
+            <span id="player-pin-display" style="font-size: 0.8rem; color: var(--cyan); margin-left: 2px; display: none;"></span>
+            <span class="player-tokens">🪙 <span id="player-tokens-display">--</span></span>
+        </div>
+        <button id="btn-scan-trigger" class="btn-secondary" style="padding: 8px 14px;" onclick="openPinKeypad()">
+            🔢 Enter PIN
+        </button>
+    </div>
+</header>
+
+<main>
+    <div id="game-area">
+        <!-- Top Port Selection Bar -->
+        <div class="port-nav">
+            <button class="nav-arrow-btn" onclick="shiftPort(-1)">◀</button>
+            <div class="ports-container" id="ports-container">
+                <!-- 9 Starting Top Ports -->
+            </div>
+            <button class="nav-arrow-btn" onclick="shiftPort(1)">▶</button>
+        </div>
+
+        <!-- The Plinko Board Canvas -->
+        <div id="canvas-wrapper">
+            <canvas id="plinko-canvas"></canvas>
+        </div>
+
+        <!-- Controls -->
+        <div class="action-dock">
+            <button id="btn-drop-packet" class="btn-drop" onclick="dropPacket()">
+                🚀 DROP PACKET [ENTER]
+            </button>
+        </div>
+    </div>
+
+    <!-- ARCADE 4-DIGIT PIN KEYPAD MODAL -->
+    <div id="pin-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <h2 style="color: var(--cyan); margin-bottom: 4px;">Player Check-In</h2>
+            <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 12px;">Enter your 4-digit PIN code:</p>
+
+            <div class="pin-pad-container">
+                <div class="pin-display" id="pin-boxes">
+                    <div class="pin-digit-box active" id="pin-box-0">&bull;</div>
+                    <div class="pin-digit-box" id="pin-box-1">&bull;</div>
+                    <div class="pin-digit-box" id="pin-box-2">&bull;</div>
+                    <div class="pin-digit-box" id="pin-box-3">&bull;</div>
+                </div>
+
+                <div id="pin-status-msg" class="pin-status-msg">Tap or type 4 digits</div>
+
+                <div class="pin-keypad-grid">
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('1')">1</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('2')">2</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('3')">3</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('4')">4</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('5')">5</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('6')">6</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('7')">7</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('8')">8</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('9')">9</button>
+                    <button type="button" class="pin-key-btn btn-action-key" onclick="clearPinKeypad()">CLR</button>
+                    <button type="button" class="pin-key-btn" onclick="pressPinKey('0')">0</button>
+                    <button type="button" class="pin-key-btn btn-action-key" onclick="backspacePinKey()">⌫</button>
+                </div>
+
+                <div style="display: flex; gap: 8px; width: 100%; margin-top: 6px;">
+                    <button type="button" class="btn-secondary" style="flex:1; padding: 10px; font-size: 0.85rem;" onclick="openManualFromPin()">⌨️ Manual ID</button>
+                    <button type="button" class="btn-secondary" style="flex:1; padding: 10px; background: #262c36; font-size: 0.85rem;" onclick="closePinKeypad()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MANUAL ID ENTRY MODAL -->
+    <div id="manual-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <h3 style="color: var(--cyan); margin-bottom: 10px;">Manual Player Lookup</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Enter Player ID (e.g. p_a1b2c3d4) or registered email:</p>
+            <input type="text" id="manual-player-id" placeholder="Player ID or Email" style="width: 100%; background: #06080e; border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: white; font-size: 1rem; margin-bottom: 15px; outline: none;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-drop" style="flex:1; padding: 12px;" onclick="submitManualPlayer()">Load Player</button>
+                <button class="btn-secondary" style="flex:1; padding: 12px;" onclick="closeManualInput()">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYOUT MODAL -->
+    <div id="payout-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card payout-popup">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+            <h2 style="color: var(--cyan); letter-spacing: 1px;">PACKET ROUTED!</h2>
+            <p id="payout-port-desc" style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">Delivered to Output Port</p>
+            
+            <div class="token-win-display">
+                +<span id="payout-tokens-amt">5</span> TOKENS
+            </div>
+
+            <p style="color: var(--text-main); font-size: 1.05rem; margin-bottom: 20px;">
+                New Balance: <strong id="payout-new-balance" style="color: var(--gold);">105</strong> Tokens
+            </p>
+
+            <button class="btn-drop" style="width: 100%;" onclick="closePayoutModal()">
+                NEXT DROP &bull; <span id="auto-reset-countdown">5</span>s
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    // --- AUDIO SYSTEM (Web Audio API Synthesizer) ---
+    class SoundEngine {
+        constructor() {
+            this.ctx = null;
+        }
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        playPegPing(row = 0) {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                // Pentatonic frequency scaling by row
+                const baseFreq = 440;
+                const semitones = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+                const freq = baseFreq * Math.pow(2, (semitones[row % semitones.length] || 0) / 12);
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.15);
+            } catch(e) {}
+        }
+        playDrop() {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.25);
+            } catch(e) {}
+        }
+        playWin(tokens) {
+            try {
+                this.init();
+                const chords = tokens >= 5 ? [523.25, 659.25, 783.99, 1046.50] : [440, 554.37, 659.25];
+                chords.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.08);
+                    osc.stop(this.ctx.currentTime + idx * 0.08 + 0.4);
+                });
+            } catch(e) {}
+        }
+        playClick() {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.05);
+            } catch(e) {}
+        }
+    }
+    const audio = new SoundEngine();
+
+    // --- GAME CONFIG & STATE ---
+    // 9 Starting Top Ports: mutable headers
+    const TOP_PORTS = [5001, 5432, 8000, 8080, 3000, 443, 22, 8443, 9000];
+    
+    // 9 Symmetrical Payout Slots: dynamically updated from economy config
+    let PAYOUT_SLOTS = [1, 1, 2, 2, 5, 2, 2, 1, 1];
+    let plinkoCost = 0;
+
+    let activePlayer = null;
+    let selectedPortIndex = 4; // Start center (port 3000)
+    let isDropping = false;
+    let autoResetTimer = null;
+    let html5QrCode = null;
+
+    // --- CANVAS & PHYSICS ENGINE ---
+    const canvas = document.getElementById('plinko-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = 600;
+    let height = 800;
+
+    // Physics parameters (from spec)
+    const GRAVITY = 680;           // Scaled acceleration (px/s^2)
+    const RESTITUTION = 0.65;      // Bounciness coefficient
+    const BALL_RADIUS = 10;
+    const PEG_RADIUS = 6;
+    const ROWS = 11;               // 11 Staggered Peg Rows
+
+    let pegs = [];
+    let slots = [];
+    let ball = null;
+    let particles = [];
+    let lastTime = performance.now();
+
+    function resizeCanvas() {
+        const wrapper = document.getElementById('canvas-wrapper');
+        const rect = wrapper.getBoundingClientRect();
+        width = Math.floor(rect.width);
+        height = Math.floor(rect.height);
+
+        canvas.width = width;
+        canvas.height = height;
+
+        initBoardGeometry();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function initBoardGeometry() {
+        pegs = [];
+        slots = [];
+
+        const topMargin = 70;
+        const bottomMargin = 90;
+        const boardHeight = height - topMargin - bottomMargin;
+        const rowSpacing = boardHeight / (ROWS + 1);
+
+        // 11 Staggered Rows:
+        // Alternating: Row 0 has 10 pegs, Row 1 has 9 pegs, etc.
+        for (let r = 0; r < ROWS; r++) {
+            const isTenPegs = (r % 2 === 0);
+            const numPegs = isTenPegs ? 10 : 9;
+            const y = topMargin + (r + 1) * rowSpacing;
+            
+            // Distribute pegs evenly across width with edge margins
+            const margin = isTenPegs ? width * 0.08 : width * 0.12;
+            const availableWidth = width - margin * 2;
+            const spacing = availableWidth / (numPegs - 1);
+
+            for (let c = 0; c < numPegs; c++) {
+                const x = margin + c * spacing;
+                pegs.push({
+                    x: x,
+                    y: y,
+                    row: r,
+                    glowTime: 0 // decay timer for impact light trail
+                });
+            }
+        }
+
+        // 9 Bottom Payout Slots
+        const slotWidth = width / 9;
+        const slotY = height - bottomMargin;
+
+        for (let i = 0; i < 9; i++) {
+            slots.push({
+                index: i,
+                x: i * slotWidth,
+                y: slotY,
+                width: slotWidth,
+                height: bottomMargin,
+                tokens: PAYOUT_SLOTS[i],
+                glow: 0
+            });
+        }
+    }
+
+    // --- PORT SELECTION UI ---
+    function renderPortsUI() {
+        const container = document.getElementById('ports-container');
+        container.innerHTML = '';
+        TOP_PORTS.forEach((port, idx) => {
+            const btn = document.createElement('div');
+            btn.className = `port-btn ${idx === selectedPortIndex ? 'selected' : ''}`;
+            btn.innerText = `:${port}`;
+            btn.onclick = () => selectPort(idx);
+            container.appendChild(btn);
+        });
+    }
+
+    function selectPort(idx) {
+        if (isDropping) return;
+        selectedPortIndex = Math.max(0, Math.min(TOP_PORTS.length - 1, idx));
+        renderPortsUI();
+    }
+
+    function shiftPort(delta) {
+        selectPort(selectedPortIndex + delta);
+    }
+
+    // Keyboard support: Left/Right arrow and Enter
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') shiftPort(-1);
+        if (e.key === 'ArrowRight') shiftPort(1);
+        if (e.key === 'Enter') {
+            const btn = document.getElementById('btn-drop-packet');
+            if (!btn.disabled && !isDropping) {
+                dropPacket();
+            }
+        }
+    });
+
+    // --- PLINKO CONFIG & ECONOMY ---
+    async function loadPlinkoConfig() {
+        try {
+            const res = await fetch('/api/plinko/config');
+            const data = await res.json();
+            if (data.status === 'success') {
+                if (data.cost !== undefined) plinkoCost = parseInt(data.cost) || 0;
+                if (Array.isArray(data.slots) && data.slots.length === 9) {
+                    PAYOUT_SLOTS = data.slots;
+                }
+                updateDropButtonLabel();
+                initBoardGeometry();
+            }
+        } catch(e) {}
+    }
+
+    function updateDropButtonLabel() {
+        const btn = document.getElementById('btn-drop-packet');
+        if (!btn) return;
+        if (plinkoCost > 0) {
+            btn.innerText = `🚀 DROP PACKET (-${plinkoCost} 🪙) [ENTER]`;
+        } else {
+            btn.innerText = `🚀 DROP PACKET [ENTER]`;
+        }
+    }
+
+    // --- DROP PACKET ACTION ---
+    async function dropPacket() {
+        if (isDropping) return;
+
+        // Check token play cost if configured
+        if (plinkoCost > 0) {
+            if (!activePlayer || !activePlayer.id) {
+                alert(`Please enter your PIN first. Drop cost: ${plinkoCost} tokens.`);
+                openPinKeypad();
+                return;
+            }
+            if (activePlayer.balance < plinkoCost) {
+                alert(`Insufficient tokens! (Need ${plinkoCost} tokens, your balance: ${activePlayer.balance}). Visit the Cashier Desk to top up.`);
+                return;
+            }
+            try {
+                const res = await fetch('/api/plinko/play', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ player_id: activePlayer.id })
+                });
+                const data = await res.json();
+                if (!res.ok || data.status !== 'success') {
+                    alert(data.message || "Could not deduct play cost.");
+                    return;
+                }
+                activePlayer.balance = data.balance;
+                document.getElementById('player-tokens-display').innerText = activePlayer.balance;
+            } catch(e) {
+                alert("Network error connecting to Plinko server.");
+                return;
+            }
+        }
+
+        isDropping = true;
+        document.getElementById('btn-drop-packet').disabled = true;
+
+        audio.playDrop();
+
+        // Calculate drop X position corresponding to selected top port
+        const portWidth = width / 9;
+        const baseX = (selectedPortIndex + 0.5) * portWidth;
+
+        // SPEC REQUIREMENT: Sub-Pixel "Network Jitter" (Anti-Exploit)
+        // Microscopic randomized lateral offset (+/- 0.4 pixels) and tiny velocity jitter
+        const jitterX = (Math.random() - 0.5) * 0.8;
+        const jitterVx = (Math.random() - 0.5) * 20.0;
+
+        ball = {
+            x: baseX + jitterX,
+            y: 35,
+            vx: jitterVx,
+            vy: 30,
+            radius: BALL_RADIUS,
+            color: '#00ffcc',
+            trail: []
+        };
+    }
+
+    // --- PHYSICS & RENDER LOOP ---
+    function updatePhysics(dt) {
+        if (!ball) return;
+
+        // Apply gravity
+        ball.vy += GRAVITY * dt;
+
+        // Update position
+        ball.x += ball.vx * dt;
+        ball.y += ball.vy * dt;
+
+        // Record breadcrumb trail
+        ball.trail.push({ x: ball.x, y: ball.y, alpha: 1.0 });
+        if (ball.trail.length > 25) ball.trail.shift();
+
+        // Wall collisions (left/right bounds)
+        if (ball.x - ball.radius < 4) {
+            ball.x = 4 + ball.radius;
+            ball.vx = -ball.vx * RESTITUTION;
+        } else if (ball.x + ball.radius > width - 4) {
+            ball.x = width - 4 - ball.radius;
+            ball.vx = -ball.vx * RESTITUTION;
+        }
+
+        // Peg collisions
+        pegs.forEach(p => {
+            const dx = ball.x - p.x;
+            const dy = ball.y - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const minDist = ball.radius + PEG_RADIUS;
+
+            if (dist < minDist) {
+                // Collision normal
+                const nx = dx / (dist || 1);
+                const ny = dy / (dist || 1);
+
+                // Push ball outside peg
+                ball.x = p.x + nx * minDist;
+                ball.y = p.y + ny * minDist;
+
+                // Reflect velocity vector
+                const dot = ball.vx * nx + ball.vy * ny;
+                if (dot < 0) {
+                    ball.vx = (ball.vx - (1 + RESTITUTION) * dot * nx) + (Math.random() - 0.5) * 15;
+                    ball.vy = (ball.vy - (1 + RESTITUTION) * dot * ny);
+                }
+
+                // Impact Light Trail Decay: Flash bright cyan/magenta with decay time 1.8s
+                p.glowTime = 1.8;
+                audio.playPegPing(p.row);
+
+                // Spawn spark particles
+                for (let i = 0; i < 4; i++) {
+                    particles.push({
+                        x: p.x,
+                        y: p.y,
+                        vx: (Math.random() - 0.5) * 80,
+                        vy: (Math.random() - 0.5) * 80,
+                        life: 0.35,
+                        color: (p.row % 2 === 0) ? '#00ffcc' : '#ff007f'
+                    });
+                }
+            }
+        });
+
+        // Check landing in bottom slots
+        const slotY = height - 90;
+        if (ball.y >= slotY + 20) {
+            // Find which slot it landed in
+            const slotIndex = Math.max(0, Math.min(8, Math.floor(ball.x / (width / 9))));
+            onPacketLanded(slotIndex);
+            ball = null;
+        }
+    }
+
+    function onPacketLanded(slotIndex) {
+        const slot = slots[slotIndex];
+        const tokensAwarded = slot.tokens;
+        slot.glow = 2.0;
+
+        audio.playWin(tokensAwarded);
+
+        // Process Payout via Backend
+        settlePayout(slotIndex, tokensAwarded);
+    }
+
+    async function settlePayout(slotIndex, tokensAwarded) {
+        const portName = TOP_PORTS[selectedPortIndex];
+        let newBalance = activePlayer ? (activePlayer.balance + tokensAwarded) : tokensAwarded;
+
+        if (activePlayer && activePlayer.id) {
+            try {
+                const res = await fetch('/api/plinko/payout', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        player_id: activePlayer.id,
+                        payout: tokensAwarded,
+                        slot_index: slotIndex,
+                        port: portName
+                    })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    newBalance = data.new_balance;
+                    activePlayer.balance = newBalance;
+                    document.getElementById('player-tokens-display').innerText = newBalance;
+                }
+            } catch(e) {
+                console.error("Payout API error", e);
+            }
+        }
+
+        // Show Payout Modal
+        document.getElementById('payout-tokens-amt').innerText = tokensAwarded;
+        document.getElementById('payout-port-desc').innerText = `Routed from Port :${portName} to Output Slot ${slotIndex + 1}`;
+        document.getElementById('payout-new-balance').innerText = newBalance;
+        document.getElementById('payout-modal').style.display = 'flex';
+
+        // 5-Second Hands-Free Auto-Reset Loop (Spec Requirement)
+        let countdown = 5;
+        document.getElementById('auto-reset-countdown').innerText = countdown;
+        clearInterval(autoResetTimer);
+        autoResetTimer = setInterval(() => {
+            countdown--;
+            document.getElementById('auto-reset-countdown').innerText = countdown;
+            if (countdown <= 0) {
+                clearInterval(autoResetTimer);
+                closePayoutModal();
+            }
+        }, 1000);
+    }
+
+    function closePayoutModal() {
+        clearInterval(autoResetTimer);
+        document.getElementById('payout-modal').style.display = 'none';
+        isDropping = false;
+        document.getElementById('btn-drop-packet').disabled = false;
+    }
+
+    // --- MAIN RENDER LOOP ---
+    function render(currentTime) {
+        const dt = Math.min((currentTime - lastTime) / 1000, 0.05);
+        lastTime = currentTime;
+
+        updatePhysics(dt);
+
+        // Clear canvas with deep space tint
+        ctx.fillStyle = '#06080e';
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw Top Entry Funnel Indicator
+        const portWidth = width / 9;
+        const selectorX = (selectedPortIndex + 0.5) * portWidth;
+        ctx.fillStyle = 'rgba(0, 255, 204, 0.2)';
+        ctx.beginPath();
+        ctx.moveTo(selectorX - 18, 0);
+        ctx.lineTo(selectorX + 18, 0);
+        ctx.lineTo(selectorX, 28);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#00ffcc';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw Slots & Dividers at Bottom
+        const slotY = height - 90;
+        slots.forEach((s, idx) => {
+            // Divider lines
+            ctx.strokeStyle = '#21262d';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(s.x, slotY);
+            ctx.lineTo(s.x, height);
+            ctx.stroke();
+
+            // Slot Background Highlight
+            if (s.tokens >= 5) {
+                ctx.fillStyle = s.glow > 0 ? 'rgba(255, 215, 0, 0.4)' : 'rgba(255, 215, 0, 0.08)';
+            } else if (s.tokens >= 2) {
+                ctx.fillStyle = s.glow > 0 ? 'rgba(255, 0, 127, 0.35)' : 'rgba(255, 0, 127, 0.05)';
+            } else {
+                ctx.fillStyle = s.glow > 0 ? 'rgba(0, 255, 204, 0.35)' : 'rgba(0, 255, 204, 0.03)';
+            }
+            ctx.fillRect(s.x + 2, slotY, s.width - 4, 90);
+
+            // Slot Token Label
+            ctx.font = 'bold 15px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = s.tokens >= 5 ? '#ffd700' : (s.tokens >= 2 ? '#ff007f' : '#00ffcc');
+            ctx.fillText(`${s.tokens} 🪙`, s.x + s.width / 2, slotY + 45);
+
+            ctx.font = '9px monospace';
+            ctx.fillStyle = '#8b949e';
+            ctx.fillText(`OUT-${idx + 1}`, s.x + s.width / 2, slotY + 68);
+
+            // Decay slot glow
+            if (s.glow > 0) s.glow -= dt;
+        });
+
+        // Draw Pegs with 1.8s Decay Light Trails
+        pegs.forEach(p => {
+            // Decay glow time
+            if (p.glowTime > 0) {
+                p.glowTime -= dt;
+            }
+
+            const glowFactor = Math.max(0, p.glowTime / 1.8);
+
+            // Peg Body
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, PEG_RADIUS, 0, Math.PI * 2);
+
+            if (glowFactor > 0) {
+                // Neon Impact Flash & Glow
+                ctx.fillStyle = (p.row % 2 === 0) ? '#ffffff' : '#ff99dd';
+                ctx.shadowColor = (p.row % 2 === 0) ? '#00ffcc' : '#ff007f';
+                ctx.shadowBlur = 18 * glowFactor;
+                ctx.fill();
+                ctx.shadowBlur = 0; // reset
+            } else {
+                // Dark Idle Chrome Pin
+                ctx.fillStyle = '#21262d';
+                ctx.fill();
+                ctx.strokeStyle = '#484f58';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+        });
+
+        // Draw Spark Particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const pt = particles[i];
+            pt.x += pt.vx * dt;
+            pt.y += pt.vy * dt;
+            pt.life -= dt;
+            if (pt.life <= 0) {
+                particles.splice(i, 1);
+                continue;
+            }
+            ctx.fillStyle = pt.color;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw Ball & Breadcrumb Routing Trail
+        if (ball) {
+            // Render Trail
+            for (let i = 0; i < ball.trail.length; i++) {
+                const tr = ball.trail[i];
+                const trAlpha = (i / ball.trail.length) * 0.45;
+                ctx.fillStyle = `rgba(0, 255, 204, ${trAlpha})`;
+                ctx.beginPath();
+                ctx.arc(tr.x, tr.y, ball.radius * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Render Ball (Neon Packet Orb)
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#00ffcc';
+            ctx.shadowBlur = 20;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            ctx.strokeStyle = '#00ffcc';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        requestAnimationFrame(render);
+    }
+
+    // --- ARCADE 4-DIGIT PIN KEYPAD & PLAYER MANAGEMENT ---
+    let currentPin = "";
+
+    function openPinKeypad() {
+        currentPin = "";
+        updatePinDisplay();
+        const statusEl = document.getElementById('pin-status-msg');
+        statusEl.innerText = "Tap or type 4 digits";
+        statusEl.style.color = "var(--text-muted)";
+        document.getElementById('pin-modal').style.display = 'flex';
+    }
+
+    function closePinKeypad() {
+        document.getElementById('pin-modal').style.display = 'none';
+        currentPin = "";
+    }
+
+    function openManualFromPin() {
+        closePinKeypad();
+        openManualInput();
+    }
+
+    function pressPinKey(num) {
+        if (currentPin.length >= 4) return;
+        currentPin += num;
+        audio.playClick();
+        updatePinDisplay();
+        if (currentPin.length === 4) {
+            verifyAndSubmitPin();
+        }
+    }
+
+    function backspacePinKey() {
+        if (currentPin.length > 0) {
+            currentPin = currentPin.slice(0, -1);
+            updatePinDisplay();
+        }
+    }
+
+    function clearPinKeypad() {
+        currentPin = "";
+        updatePinDisplay();
+        const statusEl = document.getElementById('pin-status-msg');
+        statusEl.innerText = "Cleared. Enter 4 digits.";
+        statusEl.style.color = "var(--text-muted)";
+    }
+
+    function updatePinDisplay() {
+        for (let i = 0; i < 4; i++) {
+            const box = document.getElementById(`pin-box-${i}`);
+            if (!box) continue;
+            if (i < currentPin.length) {
+                box.innerText = currentPin[i];
+                box.className = 'pin-digit-box filled';
+            } else if (i === currentPin.length) {
+                box.innerText = '—';
+                box.className = 'pin-digit-box active';
+            } else {
+                box.innerText = '—';
+                box.className = 'pin-digit-box';
+            }
+        }
+    }
+
+    async function verifyAndSubmitPin() {
+        const statusEl = document.getElementById('pin-status-msg');
+        statusEl.innerText = "Verifying PIN...";
+        statusEl.style.color = "var(--cyan)";
+        const pinToTest = currentPin;
+
+        try {
+            const res = await fetch(`/api/player/${pinToTest}`);
+            const data = await res.json();
+            if (!res.ok || data.status !== 'success' || !data.player) {
+                statusEl.innerText = `PIN ${pinToTest} not found! Check with attendant.`;
+                statusEl.style.color = "#ff6b81";
+                const boxes = document.getElementById('pin-boxes');
+                boxes.classList.add('shake');
+                setTimeout(() => {
+                    boxes.classList.remove('shake');
+                    currentPin = "";
+                    updatePinDisplay();
+                }, 600);
+                return;
+            }
+
+            statusEl.innerText = `✓ Welcome, ${data.player.name}!`;
+            statusEl.style.color = "var(--cyan)";
+            setTimeout(() => {
+                closePinKeypad();
+                loadPlayer(pinToTest);
+            }, 300);
+
+        } catch (e) {
+            statusEl.innerText = "Network error connecting to server.";
+            statusEl.style.color = "#ff6b81";
+        }
+    }
+
+    // Physical keyboard input listener
+    window.addEventListener('keydown', (e) => {
+        const pinModal = document.getElementById('pin-modal');
+        if (pinModal && pinModal.style.display === 'flex') {
+            if (e.key >= '0' && e.key <= '9') {
+                pressPinKey(e.key);
+            } else if (e.key === 'Backspace') {
+                backspacePinKey();
+            } else if (e.key === 'Escape') {
+                closePinKeypad();
+            }
+        }
+    });
+
+    function openManualInput() {
+        document.getElementById('manual-modal').style.display = 'flex';
+        document.getElementById('manual-player-id').focus();
+    }
+
+    function closeManualInput() {
+        document.getElementById('manual-modal').style.display = 'none';
+        document.getElementById('manual-player-id').value = '';
+    }
+
+    async function submitManualPlayer() {
+        const val = document.getElementById('manual-player-id').value.trim();
+        if (!val) return;
+        closeManualInput();
+        await loadPlayer(val);
+    }
+
+    async function loadPlayer(identifier) {
+        try {
+            const res = await fetch(`/api/player/${identifier}`);
+            const data = await res.json();
+            if (data.status === 'success' && data.player) {
+                activePlayer = data.player;
+                document.getElementById('player-name-display').innerText = activePlayer.name;
+                document.getElementById('player-tokens-display').innerText = activePlayer.balance;
+                const pinDisplay = document.getElementById('player-pin-display');
+                if (pinDisplay && activePlayer.pin) {
+                    pinDisplay.innerText = `(PIN: ${activePlayer.pin})`;
+                    pinDisplay.style.display = 'inline';
+                }
+                document.getElementById('player-status-pill').style.borderColor = 'var(--cyan)';
+            } else {
+                alert("Player pass not found. Register on the signup page first!");
+            }
+        } catch(e) {
+            alert("Connection error checking player.");
+        }
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', () => {
+        loadPlinkoConfig();
+        resizeCanvas();
+        renderPortsUI();
+        requestAnimationFrame(render);
+    });
+</script>
+
+</body>
+</html>

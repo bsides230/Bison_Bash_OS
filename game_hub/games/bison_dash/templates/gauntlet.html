@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The AI Gauntlet - Touchscreen Door Challenge</title>
+    <script src="/static/js/pin_auth_flow.js?v=20261023_02"></script>
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --panel-bg: #0f141c;
+            --card-bg: #161d28;
+            --cyan: #00ffcc;
+            --cyan-glow: rgba(0, 255, 204, 0.45);
+            --purple: #a855f7;
+            --purple-glow: rgba(168, 85, 247, 0.45);
+            --danger: #ff4757;
+            --danger-glow: rgba(255, 71, 87, 0.5);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.55);
+            --border: #242f40;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(168, 85, 247, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 50% 90%, rgba(0, 255, 204, 0.08) 0%, transparent 60%);
+        }
+
+        /* Header HUD */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 28px;
+            background: var(--panel-bg);
+            border-bottom: 2px solid var(--border);
+            z-index: 10;
+        }
+
+        .hud-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hud-brand h1 {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--purple);
+            text-shadow: 0 0 15px var(--purple-glow);
+        }
+
+        .level-badge {
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid var(--purple);
+            color: #d8b4fe;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hud-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hud-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #090d14;
+            border: 1px solid var(--border);
+            padding: 8px 18px;
+            border-radius: 24px;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .banked-pill {
+            border-color: var(--gold);
+            color: var(--gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Main Game Arena */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+        }
+
+        /* Progress Steps Bar */
+        .progress-bar-container {
+            width: 100%;
+            max-width: 820px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--border);
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .progress-line-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--purple));
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .step-node {
+            position: relative;
+            z-index: 2;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #090d14;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1rem;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .step-node.active {
+            border-color: var(--cyan);
+            color: #000;
+            background: var(--cyan);
+            box-shadow: 0 0 20px var(--cyan-glow);
+            transform: scale(1.15);
+        }
+
+        .step-node.completed {
+            border-color: var(--purple);
+            background: var(--purple);
+            color: white;
+        }
+
+        .step-node.vault {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .step-node.vault.active {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 25px var(--gold-glow);
+        }
+
+        /* Mission Briefing Text */
+        .stage-prompt {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .stage-prompt h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .stage-prompt p {
+            font-size: 1.05rem;
+            color: var(--cyan);
+            font-weight: 600;
+        }
+
+        /* 4 Doors Grid */
+        .doors-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            height: 380px;
+            perspective: 1000px;
+        }
+
+        .door-card {
+            background: linear-gradient(180deg, #161e2b 0%, #0c121b 100%);
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .door-card:hover {
+            border-color: var(--cyan);
+            box-shadow: 0 0 25px var(--cyan-glow);
+            transform: translateY(-6px);
+        }
+
+        .door-card:active {
+            transform: scale(0.96);
+        }
+
+        .door-card.opened {
+            cursor: default;
+        }
+
+        .door-header-tag {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .door-icon {
+            font-size: 4.5rem;
+            margin: 15px 0;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 204, 0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .door-label {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .door-subtext {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Card Revealed State Styles */
+        .door-card.revealed-token {
+            border-color: var(--gold) !important;
+            background: linear-gradient(180deg, rgba(255, 215, 0, 0.2) 0%, #0d1219 100%) !important;
+            box-shadow: 0 0 35px var(--gold-glow) !important;
+        }
+
+        .door-card.revealed-safe {
+            border-color: var(--cyan) !important;
+            background: linear-gradient(180deg, rgba(0, 255, 204, 0.2) 0%, #0d1219 100%) !important;
+            box-shadow: 0 0 35px var(--cyan-glow) !important;
+        }
+
+        .door-card.revealed-glitch {
+            border-color: var(--danger) !important;
+            background: linear-gradient(180deg, rgba(255, 71, 87, 0.25) 0%, #15090b 100%) !important;
+            box-shadow: 0 0 35px var(--danger-glow) !important;
+            animation: glitchShake 0.4s ease;
+        }
+
+        @keyframes glitchShake {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-8px, 4px); }
+            40% { transform: translate(8px, -4px); }
+            60% { transform: translate(-5px, 2px); }
+            80% { transform: translate(5px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* Modals & Overlays */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(5, 7, 12, 0.94);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 24px;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-card {
+            background: #0e131d;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 35px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.9);
+        }
+
+        /* ARCADE 4-DIGIT PIN KEYPAD */
+        .pin-pad-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .pin-display {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 4px 0;
+        }
+
+        .pin-digit-box {
+            width: 58px;
+            height: 68px;
+            background: #090d14;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: monospace;
+            color: var(--purple);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+            transition: all 0.15s ease;
+        }
+
+        .pin-digit-box.filled {
+            border-color: var(--purple);
+            box-shadow: 0 0 15px var(--purple-glow), inset 0 0 10px rgba(168, 85, 247, 0.2);
+            color: #fff;
+        }
+
+        .pin-digit-box.active {
+            border-color: var(--cyan);
+            box-shadow: 0 0 18px var(--cyan-glow);
+            animation: pinPulse 1s infinite alternate;
+        }
+
+        @keyframes pinPulse {
+            from { border-color: rgba(0, 255, 204, 0.4); }
+            to { border-color: rgba(0, 255, 204, 1); box-shadow: 0 0 22px var(--cyan-glow); }
+        }
+
+        .pin-keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .pin-key-btn {
+            background: #182030;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 14px 0;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-key-btn:active {
+            transform: scale(0.94);
+            background: #25334d;
+        }
+
+        .pin-key-btn.btn-action-key {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .pin-status-msg {
+            min-height: 22px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .shake {
+            animation: shakeKeypad 0.4s ease-in-out;
+        }
+
+        @keyframes shakeKeypad {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 28px;
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--purple-glow);
+            transition: all 0.2s;
+        }
+
+        .btn-action:active {
+            transform: scale(0.97);
+        }
+
+        .btn-cyan {
+            background: linear-gradient(135deg, #00ffcc 0%, #00b894 100%);
+            color: black;
+            box-shadow: 0 4px 20px var(--cyan-glow);
+        }
+
+        .btn-secondary {
+            background: #1c2432;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #242f40;
+        }
+
+        /* Live Token Action Toast Notification */
+        #token-toast-container {
+            position: fixed;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            gap: 8px;
+        }
+
+        .token-toast {
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 900;
+            font-size: 1.15rem;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            animation: toastPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        .token-toast.deduct {
+            background: rgba(255, 71, 87, 0.96);
+            color: #ffffff;
+            border: 2px solid #ff4757;
+            box-shadow: 0 0 25px rgba(255, 71, 87, 0.6);
+        }
+
+        .token-toast.win {
+            background: rgba(0, 255, 204, 0.95);
+            color: #05080f;
+            border: 2px solid #00ffcc;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.7);
+        }
+
+        .token-toast.fade-out {
+            opacity: 0;
+            transform: translateY(-15px) scale(0.9);
+        }
+
+        @keyframes toastPopIn {
+            from { transform: translateY(-20px) scale(0.85); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="token-toast-container"></div>
+
+<header>
+    <div class="hud-brand">
+        <span style="font-size: 1.8rem;">🤖</span>
+        <div>
+            <h1>The AI Gauntlet</h1>
+            <span id="level-title-badge" class="level-badge">Stage 1: Input Embeddings</span>
+        </div>
+    </div>
+
+    <div class="hud-stats">
+        <div class="hud-pill">
+            <span>👤</span>
+            <span id="player-name-display">Authenticate with PIN</span>
+            <span id="player-pin-display" style="font-family: monospace; font-size: 0.8rem; color: var(--cyan); margin-left: 4px;"></span>
+            <span id="player-balance-display" style="font-size: 0.82rem; color: var(--gold); margin-left: 6px; font-weight: 700;"></span>
+        </div>
+        <div class="hud-pill banked-pill">
+            <span>🪙 Banked:</span>
+            <span id="banked-tokens-display" style="font-size: 1.2rem;">0</span>
+        </div>
+        <button id="btn-scan-trigger" class="btn-secondary" onclick="openPinKeypad()">
+            🔢 Enter PIN
+        </button>
+    </div>
+</header>
+
+<main>
+    <!-- Progress Indicator -->
+    <div class="progress-bar-container">
+        <div class="progress-line">
+            <div id="progress-line-fill" class="progress-line-fill"></div>
+        </div>
+        <div class="step-node active" id="node-1">1</div>
+        <div class="step-node" id="node-2">2</div>
+        <div class="step-node" id="node-3">3</div>
+        <div class="step-node" id="node-4">4</div>
+        <div class="step-node vault" id="node-5">★</div>
+    </div>
+
+    <!-- Stage Instructions -->
+    <div class="stage-prompt">
+        <h2 id="stage-headline">Select a Neural Gateway</h2>
+        <p id="stage-subheadline">One door holds a fatal AI error. Choose carefully to bank tokens and advance!</p>
+    </div>
+
+    <!-- 4 Doors Grid -->
+    <div class="doors-grid" id="doors-grid">
+        <!-- Generated Dynamically -->
+    </div>
+
+    <!-- STANDARDIZED 3-STEP PIN AUTHENTICATION -->
+    <div id="gauntlet-pin-container"></div>
+
+    <!-- GAME OVER / GLITCH MODAL -->
+    <div id="glitch-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="border-color: var(--danger); box-shadow: 0 0 50px var(--danger-glow);">
+            <div style="font-size: 4rem; margin-bottom: 10px;">💥</div>
+            <h2 id="glitch-title" style="color: var(--danger); font-size: 1.8rem; letter-spacing: 1px;">AI ERROR DETECTED!</h2>
+            <p id="glitch-desc" style="color: #ff99aa; font-size: 1.1rem; margin: 12px 0 20px;">CUDA Memory Overflow: Tensor size exceeded VRAM bounds.</p>
+            
+            <div style="background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold); border-radius: 12px; padding: 15px; margin-bottom: 25px;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Banked Tokens Saved</div>
+                <div style="font-size: 2.4rem; font-weight: 900; color: var(--gold);">+<span id="glitch-banked-amt">0</span> 🪙</div>
+                <div style="font-size: 0.9rem; color: var(--text-main); margin-top: 4px;">Remaining Balance: <strong id="glitch-new-balance" style="color: var(--gold);">100</strong> Tokens</div>
+            </div>
+
+            <button class="btn-action" style="width: 100%;" onclick="resetToAttract()">
+                FINISH &bull; RESET (<span id="glitch-reset-timer">5</span>s)
+            </button>
+        </div>
+    </div>
+
+    <!-- JACKPOT VICTORY MODAL -->
+    <div id="victory-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="border-color: var(--gold); box-shadow: 0 0 60px var(--gold-glow);">
+            <div style="font-size: 4.5rem; margin-bottom: 10px;">🏆</div>
+            <h2 style="color: var(--gold); font-size: 2rem; letter-spacing: 1px;">GAUNTLET CONQUERED!</h2>
+            <p style="color: #fff; font-size: 1.1rem; margin: 8px 0 15px;">You successfully breached the Superalignment Vault!</p>
+            
+            <div style="font-size: 3.5rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 25px var(--gold-glow); margin-bottom: 15px;">
+                +<span id="victory-tokens-amt">25</span> TOKENS
+            </div>
+
+            <p style="color: var(--text-main); font-size: 1.05rem; margin-bottom: 25px;">
+                Total Wallet Balance: <strong id="victory-new-balance" style="color: var(--gold);">125</strong> Tokens
+            </p>
+
+            <button class="btn-action btn-cyan" style="width: 100%;" onclick="resetToAttract()">
+                CONGRATULATIONS &bull; NEXT (<span id="victory-reset-timer">5</span>s)
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    // --- SYNTHESIZER AUDIO ENGINE ---
+    class GauntletSound {
+        constructor() {
+            this.ctx = null;
+        }
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        playDoorOpen() {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.2);
+            } catch(e) {}
+        }
+        playWinTokens() {
+            try {
+                this.init();
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.08);
+                    osc.stop(this.ctx.currentTime + idx * 0.08 + 0.35);
+                });
+            } catch(e) {}
+        }
+        playSafeAdvance() {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(350, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(700, this.ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.25);
+            } catch(e) {}
+        }
+        playGlitchBuzzer() {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.4);
+            } catch(e) {}
+        }
+        playGrandJackpot() {
+            try {
+                this.init();
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.1);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.1 + 0.6);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.1);
+                    osc.stop(this.ctx.currentTime + idx * 0.1 + 0.6);
+                });
+            } catch(e) {}
+        }
+    }
+    const audio = new GauntletSound();
+
+    // --- GAUNTLET STAGE DEFINITIONS ---
+    const STAGES = [
+        {
+            level: 1,
+            title: "Stage 1: Input Embeddings",
+            subtext: "Navigate past initial prompt validation.",
+            // 4 Doors: 1 Token Door, 2 Safe Doors, 1 Glitch Door
+            distribution: [
+                { type: "TOKEN", tokens: 2, label: "+2 Tokens", icon: "🪙", desc: "Embeddings Optimized" },
+                { type: "SAFE", tokens: 0, label: "Clear Path", icon: "🚪", desc: "No Errors Found" },
+                { type: "SAFE", tokens: 0, label: "Clear Path", icon: "🚪", desc: "Bypass Granted" },
+                { type: "GLITCH", label: "429 Rate Limit", icon: "🚨", error: "Too many concurrent prompts requested. API server locked down." }
+            ]
+        },
+        {
+            level: 2,
+            title: "Stage 2: Multi-Head Attention",
+            subtext: "Traverse cross-attention query matrices.",
+            // 4 Doors: 1 Token Door, 2 Safe Doors, 1 Glitch Door
+            distribution: [
+                { type: "TOKEN", tokens: 3, label: "+3 Tokens", icon: "💎", desc: "Key-Value Cache Hit" },
+                { type: "SAFE", tokens: 0, label: "Clear Path", icon: "🚪", desc: "Weights Aligned" },
+                { type: "SAFE", tokens: 0, label: "Clear Path", icon: "🚪", desc: "Self-Attention OK" },
+                { type: "GLITCH", label: "Context Exceeded", icon: "📜", error: "Token window breached. Memory buffer crashed." }
+            ]
+        },
+        {
+            level: 3,
+            title: "Stage 3: Quantization Layer",
+            subtext: "Navigate 4-bit tensor compression.",
+            // 4 Doors: 1 Big Token, 1 Small Token, 1 Safe, 1 Glitch
+            distribution: [
+                { type: "TOKEN", tokens: 5, label: "+5 Tokens", icon: "🪙", desc: "Zero Quantization Loss" },
+                { type: "TOKEN", tokens: 2, label: "+2 Tokens", icon: "⚡", desc: "FP8 Pipeline Accelerated" },
+                { type: "SAFE", tokens: 0, label: "Clear Path", icon: "🚪", desc: "Int8 Quantized" },
+                { type: "GLITCH", label: "CUDA Out of Memory", icon: "💥", error: "VRAM allocation failed. GPU thread terminated." }
+            ]
+        },
+        {
+            level: 4,
+            title: "Stage 4: RLHF Alignment",
+            subtext: "Bypass the reward model safety gates.",
+            // 4 Doors: 1 Big Token, 1 Safe, 2 Glitches (50% danger!)
+            distribution: [
+                { type: "TOKEN", tokens: 8, label: "+8 Tokens", icon: "👑", desc: "Human Preference S-Tier" },
+                { type: "SAFE", tokens: 0, label: "Clear Path", icon: "🚪", desc: "Alignment Checked" },
+                { type: "GLITCH", label: "Hallucination Detected", icon: "🌀", error: "Model claimed 2 + 2 = 5 with 99.9% confidence." },
+                { type: "GLITCH", label: "Safety Tripwire", icon: "🛑", error: "Refusal trigger activated. Access denied." }
+            ]
+        },
+        {
+            level: 5,
+            title: "Stage 5: Superalignment Vault",
+            subtext: "THE FINAL GATEWAY. Breach the vault for the Grand Jackpot!",
+            // 4 Doors: 1 GRAND JACKPOT (+25), 1 Runner-up (+10), 2 Glitches
+            distribution: [
+                { type: "JACKPOT", tokens: 25, label: "GRAND JACKPOT!", icon: "🏆", desc: "AGI UNLOCKED! (+25 TOKENS)" },
+                { type: "TOKEN", tokens: 10, label: "+10 Tokens", icon: "🪙", desc: "High Value Weights (+10)" },
+                { type: "GLITCH", label: "Model Collapse", icon: "💀", error: "Entropy maximum reached. Neural network dissolved." },
+                { type: "GLITCH", label: "Loss Divergence", icon: "⚠️", error: "Loss exploded to NaN. Weights scrambled." }
+            ]
+        }
+    ];
+
+    let currentLevelIndex = 0;
+    let bankedTokens = 0;
+    let tokensCreditedThisRun = 0;
+    let activePlayer = null;
+    let roundActive = false;
+    let autoResetTimer = null;
+    let html5QrCode = null;
+
+    let gauntletCost = 4;
+    let gauntletPayouts = { stage1: 2, stage2: 3, stage3: 5, stage4: 8, vault_jackpot: 25, vault_runner_up: 10 };
+    let entryDeductedForRun = false;
+
+    function showTokenNotification(text, type = 'win') {
+        const container = document.getElementById('token-toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `token-toast ${type}`;
+        toast.innerText = text;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 350);
+        }, 2200);
+    }
+
+    function applyEconomyToStages(payouts) {
+        if (!payouts) return;
+        const s1 = payouts.stage1 !== undefined ? payouts.stage1 : 2;
+        const s2 = payouts.stage2 !== undefined ? payouts.stage2 : 3;
+        const s3 = payouts.stage3 !== undefined ? payouts.stage3 : 5;
+        const s4 = payouts.stage4 !== undefined ? payouts.stage4 : 8;
+        const vJackpot = payouts.vault_jackpot !== undefined ? payouts.vault_jackpot : 25;
+        const vRunner = payouts.vault_runner_up !== undefined ? payouts.vault_runner_up : 10;
+
+        STAGES[0].distribution[0].tokens = s1;
+        STAGES[0].distribution[0].label = `+${s1} Tokens`;
+
+        STAGES[1].distribution[0].tokens = s2;
+        STAGES[1].distribution[0].label = `+${s2} Tokens`;
+
+        STAGES[2].distribution[0].tokens = s3;
+        STAGES[2].distribution[0].label = `+${s3} Tokens`;
+
+        STAGES[3].distribution[0].tokens = s4;
+        STAGES[3].distribution[0].label = `+${s4} Tokens`;
+
+        STAGES[4].distribution[0].tokens = vJackpot;
+        STAGES[4].distribution[0].label = `GRAND JACKPOT! (+${vJackpot})`;
+        STAGES[4].distribution[0].desc = `AGI UNLOCKED! (+${vJackpot} TOKENS)`;
+
+        STAGES[4].distribution[1].tokens = vRunner;
+        STAGES[4].distribution[1].label = `+${vRunner} Tokens`;
+        STAGES[4].distribution[1].desc = `High Value Weights (+${vRunner})`;
+    }
+
+    async function loadGauntletConfig() {
+        try {
+            const res = await fetch('/api/gauntlet/config');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.cost !== undefined && data.cost !== null) {
+                    gauntletCost = parseInt(data.cost) || 4;
+                }
+                if (data.payouts) {
+                    gauntletPayouts = data.payouts;
+                    applyEconomyToStages(gauntletPayouts);
+                }
+                if (pinAuth) {
+                    pinAuth.setTokenCost(gauntletCost);
+                }
+                updateGauntletCostLabels();
+            }
+        } catch (e) {
+            console.warn("Could not load gauntlet config:", e);
+        }
+    }
+
+    function updateGauntletCostLabels() {
+        const btn = document.getElementById('btn-scan-trigger');
+        if (btn) {
+            btn.innerHTML = gauntletCost > 0
+                ? `🔢 Enter PIN <span style="font-size:0.78rem; color:var(--gold); margin-left:4px;">(${gauntletCost} 🪙)</span>`
+                : `🔢 Enter PIN`;
+        }
+        if (activePlayer && document.getElementById('player-balance-display')) {
+            document.getElementById('player-balance-display').innerText = `🪙 ${activePlayer.balance || 0}`;
+        }
+    }
+
+    function shuffleArray(arr) {
+        const copy = [...arr];
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+
+    function renderStage() {
+        const stage = STAGES[currentLevelIndex];
+        roundActive = true;
+
+        // Update HUD
+        document.getElementById('level-title-badge').innerText = stage.title;
+        document.getElementById('stage-headline').innerText = stage.level === 5 ? "THE SUPERALIGNMENT VAULT" : "Select a Neural Gateway";
+        document.getElementById('stage-subheadline').innerText = stage.subtext;
+
+        // Update Progress Bar
+        const fillPercent = (currentLevelIndex / (STAGES.length - 1)) * 100;
+        document.getElementById('progress-line-fill').style.width = `${fillPercent}%`;
+
+        for (let i = 1; i <= 5; i++) {
+            const node = document.getElementById(`node-${i}`);
+            node.className = `step-node ${i === 5 ? 'vault' : ''}`;
+            if (i < stage.level) {
+                node.classList.add('completed');
+            } else if (i === stage.level) {
+                node.classList.add('active');
+            }
+        }
+
+        // Shuffle and Render 4 Doors
+        const grid = document.getElementById('doors-grid');
+        grid.innerHTML = '';
+
+        const shuffledDoors = shuffleArray(stage.distribution);
+
+        shuffledDoors.forEach((doorData, idx) => {
+            const card = document.createElement('div');
+            card.className = 'door-card';
+            card.id = `door-${idx}`;
+            card.innerHTML = `
+                <div class="door-header-tag">GATEWAY 0${idx + 1}</div>
+                <div class="door-icon">🚪</div>
+                <div>
+                    <div class="door-label">Neural Portal</div>
+                    <div class="door-subtext">Tap to initialize</div>
+                </div>
+            `;
+            card.onclick = () => selectDoor(idx, doorData, shuffledDoors);
+            grid.appendChild(card);
+        });
+    }
+
+    async function selectDoor(selectedIndex, chosenDoor, allDoors) {
+        if (!roundActive) return;
+
+        if (!activePlayer) {
+            openPinKeypad();
+            return;
+        }
+
+        // Fail-safe entry cost check on stage 1 (first gate choice if not already deducted at check-in)
+        if (currentLevelIndex === 0 && !entryDeductedForRun && gauntletCost > 0) {
+            if ((activePlayer.balance || 0) < gauntletCost) {
+                alert(`Insufficient tokens! The Gauntlet requires ${gauntletCost} tokens to play, but you have ${activePlayer.balance || 0}.`);
+                openPinKeypad();
+                return;
+            }
+
+            try {
+                const playerIdToSend = (activePlayer && (activePlayer.id || activePlayer.pin || activePlayer.email)) || '';
+                const pinToSend = (activePlayer && activePlayer.pin) || '';
+                const res = await fetch('/api/gauntlet/play', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        player_id: playerIdToSend,
+                        id: playerIdToSend,
+                        pin: pinToSend
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok || data.status !== 'success') {
+                    const err = data.message || data.error || (typeof data.detail === 'string' ? data.detail : (data.detail && data.detail[0] ? (data.detail[0].msg || JSON.stringify(data.detail[0])) : null)) || "Could not deduct entry fee.";
+                    alert(err);
+                    openPinKeypad();
+                    return;
+                }
+                activePlayer.balance = data.balance;
+                updateGauntletCostLabels();
+                entryDeductedForRun = true;
+                showTokenNotification(`🪙 -${gauntletCost} Tokens (Gauntlet Entry)`, 'deduct');
+            } catch (err) {
+                alert("Network error deducting entry cost. Please try again.");
+                return;
+            }
+        }
+
+        roundActive = false;
+
+        audio.playDoorOpen();
+
+        // Reveal chosen door
+        const selectedCard = document.getElementById(`door-${selectedIndex}`);
+        revealCard(selectedCard, chosenDoor);
+
+        // Also reveal all other doors after a 0.3s delay so player sees where the traps were!
+        setTimeout(() => {
+            allDoors.forEach((door, idx) => {
+                if (idx !== selectedIndex) {
+                    const otherCard = document.getElementById(`door-${idx}`);
+                    revealCard(otherCard, door, true);
+                }
+            });
+        }, 350);
+
+        // Process Outcome
+        if (chosenDoor.type === 'TOKEN' || chosenDoor.type === 'JACKPOT') {
+            const wonAmt = chosenDoor.tokens;
+            bankedTokens += wonAmt;
+            document.getElementById('banked-tokens-display').innerText = bankedTokens;
+
+            // REAL-TIME WALLET CREDITING
+            if (activePlayer && wonAmt > 0) {
+                try {
+                    const playerIdToSend = activePlayer.id || activePlayer.pin || activePlayer.email || '';
+                    const pinToSend = activePlayer.pin || '';
+                    const res = await fetch('/api/gauntlet/payout', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            player_id: playerIdToSend,
+                            id: playerIdToSend,
+                            pin: pinToSend,
+                            payout: wonAmt,
+                            level_reached: currentLevelIndex + 1,
+                            outcome: chosenDoor.type
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        activePlayer.balance = data.new_balance;
+                        tokensCreditedThisRun += wonAmt;
+                        updateGauntletCostLabels();
+                        showTokenNotification(`+${wonAmt} 🪙 Won! (Balance: ${activePlayer.balance})`, 'win');
+                    }
+                } catch (e) {
+                    console.error("[Gauntlet] Error crediting won tokens:", e);
+                }
+            }
+
+            if (chosenDoor.type === 'JACKPOT') {
+                audio.playGrandJackpot();
+                setTimeout(() => handleVictory(), 1200);
+            } else {
+                audio.playWinTokens();
+                setTimeout(() => advanceNextLevel(), 1200);
+            }
+        } else if (chosenDoor.type === 'SAFE') {
+            audio.playSafeAdvance();
+            setTimeout(() => advanceNextLevel(), 1200);
+        } else if (chosenDoor.type === 'GLITCH') {
+            audio.playGlitchBuzzer();
+            setTimeout(() => handleGlitch(chosenDoor), 1200);
+        }
+    }
+
+    function revealCard(card, data, isGhost = false) {
+        card.classList.add('opened');
+        if (data.type === 'TOKEN' || data.type === 'JACKPOT') {
+            card.classList.add('revealed-token');
+        } else if (data.type === 'SAFE') {
+            card.classList.add('revealed-safe');
+        } else {
+            card.classList.add('revealed-glitch');
+        }
+
+        if (isGhost) card.style.opacity = '0.55';
+
+        card.innerHTML = `
+            <div class="door-header-tag" style="color:${data.type === 'GLITCH' ? 'var(--danger)' : 'var(--cyan)'}">
+                ${data.type === 'GLITCH' ? 'FATAL ERROR' : 'SECURE'}
+            </div>
+            <div class="door-icon">${data.icon}</div>
+            <div>
+                <div class="door-label" style="color:${data.type === 'GLITCH' ? '#ff6b81' : (data.type === 'TOKEN' || data.type === 'JACKPOT' ? 'var(--gold)' : '#fff')}">
+                    ${data.label}
+                </div>
+                <div class="door-subtext" style="font-size:0.75rem;">
+                    ${data.type === 'GLITCH' ? (data.error.substring(0, 30) + '...') : data.desc}
+                </div>
+            </div>
+        `;
+    }
+
+    function advanceNextLevel() {
+        currentLevelIndex++;
+        if (currentLevelIndex < STAGES.length) {
+            renderStage();
+        } else {
+            handleVictory();
+        }
+    }
+
+    // --- GAME RESOLUTION & PAYOUTS ---
+    async function handleGlitch(glitchData) {
+        let newBalance = activePlayer ? activePlayer.balance : 0;
+        const uncredited = bankedTokens - tokensCreditedThisRun;
+
+        if (activePlayer && uncredited > 0) {
+            try {
+                const playerIdToSend = activePlayer.id || activePlayer.pin || activePlayer.email || '';
+                const pinToSend = activePlayer.pin || '';
+                const res = await fetch('/api/gauntlet/payout', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        player_id: playerIdToSend,
+                        id: playerIdToSend,
+                        pin: pinToSend,
+                        payout: uncredited,
+                        level_reached: currentLevelIndex + 1,
+                        outcome: "GLITCH"
+                    })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    newBalance = data.new_balance;
+                    activePlayer.balance = newBalance;
+                    tokensCreditedThisRun += uncredited;
+                    updateGauntletCostLabels();
+                } else {
+                    console.error("[Gauntlet] Payout failed:", data);
+                }
+            } catch(e) {
+                console.error("[Gauntlet] Payout fetch error:", e);
+            }
+        }
+
+        document.getElementById('glitch-title').innerText = glitchData.label;
+        document.getElementById('glitch-desc').innerText = glitchData.error;
+        document.getElementById('glitch-banked-amt').innerText = bankedTokens;
+        document.getElementById('glitch-new-balance').innerText = newBalance;
+        document.getElementById('glitch-modal').style.display = 'flex';
+
+        startAutoResetTimer('glitch-reset-timer');
+    }
+
+    async function handleVictory() {
+        let newBalance = activePlayer ? activePlayer.balance : 0;
+        const uncredited = bankedTokens - tokensCreditedThisRun;
+
+        if (activePlayer && uncredited > 0) {
+            try {
+                const playerIdToSend = activePlayer.id || activePlayer.pin || activePlayer.email || '';
+                const pinToSend = activePlayer.pin || '';
+                const res = await fetch('/api/gauntlet/payout', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        player_id: playerIdToSend,
+                        id: playerIdToSend,
+                        pin: pinToSend,
+                        payout: uncredited,
+                        level_reached: 5,
+                        outcome: "WIN"
+                    })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    newBalance = data.new_balance;
+                    activePlayer.balance = newBalance;
+                    tokensCreditedThisRun += uncredited;
+                    updateGauntletCostLabels();
+                } else {
+                    console.error("[Gauntlet] Payout failed:", data);
+                }
+            } catch(e) {
+                console.error("[Gauntlet] Payout fetch error:", e);
+            }
+        }
+
+        document.getElementById('victory-tokens-amt').innerText = bankedTokens;
+        document.getElementById('victory-new-balance').innerText = newBalance;
+        document.getElementById('victory-modal').style.display = 'flex';
+
+        startAutoResetTimer('victory-reset-timer');
+    }
+
+    function startAutoResetTimer(elementId) {
+        let countdown = 5;
+        document.getElementById(elementId).innerText = countdown;
+        clearInterval(autoResetTimer);
+        autoResetTimer = setInterval(() => {
+            countdown--;
+            document.getElementById(elementId).innerText = countdown;
+            if (countdown <= 0) {
+                clearInterval(autoResetTimer);
+                resetToAttract();
+            }
+        }, 1000);
+    }
+
+    function resetToAttract() {
+        clearInterval(autoResetTimer);
+        document.getElementById('glitch-modal').style.display = 'none';
+        document.getElementById('victory-modal').style.display = 'none';
+
+        currentLevelIndex = 0;
+        bankedTokens = 0;
+        tokensCreditedThisRun = 0;
+        entryDeductedForRun = false;
+        document.getElementById('banked-tokens-display').innerText = '0';
+        activePlayer = null;
+        document.getElementById('player-name-display').innerText = 'Authenticate with PIN';
+        const pinDisplay = document.getElementById('player-pin-display');
+        if (pinDisplay) pinDisplay.innerText = '';
+        const balDisplay = document.getElementById('player-balance-display');
+        if (balDisplay) balDisplay.innerText = '';
+        updateGauntletCostLabels();
+
+        renderStage();
+
+        if (pinAuth) {
+            pinAuth.resetToStep1();
+            pinAuth.open();
+        }
+    }
+
+    // --- STANDARDIZED 3-STEP PIN AUTHENTICATION FLOW ---
+    let pinAuth = null;
+
+    function initPinAuth() {
+        if (pinAuth) return pinAuth;
+        pinAuth = new PinAuthFlow({
+            containerId: 'gauntlet-pin-container',
+            isModal: true,
+            title: 'AI GAUNTLET CHECK-IN',
+            subtitle: 'Enter your 4-digit attendee PIN to enter the Neural Gateway',
+            tokenCost: gauntletCost,
+            onConfirmed: async (attendee) => {
+                if (!attendee) return;
+                activePlayer = {
+                    id: (attendee && (attendee.id || attendee.player_id)) || attendee.pin || '',
+                    name: (attendee && (attendee.display_name || attendee.name)) || 'Attendee',
+                    email: (attendee && attendee.email) || '',
+                    balance: Number((attendee && attendee.balance !== undefined) ? attendee.balance : 0),
+                    pin: (attendee && attendee.pin) || ''
+                };
+                entryDeductedForRun = false;
+                tokensCreditedThisRun = 0;
+                bankedTokens = 0;
+                currentLevelIndex = 0;
+
+                // DEDUCT ENTRY COST (4 TOKENS) ON CHECK-IN CONFIRMATION
+                if (gauntletCost > 0) {
+                    if ((activePlayer.balance || 0) < gauntletCost) {
+                        alert(`Insufficient tokens! The Gauntlet requires ${gauntletCost} tokens to play, but you have ${activePlayer.balance || 0}.`);
+                        if (pinAuth) {
+                            pinAuth.resetToStep1();
+                            pinAuth.open();
+                        }
+                        return;
+                    }
+
+                    try {
+                        const playerIdToSend = activePlayer.id || activePlayer.pin || activePlayer.email || '';
+                        const pinToSend = activePlayer.pin || '';
+                        const res = await fetch('/api/gauntlet/play', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                player_id: playerIdToSend,
+                                id: playerIdToSend,
+                                pin: pinToSend
+                            })
+                        });
+                        const data = await res.json();
+                        if (!res.ok || data.status !== 'success') {
+                            const err = data.message || data.error || (typeof data.detail === 'string' ? data.detail : (data.detail && data.detail[0] ? (data.detail[0].msg || JSON.stringify(data.detail[0])) : null)) || "Could not deduct entry fee.";
+                            alert(err);
+                            if (pinAuth) {
+                                pinAuth.resetToStep1();
+                                pinAuth.open();
+                            }
+                            return;
+                        }
+                        activePlayer.balance = data.balance;
+                        entryDeductedForRun = true;
+                    } catch (err) {
+                        console.error("[Gauntlet] Error deducting entry cost:", err);
+                        alert("Network error deducting entry cost. Please try again.");
+                        if (pinAuth) {
+                            pinAuth.resetToStep1();
+                            pinAuth.open();
+                        }
+                        return;
+                    }
+                }
+
+                // Update HUD displays
+                document.getElementById('player-name-display').innerText = activePlayer.name;
+                const pinDisplay = document.getElementById('player-pin-display');
+                if (pinDisplay) pinDisplay.innerText = `(PIN: ${activePlayer.pin})`;
+                const balDisplay = document.getElementById('player-balance-display');
+                if (balDisplay) balDisplay.innerText = `🪙 ${activePlayer.balance}`;
+                document.getElementById('banked-tokens-display').innerText = '0';
+                updateGauntletCostLabels();
+                showTokenNotification(`🪙 -${gauntletCost} Tokens (Gauntlet Entry)`, 'deduct');
+                renderStage();
+            },
+            onCancel: () => {
+                // Keep modal open if cancelled so guest cannot play without authenticating
+                if (pinAuth) {
+                    pinAuth.resetToStep1();
+                    pinAuth.open();
+                }
+            }
+        });
+        return pinAuth;
+    }
+
+    function openPinKeypad() {
+        initPinAuth();
+        if (pinAuth) {
+            pinAuth.resetToStep1();
+            pinAuth.open();
+        }
+    }
+
+    // Initialize game and PIN auth immediately
+    function startUp() {
+        initPinAuth();
+        renderStage();
+        if (!activePlayer && pinAuth) {
+            pinAuth.open();
+        }
+        // Background-fetch live config and payouts
+        loadGauntletConfig();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startUp);
+    } else {
+        startUp();
+    }
+</script>
+
+</body>
+</html>

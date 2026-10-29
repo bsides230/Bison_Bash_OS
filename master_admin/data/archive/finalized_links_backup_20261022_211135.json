@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "id": "portal",
+      "title": "Mobile Player Portal",
+      "port": 8009,
+      "path": "/portal",
+      "subtitle": "Scan with phone camera to view wallet balance & pass",
+      "icon": "\ud83d\udcf1",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "signup",
+      "title": "Attendee Sign-Up",
+      "port": 8009,
+      "path": "/signup",
+      "subtitle": "Register now to receive starter tokens & your 4-digit PIN",
+      "icon": "\ud83d\udcdd",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "pass",
+      "title": "Player Pass Lookup",
+      "port": 8009,
+      "path": "/pass",
+      "subtitle": "Enter your 4-digit PIN to show your digital badge",
+      "icon": "\ud83d\udcb3",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "kiosk1",
+      "title": "Bison Dash Betting Tablet 1",
+      "port": 8008,
+      "path": "/kiosk?tablet=1",
+      "subtitle": "Self-service touchscreen terminal for live race wagers",
+      "icon": "\ud83d\udd79\ufe0f",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "kiosk2",
+      "title": "Bison Dash Betting Tablet 2",
+      "port": 8008,
+      "path": "/kiosk?tablet=2",
+      "subtitle": "Self-service touchscreen terminal for live race wagers",
+      "icon": "\ud83d\udd79\ufe0f",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "gauntlet",
+      "title": "AI Gauntlet Challenge",
+      "port": 8007,
+      "path": "/",
+      "subtitle": "Test your nerve in the neural gateway challenge",
+      "icon": "\u26a1",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "mint",
+      "title": "Token Mint & Cash Desk",
+      "port": 8005,
+      "path": "/",
+      "subtitle": "Volunteer station to add donation tokens to player wallets",
+      "icon": "\ud83e\ude99",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "n64",
+      "title": "N64 Arena Match Deck",
+      "port": 8004,
+      "path": "/",
+      "subtitle": "Mario Kart & GoldenEye 1v1 tournament station",
+      "icon": "\ud83c\udfae",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "bughunt",
+      "title": "Bug Bounty: Kids Booth",
+      "port": 8003,
+      "path": "/",
+      "subtitle": "Physical 60-second bug collection challenge for kids",
+      "icon": "\ud83d\udc1b",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "bison_arena",
+      "title": "Bison Dash Stadium Arena",
+      "port": 8001,
+      "path": "/",
+      "subtitle": "Main race track display and betting odds board",
+      "icon": "\ud83c\udfc1",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "bison_projector",
+      "title": "Bison Dash Stadium Projector",
+      "port": 8001,
+      "path": "/projector",
+      "subtitle": "Jumbotron stadium broadcast screen",
+      "icon": "\ud83d\udcfd\ufe0f",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "slideshow",
+      "title": "Stadium Slideshow",
+      "port": 8010,
+      "path": "/slideshow",
+      "subtitle": "Full-screen projector slideshow and live race cut-in display",
+      "icon": "\ud83d\udcfd\ufe0f",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "presenter",
+      "title": "Presenter Slide Remote",
+      "port": 8010,
+      "path": "/presenter",
+      "subtitle": "Mobile remote control to advance presentation slides",
+      "icon": "\ud83d\udcf1",
+      "is_custom": false,
+      "url": ""
+    },
+    {
+      "id": "manifest",
+      "title": "Full Player Manifest",
+      "port": 8000,
+      "path": "/manifest",
+      "subtitle": "Master roster of all registered attendees & PINs",
+      "icon": "\ud83d\udc65",
+      "is_custom": false,
+      "url": ""
+    }
+  ]
+}

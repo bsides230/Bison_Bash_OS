@@ -1,0 +1,40 @@
+{
+  "players": {
+    "p_55ae49be": {
+      "id": "p_55ae49be",
+      "name": "Hank the Cow Dog",
+      "email": "mattamac230@gmail.com",
+      "pin": "5844",
+      "balance": 124,
+      "created_at": 1792736034,
+      "total_wagers": 0,
+      "total_winnings": 1,
+      "newsletter_opt_in": false,
+      "updated_at": 1792739423.4937863
+    },
+    "p_f3cdb8a5": {
+      "id": "p_f3cdb8a5",
+      "name": "Alice Walker",
+      "email": "alice@venue.com",
+      "pin": "6021",
+      "balance": 50,
+      "created_at": 1792778442,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792778442.6936088
+    },
+    "p_4bc529a6": {
+      "id": "p_4bc529a6",
+      "name": "Bob Builder",
+      "email": "bob@venue.com",
+      "pin": "2460",
+      "balance": 50,
+      "created_at": 1792778442,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792778442.7215652
+    }
+  }
+}

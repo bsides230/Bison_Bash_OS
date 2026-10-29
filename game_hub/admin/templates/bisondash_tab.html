@@ -1,156 +1,212 @@
 <div class="bison-dash-admin">
     <style>
         .bison-dash-admin {
-            font-family: monospace;
-            background: #121212;
-            color: #eee;
-            padding: 20px;
-            border-radius: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            background: #161b22;
+            color: #f0f6fc;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
         }
 
         .bison-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .bison-title-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .big-red-btn {
-            background: #ff3333;
+            background: #ff4444;
             color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 12px 20px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 51, 51, 0.4);
-            transition: transform 0.1s;
+            box-shadow: 0 4px 12px rgba(255, 68, 68, 0.35);
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-height: 48px;
         }
-        .big-red-btn:active { transform: scale(0.95); }
-        .big-red-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
+        .big-red-btn:active { transform: scale(0.97); }
+        .big-red-btn:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; box-shadow: none; opacity: 0.6; }
 
         .status-display {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #4CAF50;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #00ffcc;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 4px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            font-family: monospace;
         }
 
         .grid-2col {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        @media (min-width: 820px) {
+            .grid-2col {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         .card {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 6px;
-            border: 1px solid #333;
+            background: #0d1117;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
         }
 
-        .slider-group { margin-bottom: 15px; }
-        .slider-group label { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        input[type=range] { width: 100%; }
+        .slider-group { margin-bottom: 16px; }
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            accent-color: #00ffcc;
+        }
 
         .lineup-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 12px;
+        }
+        @media (min-width: 480px) {
+            .lineup-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
         .bison-card {
-            background: #2a2a2a;
-            padding: 10px;
-            border-radius: 4px;
+            background: #161b22;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
             border-left: 5px solid #fff;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            gap: 8px;
         }
-        .bison-card h4 { margin: 0 0 5px 0; font-size: 0.9rem; }
-        .bison-stats { font-size: 0.75rem; color: #aaa; margin-bottom: 8px; }
+        .bison-card h4 { margin: 0; font-size: 0.95rem; font-weight: 700; color: #fff; }
+        .bison-stats { font-size: 0.78rem; color: #8b949e; font-family: monospace; line-height: 1.4; }
         .force-retire-btn {
-            background: #555;
-            color: white;
-            border: none;
-            padding: 5px;
-            border-radius: 4px;
+            background: #21262d;
+            border: 1px solid #ff5555;
+            color: #ff5555;
+            padding: 8px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            min-height: 38px;
+            transition: all 0.15s;
         }
-        .force-retire-btn:hover { background: #ff5555; }
+        .force-retire-btn:active { background: #ff5555; color: #fff; }
 
         .server-config {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 6px;
-            border: 1px solid #333;
-            margin-bottom: 20px;
+            background: #0d1117;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
             gap: 10px;
         }
         .server-config input {
-            padding: 8px;
-            border: 1px solid #444;
-            background: #2a2a2a;
+            padding: 8px 12px;
+            border: 1px solid #30363d;
+            background: #161b22;
             color: white;
-            border-radius: 4px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: monospace;
         }
     </style>
 
     <div class="server-config">
-        <label for="bd-server-url">Bison Dash Server URL (IP:Port):</label>
-        <input type="text" id="bd-server-url" value="http://127.0.0.1:8001" style="width: 250px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label for="bd-server-url" style="font-size: 0.85rem; color: #8b949e; font-weight: 600;">Dash Server URL:</label>
+            <input type="text" id="bd-server-url" value="http://127.0.0.1:8001" style="max-width: 220px;">
+        </div>
+        <div style="font-size: 0.8rem; color: #8b949e; font-family: monospace;">
+            Port 8001 Live Engine
+        </div>
     </div>
 
     <div class="bison-header">
-        <div>
-            <h2 style="margin:0;">BISON DASH CONTROL</h2>
-            <div id="bd-current-state" class="status-display">Unknown</div>
+        <div class="bison-title-block">
+            <h3 style="margin:0; font-size: 1.15rem; color: #00ffcc; letter-spacing: 0.5px;"><img src="/static/img/bison_logo.png" style="width: 22px; height: 22px; vertical-align: middle; margin-right: 6px; filter: drop-shadow(0 0 5px rgba(0,255,204,0.5));" alt="Bison" /> BISON DASH ARENA</h3>
+            <div id="bd-current-state" class="status-display">Connecting...</div>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <button id="bd-panic-btn" class="big-red-btn" style="background:#555; font-size: 0.9rem; padding: 10px 15px;" onclick="triggerPanicReset()">PANIC RESET</button>
-            <button id="bd-trigger-btn" class="big-red-btn" onclick="triggerSoftClosure()">TRIGGER CLOSURE</button>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 440px;">
+            <button id="bd-panic-btn" class="big-red-btn" style="flex: 1; background: #21262d; border: 1px solid #ff4444; color: #ff6b6b; font-size: 0.85rem;" onclick="triggerPanicReset()">⚠️ PANIC RESET</button>
+            <button id="bd-trigger-btn" class="big-red-btn" style="flex: 2; background: #ff3333; font-size: 0.95rem;" onclick="triggerSoftClosure()">TRIGGER CLOSURE</button>
         </div>
     </div>
 
     <div class="grid-2col">
         <!-- Elastic Clock Sliders -->
         <div class="card">
-            <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:5px;">Elastic Clock (Phase Durations)</h3>
-            <p style="font-size:0.8rem; color:#888; margin-bottom:15px;">Adjustments take effect immediately.</p>
+            <h4 style="margin: 0 0 4px 0; color: #ffd700; font-size: 1rem;">⏱️ Elastic Clock (Phase Durations)</h4>
+            <p style="font-size: 0.78rem; color: #8b949e; margin-bottom: 14px;">Adjustments take effect immediately on next cycle.</p>
 
             <div class="slider-group">
-                <label><span>Soft Closure:</span> <span id="val-Soft_Closure">10s</span></label>
+                <label><span>Soft Closure:</span> <span id="val-Soft_Closure" style="color:#00ffcc; font-family:monospace; font-weight:bold;">10s</span></label>
                 <input type="range" id="slider-Soft_Closure" min="5" max="30" value="10" oninput="updateTimerVal('Soft_Closure')" onchange="saveTimers()">
             </div>
 
             <div class="slider-group">
-                <label><span>Closed Intros:</span> <span id="val-Closed_Intros">60s</span></label>
+                <label><span>Closed Intros:</span> <span id="val-Closed_Intros" style="color:#00ffcc; font-family:monospace; font-weight:bold;">60s</span></label>
                 <input type="range" id="slider-Closed_Intros" min="10" max="180" value="60" oninput="updateTimerVal('Closed_Intros')" onchange="saveTimers()">
             </div>
 
             <div class="slider-group">
-                <label><span>Race Sprint (Fixed):</span> <span>30s</span></label>
-                <input type="range" disabled min="30" max="30" value="30">
+                <label><span>Race Sprint (Fixed):</span> <span style="color:#8b949e; font-family:monospace;">30s</span></label>
+                <input type="range" disabled min="30" max="30" value="30" style="opacity:0.5;">
             </div>
 
             <div class="slider-group">
-                <label><span>Results Payout:</span> <span id="val-Results_Payout">120s</span></label>
+                <label><span>Results Payout:</span> <span id="val-Results_Payout" style="color:#00ffcc; font-family:monospace; font-weight:bold;">120s</span></label>
                 <input type="range" id="slider-Results_Payout" min="30" max="300" value="120" oninput="updateTimerVal('Results_Payout')" onchange="saveTimers()">
             </div>
         </div>
 
         <!-- Lineup Override -->
         <div class="card">
-            <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:5px;">Lineup Override Card</h3>
-            <p style="font-size:0.8rem; color:#888;">Force retire an entry to instantly spawn a rookie.</p>
+            <h4 style="margin: 0 0 4px 0; color: #ffd700; font-size: 1rem;">🏇 Active Lineup Override</h4>
+            <p style="font-size: 0.78rem; color: #8b949e; margin-bottom: 8px;">Force retire an entry to instantly spawn a rookie.</p>
             <div id="bd-lineup-grid" class="lineup-grid">
-                <!-- Populated by JS -->
+                <div style="color: #8b949e; font-size: 0.85rem; padding: 10px;">Loading lineup...</div>
             </div>
         </div>
     </div>

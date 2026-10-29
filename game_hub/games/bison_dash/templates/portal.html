@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bison Bash • Player Portal</title>
+    <style>
+        :root {
+            --bg-color: #080c14;
+            --card-bg: #111723;
+            --card-border: #1e283d;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.35);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.35);
+            --danger: #ff4757;
+            --danger-glow: rgba(255, 71, 87, 0.35);
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --purple: #9b5de5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 18px 16px;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 255, 204, 0.12) 0%, transparent 55%),
+                radial-gradient(circle at 50% 100%, rgba(255, 215, 0, 0.08) 0%, transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin: auto 0;
+        }
+
+        /* Top Brand Header */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .brand-logo {
+            font-size: 2.8rem;
+            margin-bottom: 4px;
+            display: inline-block;
+            filter: drop-shadow(0 0 16px var(--accent-glow));
+        }
+
+        .brand-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-main);
+        }
+
+        .brand-title span {
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .brand-subtitle {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Views Card */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- SCREEN 1: HOME VIEW --- */
+        #view-home {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .home-tagline {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .btn-action-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            min-height: 84px;
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            text-align: left;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .btn-action-main:active {
+            transform: scale(0.98);
+        }
+
+        .btn-signup-main {
+            background: linear-gradient(135deg, rgba(0, 255, 204, 0.14) 0%, rgba(0, 255, 204, 0.04) 100%);
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px rgba(0, 255, 204, 0.15);
+        }
+
+        .btn-signup-main:active {
+            background: rgba(0, 255, 204, 0.22);
+        }
+
+        .btn-balance-main {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.14) 0%, rgba(255, 215, 0, 0.04) 100%);
+            border-color: var(--gold);
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.15);
+        }
+
+        .btn-balance-main:active {
+            background: rgba(255, 215, 0, 0.22);
+        }
+
+        .btn-icon {
+            font-size: 2.2rem;
+            flex-shrink: 0;
+        }
+
+        .btn-text h3 {
+            font-size: 1.18rem;
+            font-weight: 800;
+            margin-bottom: 3px;
+        }
+
+        .btn-signup-main .btn-text h3 { color: var(--accent); }
+        .btn-balance-main .btn-text h3 { color: var(--gold); }
+
+        .btn-text p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        /* --- SCREEN 2 & 3: FORM VIEWS --- */
+        .form-view {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-header {
+            margin-bottom: 4px;
+        }
+
+        .form-header h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .form-header p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+        }
+
+        .form-input {
+            width: 100%;
+            background: #090e18;
+            border: 1.5px solid var(--card-border);
+            border-radius: 12px;
+            padding: 15px 16px;
+            font-size: 1.05rem;
+            color: #ffffff;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 14px var(--accent-glow);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .btn-submit-cyan {
+            background: var(--accent);
+            color: #000000;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .btn-submit-gold {
+            background: var(--gold);
+            color: #000000;
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-back:active {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        /* --- SCREEN 4: SUCCESS VENUE PASS --- */
+        #view-pass {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .pass-badge {
+            background: rgba(0, 255, 204, 0.12);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .pass-player-name {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-top: 2px;
+        }
+
+        .pin-container {
+            background: #070a10;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 30px var(--gold-glow);
+            border-radius: 18px;
+            padding: 18px 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pin-label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+
+        .pin-digits-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .pin-box {
+            width: 58px;
+            height: 68px;
+            background: #111827;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        .balance-badge-large {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid var(--gold);
+            padding: 10px 22px;
+            border-radius: 30px;
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--gold);
+        }
+
+        .pass-instructions {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed var(--card-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* --- SCREEN 5: BALANCE RESULT --- */
+        #view-balance-result {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .balance-result-card {
+            background: #080d16;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 25px var(--gold-glow);
+            border-radius: 18px;
+            padding: 22px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-top: 6px;
+        }
+
+        .stat-item {
+            background: #111724;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-val {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 2px;
+        }
+
+        /* --- MODAL POPUP (DUPLICATE EMAIL / NOT FOUND) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(4, 7, 12, 0.88);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            animation: scaleIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .modal-icon { font-size: 3rem; margin-bottom: 2px; }
+        .modal-title { font-size: 1.25rem; font-weight: 800; color: #ffffff; }
+        .modal-body { font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; }
+
+        .existing-account-box {
+            background: #090e18;
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            margin: 4px 0;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.76rem;
+            color: #556070;
+            margin-top: 10px;
+        }
+
+        /* --- VIRTUAL NUMPAD & PIN DISPLAY STYLES --- */
+        .pin-display-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 6px 0 10px 0;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .pin-display-boxes {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .pin-box-digit {
+            width: 58px;
+            height: 68px;
+            background: #090e18;
+            border: 2px solid var(--card-border);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+            transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
+            cursor: default;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .pin-box-digit.active {
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        .pin-box-digit.filled {
+            border-color: var(--gold);
+            color: var(--gold);
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .pin-readonly-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 1px;
+            height: 1px;
+        }
+
+        .pin-numpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-top: 6px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .pin-num-btn {
+            height: 62px;
+            background: #111827;
+            border: 1.5px solid var(--card-border);
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 1.7rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: transform 0.08s ease, background-color 0.1s ease, border-color 0.1s ease;
+        }
+
+        .pin-num-btn:active {
+            transform: scale(0.94);
+            background: rgba(255, 215, 0, 0.22);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .pin-action-btn {
+            background: #182234;
+            border-color: #24344d;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .pin-action-btn:active {
+            background: #253652;
+            border-color: var(--card-border);
+            color: #ffffff;
+        }
+
+        .pin-submit-key {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: #000000;
+            font-size: 1.15rem;
+            font-weight: 900;
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        .pin-submit-key:active {
+            background: #e6c200;
+            transform: scale(0.94);
+            color: #000000;
+        }
+
+        .shake {
+            animation: shakeKeypad 0.4s ease-in-out;
+        }
+
+        @keyframes shakeKeypad {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header class="brand-header">
+        <div class="brand-logo"><img src="/static/img/bison_logo.png" style="width: 56px; height: 56px; vertical-align: middle; filter: drop-shadow(0 0 10px rgba(0,255,204,0.5));" alt="Bison" /></div>
+        <h1 class="brand-title">Bison <span>Bash</span></h1>
+        <p class="brand-subtitle">Venue Player Portal • Techlahoma</p>
+    </header>
+
+    <main class="card">
+        <!-- SCREEN 1: HOME (2 MAIN BUTTONS) -->
+        <div id="view-home">
+            <p class="home-tagline">
+                Join the tournament arena! Create your pass or check your balance anytime on your phone.
+            </p>
+
+            <button class="btn-action-main btn-signup-main" onclick="showView('signup')">
+                <span class="btn-icon">📝</span>
+                <div class="btn-text">
+                    <h3>Get your 4-digit PIN</h3>
+                    <p>Get your 4-digit PIN</p>
+                </div>
+            </button>
+
+            <button class="btn-action-main btn-balance-main" onclick="showView('balance')">
+                <span class="btn-icon">🪙</span>
+                <div class="btn-text">
+                    <h3>Check Token Balance</h3>
+                    <p>Look up your balance by PIN or Email</p>
+                </div>
+            </button>
+        </div>
+
+        <!-- SCREEN 2: SIGN UP VIEW -->
+        <div id="view-signup" class="form-view">
+            <div class="form-header">
+                <h2>Player Registration</h2>
+                <p>Provision your attendee handle, link your email, and generate your 4-digit PIN.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="signup-name">Display Name</label>
+                <input type="text" id="signup-name" class="form-input" placeholder="e.g. CodeCowboy" autocomplete="off" autocorrect="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="signup-email">Email Address</label>
+                <input type="email" id="signup-email" class="form-input" placeholder="player@example.com" autocomplete="email" inputmode="email">
+            </div>
+
+            <button id="btn-submit-signup" class="btn-submit btn-submit-cyan" onclick="submitSignup()">
+                Claim My Pass
+            </button>
+
+            <button class="btn-back" onclick="showView('home')">
+                ← Back to Home
+            </button>
+        </div>
+
+        <!-- SCREEN 3: BALANCE CHECK VIEW (ON-SCREEN PIN PAD & EMAIL LOOKUP) -->
+        <div id="view-balance" class="form-view">
+            <!-- MODE A: VIRTUAL PIN NUMPAD (PRIMARY) -->
+            <div id="balance-pin-container" style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="form-header">
+                    <h2>Check Token Balance</h2>
+                    <p>Enter your 4-digit PIN on the virtual keypad below.</p>
+                </div>
+
+                <!-- Readonly / Styled Div PIN Display (Blocks Mobile Software Keyboard) -->
+                <div class="pin-display-wrapper" onclick="event.preventDefault()">
+                    <input type="text" id="balance-pin-input" class="pin-readonly-input" readonly inputmode="none" tabindex="-1" aria-hidden="true" value="" />
+                    <div class="pin-display-boxes" id="balance-pin-boxes">
+                        <div class="pin-box-digit active" id="bpin-0">-</div>
+                        <div class="pin-box-digit" id="bpin-1">-</div>
+                        <div class="pin-box-digit" id="bpin-2">-</div>
+                        <div class="pin-box-digit" id="bpin-3">-</div>
+                    </div>
+                </div>
+
+                <!-- On-Screen Virtual Numpad (0-9, Backspace/Delete, Submit) -->
+                <div class="pin-numpad-grid">
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('1')">1</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('2')">2</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('3')">3</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('4')">4</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('5')">5</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('6')">6</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('7')">7</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('8')">8</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('9')">9</button>
+                    <button type="button" class="pin-num-btn pin-action-btn" onclick="numpadBackspace()" aria-label="Backspace or Delete">⌫ Del</button>
+                    <button type="button" class="pin-num-btn" onclick="numpadPress('0')">0</button>
+                    <button type="button" class="pin-num-btn pin-submit-key" id="btn-numpad-submit" onclick="submitPinBalanceLookup()">🔍 Check</button>
+                </div>
+
+                <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                    <button type="button" class="btn-back" style="border: none; color: var(--accent); text-decoration: underline; padding: 6px; font-weight: 700;" onclick="switchToEmailLookup()">
+                        Forgot PIN? Verify with Registered Email
+                    </button>
+                    <button type="button" class="btn-back" onclick="showView('home')">
+                        ← Back to Home
+                    </button>
+                </div>
+            </div>
+
+            <!-- MODE B: EMAIL VERIFICATION (FORGOT PIN) -->
+            <div id="balance-email-container" style="display: none; flex-direction: column; gap: 14px;">
+                <div class="form-header">
+                    <h2>Verify by Email</h2>
+                    <p>Enter your registered email address to check your balance.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="balance-email-query">Registered Email</label>
+                    <input type="email" id="balance-email-query" class="form-input" placeholder="player@example.com" autocomplete="email" inputmode="email">
+                </div>
+
+                <button id="btn-submit-balance-email" class="btn-submit btn-submit-gold" onclick="submitEmailBalanceLookup()">
+                    ✉️ Check Balance via Email
+                </button>
+
+                <button type="button" class="btn-back" onclick="switchToPinLookup()">
+                    ← Back to PIN Keypad
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: SUCCESS VENUE PASS VIEW -->
+        <div id="view-pass">
+            <span class="pass-badge">✓ Active Venue Pass</span>
+            <h2 id="pass-name" class="pass-player-name">Player Name</h2>
+            <div id="pass-email" style="font-size: 0.85rem; color: var(--text-muted); margin-top: -8px;">email@example.com</div>
+
+            <div class="pin-container">
+                <span class="pin-label">YOUR 4-DIGIT PLAYER PIN</span>
+                <div class="pin-digits-row" id="pass-pin-boxes">
+                    <div class="pin-box">7</div>
+                    <div class="pin-box">4</div>
+                    <div class="pin-box">9</div>
+                    <div class="pin-box">2</div>
+                </div>
+            </div>
+
+            <div class="balance-badge-large">
+                <span>🪙</span>
+                <span id="pass-balance">0 Credits</span>
+            </div>
+
+            <div class="pass-instructions">
+                💡 <strong>Remember your 4-digit PIN!</strong><br>
+                Punch this PIN into any betting kiosk, N64 station, or booth to play and win tokens.
+            </div>
+
+            <button class="btn-back" style="width: 100%; margin-top: 4px;" onclick="showView('home')">
+                ← Back to Main Menu
+            </button>
+        </div>
+
+        <!-- SCREEN 5: BALANCE RESULT VIEW -->
+        <div id="view-balance-result" class="form-view">
+            <div class="balance-result-card">
+                <span class="pass-badge" style="border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.1);">
+                    🪙 Token Wallet
+                </span>
+
+                <h2 id="res-name" style="font-size: 1.5rem; color: #fff; margin-top: 4px;">Player Name</h2>
+
+                <div style="font-size: 2.6rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 25px var(--gold-glow); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>🪙</span>
+                    <span id="res-balance">0</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: -8px;">Total Active Credits</div>
+
+                <div style="background: #111827; border: 1.5px solid var(--gold); border-radius: 12px; padding: 10px 18px; margin-top: 4px; width: 100%;">
+                    <span style="font-size: 0.72rem; color: var(--gold); font-weight: bold; letter-spacing: 1px; display: block; margin-bottom: 2px;">YOUR 4-DIGIT PIN</span>
+                    <span id="res-pin" style="font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: 6px;">7492</span>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Wagers</div>
+                        <div id="res-wagers" class="stat-val">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Total Winnings</div>
+                        <div id="res-winnings" class="stat-val">0 🪙</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-submit btn-submit-gold" style="flex: 1; padding: 14px;" onclick="refreshCurrentBalance()">
+                    🔄 Refresh
+                </button>
+                <button class="btn-back" style="flex: 1; padding: 14px;" onclick="showView('home')">
+                    ← Main Menu
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <div class="footer-note">
+        Powered by BBGN Gaming Engine • Techlahoma Event Network
+    </div>
+</div>
+
+<!-- POPUP MODAL (EMAIL ALREADY REGISTERED) -->
+<div id="modal-exists" class="modal-overlay">
+    <div class="modal-content" style="border-color: var(--gold);">
+        <div class="modal-icon">⚠️</div>
+        <h3 class="modal-title" style="color: var(--gold);">Email Already Registered!</h3>
+        <p class="modal-body">
+            An account with this email is already active in the system. Here are your existing pass credentials:
+        </p>
+
+        <div class="existing-account-box">
+            <div id="modal-exists-name" style="font-weight: 800; font-size: 1.1rem; color: #fff;">CodeCowboy</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;" id="modal-exists-email">player@example.com</div>
+            <div style="font-size: 0.72rem; color: var(--gold); font-weight: bold;">YOUR 4-DIGIT PIN:</div>
+            <div id="modal-exists-pin" style="font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: 4px;">7492</div>
+            <div style="font-size: 0.95rem; font-weight: 800; color: var(--gold); margin-top: 4px;">
+                Balance: <span id="modal-exists-balance">0</span> 🪙
+            </div>
+        </div>
+
+        <button class="btn-submit btn-submit-gold" onclick="viewExistingFromModal()">
+            View Full Balance Card
+        </button>
+        <button class="btn-back" onclick="closeModal('modal-exists')">
+            Close
+        </button>
+    </div>
+</div>
+
+<!-- POPUP MODAL (PLAYER NOT FOUND) -->
+<div id="modal-notfound" class="modal-overlay">
+    <div class="modal-content" style="border-color: var(--danger);">
+        <div class="modal-icon">❌</div>
+        <h3 class="modal-title" style="color: var(--danger);">Account Not Found</h3>
+        <p class="modal-body" id="modal-notfound-msg">
+            No player record found matching that PIN or registered email. Check your PIN or register for a pass.
+        </p>
+        <button class="btn-submit btn-submit-cyan" onclick="closeModal('modal-notfound'); showView('signup');">
+            Sign Up for a New Pass
+        </button>
+        <button class="btn-back" onclick="closeModal('modal-notfound')">
+            Try Again
+        </button>
+    </div>
+</div>
+
+<script>
+    const API_BASE = (window.location.pathname.startsWith('/portal') || window.location.pathname.startsWith('/portal/')) ? '/portal' : '';
+    let currentLoadedPlayer = null;
+    let enteredPin = "";
+
+    function showView(viewName) {
+        document.getElementById('view-home').style.display = 'none';
+        document.getElementById('view-signup').style.display = 'none';
+        document.getElementById('view-balance').style.display = 'none';
+        document.getElementById('view-pass').style.display = 'none';
+        document.getElementById('view-balance-result').style.display = 'none';
+
+        if (viewName === 'home') {
+            document.getElementById('view-home').style.display = 'flex';
+        } else if (viewName === 'signup') {
+            document.getElementById('view-signup').style.display = 'flex';
+            document.getElementById('signup-name').focus();
+        } else if (viewName === 'balance') {
+            document.getElementById('view-balance').style.display = 'flex';
+            switchToPinLookup();
+        } else if (viewName === 'pass') {
+            document.getElementById('view-pass').style.display = 'flex';
+        } else if (viewName === 'balance-result') {
+            document.getElementById('view-balance-result').style.display = 'flex';
+        }
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+    }
+
+    // --- VIRTUAL NUMPAD LOGIC ---
+    function updatePinBoxes() {
+        for (let i = 0; i < 4; i++) {
+            const box = document.getElementById(`bpin-${i}`);
+            if (!box) continue;
+            if (i < enteredPin.length) {
+                box.innerText = enteredPin[i];
+                box.classList.add('filled');
+                box.classList.remove('active');
+            } else if (i === enteredPin.length) {
+                box.innerText = '-';
+                box.classList.remove('filled');
+                box.classList.add('active');
+            } else {
+                box.innerText = '-';
+                box.classList.remove('filled');
+                box.classList.remove('active');
+            }
+        }
+        const hiddenInput = document.getElementById('balance-pin-input');
+        if (hiddenInput) hiddenInput.value = enteredPin;
+    }
+
+    function numpadPress(digit) {
+        if (enteredPin.length < 4) {
+            enteredPin += digit;
+            updatePinBoxes();
+            if (enteredPin.length === 4) {
+                setTimeout(() => {
+                    submitPinBalanceLookup();
+                }, 120);
+            }
+        }
+    }
+
+    function numpadBackspace() {
+        if (enteredPin.length > 0) {
+            enteredPin = enteredPin.slice(0, -1);
+            updatePinBoxes();
+        }
+    }
+
+    function clearNumpad() {
+        enteredPin = "";
+        updatePinBoxes();
+    }
+
+    function switchToEmailLookup() {
+        document.getElementById('balance-pin-container').style.display = 'none';
+        const emailCont = document.getElementById('balance-email-container');
+        emailCont.style.display = 'flex';
+        document.getElementById('balance-email-query').focus();
+    }
+
+    function switchToPinLookup() {
+        document.getElementById('balance-email-container').style.display = 'none';
+        document.getElementById('balance-pin-container').style.display = 'flex';
+        clearNumpad();
+    }
+
+    // --- SUBMIT SIGNUP ---
+    async function submitSignup() {
+        const name = document.getElementById('signup-name').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const btn = document.getElementById('btn-submit-signup');
+
+        if (!name) {
+            alert("Please enter a display name.");
+            document.getElementById('signup-name').focus();
+            return;
+        }
+        if (!email || !email.includes('@')) {
+            alert("Please enter a valid email address.");
+            document.getElementById('signup-email').focus();
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Creating Pass...";
+
+        try {
+            const res = await fetch(`${API_BASE}/api/portal/register`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: name,
+                    email: email
+                })
+            });
+
+            const data = await res.json();
+            btn.disabled = false;
+            btn.innerText = "Claim My Pass";
+
+            if (data.status === 'exists') {
+                const p = data.player;
+                currentLoadedPlayer = p;
+                document.getElementById('modal-exists-name').innerText = p.name;
+                document.getElementById('modal-exists-email').innerText = p.email;
+                document.getElementById('modal-exists-pin').innerText = p.pin || "----";
+                document.getElementById('modal-exists-balance').innerText = p.balance || 0;
+                openModal('modal-exists');
+                return;
+            }
+
+            if (data.status === 'success' && data.player) {
+                displayPassScreen(data.player);
+            } else {
+                alert(data.message || "Registration could not be completed.");
+            }
+        } catch(e) {
+            btn.disabled = false;
+            btn.innerText = "Claim My Pass";
+            alert("Connection error. Please check your network connection and try again.");
+        }
+    }
+
+    function viewExistingFromModal() {
+        closeModal('modal-exists');
+        if (currentLoadedPlayer) {
+            displayBalanceResult(currentLoadedPlayer);
+        }
+    }
+
+    function displayPassScreen(player) {
+        currentLoadedPlayer = player;
+        document.getElementById('pass-name').innerText = player.name;
+        document.getElementById('pass-email').innerText = player.email;
+        document.getElementById('pass-balance').innerText = `${player.balance ?? 0} Credits`;
+
+        // Render 4-digit PIN boxes
+        const pin = String(player.pin || "0000").padStart(4, "0");
+        const container = document.getElementById('pass-pin-boxes');
+        container.innerHTML = '';
+        for (let char of pin) {
+            const box = document.createElement('div');
+            box.className = 'pin-box';
+            box.innerText = char;
+            container.appendChild(box);
+        }
+
+        showView('pass');
+    }
+
+    // --- SUBMIT PIN BALANCE LOOKUP ---
+    async function submitPinBalanceLookup() {
+        if (enteredPin.length !== 4) {
+            alert("Please enter your complete 4-digit PIN.");
+            return;
+        }
+
+        const btn = document.getElementById('btn-numpad-submit');
+        btn.disabled = true;
+        btn.innerText = "...";
+
+        try {
+            const res = await fetch(`${API_BASE}/api/portal/balance/${encodeURIComponent(enteredPin)}`);
+            const data = await res.json();
+            btn.disabled = false;
+            btn.innerText = "🔍 Check";
+
+            if (!res.ok || data.status !== 'success' || !data.player) {
+                document.getElementById('modal-notfound-msg').innerText = data.message || `No player account found matching PIN "${enteredPin}".`;
+                openModal('modal-notfound');
+                const boxContainer = document.getElementById('balance-pin-boxes');
+                if (boxContainer) {
+                    boxContainer.classList.add('shake');
+                    setTimeout(() => boxContainer.classList.remove('shake'), 400);
+                }
+                clearNumpad();
+                return;
+            }
+
+            displayBalanceResult(data.player);
+        } catch(e) {
+            btn.disabled = false;
+            btn.innerText = "🔍 Check";
+            alert("Connection error. Please check your network connection and try again.");
+        }
+    }
+
+    // --- SUBMIT EMAIL BALANCE LOOKUP ---
+    async function submitEmailBalanceLookup() {
+        const query = document.getElementById('balance-email-query').value.trim();
+        const btn = document.getElementById('btn-submit-balance-email');
+
+        if (!query) {
+            alert("Please enter your registered email address.");
+            document.getElementById('balance-email-query').focus();
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Searching...";
+
+        try {
+            const res = await fetch(`${API_BASE}/api/portal/balance/${encodeURIComponent(query)}`);
+            const data = await res.json();
+            btn.disabled = false;
+            btn.innerText = "✉️ Check Balance via Email";
+
+            if (!res.ok || data.status !== 'success' || !data.player) {
+                document.getElementById('modal-notfound-msg').innerText = data.message || `No player account found matching "${query}".`;
+                openModal('modal-notfound');
+                return;
+            }
+
+            displayBalanceResult(data.player);
+        } catch(e) {
+            btn.disabled = false;
+            btn.innerText = "✉️ Check Balance via Email";
+            alert("Connection error. Please check your network connection and try again.");
+        }
+    }
+
+    function displayBalanceResult(player) {
+        currentLoadedPlayer = player;
+        document.getElementById('res-name').innerText = player.name;
+        document.getElementById('res-balance').innerText = player.balance ?? 0;
+        document.getElementById('res-pin').innerText = player.pin || "----";
+        document.getElementById('res-wagers').innerText = player.total_wagers ?? 0;
+        document.getElementById('res-winnings').innerText = `${player.total_winnings ?? 0} 🪙`;
+
+        showView('balance-result');
+    }
+
+    async function refreshCurrentBalance() {
+        if (!currentLoadedPlayer) return;
+        const id = currentLoadedPlayer.pin || currentLoadedPlayer.id || currentLoadedPlayer.email;
+        try {
+            const res = await fetch(`${API_BASE}/api/portal/balance/${encodeURIComponent(id)}`);
+            const data = await res.json();
+            if (data.status === 'success' && data.player) {
+                displayBalanceResult(data.player);
+            }
+        } catch(e) {}
+    }
+
+    // Handle Enter keys
+    document.getElementById('signup-email').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitSignup();
+    });
+    document.getElementById('balance-email-query').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitEmailBalanceLookup();
+    });
+
+    // Optional physical keyboard support for PIN on desktop
+    document.addEventListener('keydown', (e) => {
+        const balanceView = document.getElementById('view-balance');
+        const pinContainer = document.getElementById('balance-pin-container');
+        if (balanceView && balanceView.style.display === 'flex' && pinContainer && pinContainer.style.display !== 'none') {
+            if (e.key >= '0' && e.key <= '9') {
+                numpadPress(e.key);
+            } else if (e.key === 'Backspace') {
+                numpadBackspace();
+            } else if (e.key === 'Enter') {
+                submitPinBalanceLookup();
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

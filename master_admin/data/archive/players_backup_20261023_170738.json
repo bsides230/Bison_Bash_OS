@@ -1,0 +1,16 @@
+{
+  "players": {
+    "p_ca68a7af": {
+      "id": "p_ca68a7af",
+      "name": "Bash Master",
+      "email": "mattamac230@gmail.com",
+      "pin": "4407",
+      "balance": 0,
+      "created_at": 1792793258,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792793258.327736
+    }
+  }
+}

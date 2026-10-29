@@ -1,0 +1,16 @@
+{
+  "players": {
+    "p_55ae49be": {
+      "id": "p_55ae49be",
+      "name": "Hank the Cow Dog",
+      "email": "mattamac230@gmail.com",
+      "pin": "5844",
+      "balance": 123,
+      "created_at": 1792736034,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792739403.1996813
+    }
+  }
+}

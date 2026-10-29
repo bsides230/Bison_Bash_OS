@@ -23,15 +23,19 @@ class GameProcess:
         # Build command: uvicorn games.dummy_game:app --port 8001
         cmd = [sys.executable, "-m", "uvicorn", self.module_path, "--port", str(self.port), "--host", "0.0.0.0"]
 
-        # Start subprocess and pipe stdout/stderr
-        self.process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1, # Line buffered
-            preexec_fn=os.setsid # Create a new process group for clean kill
-        )
+        # Start subprocess and pipe stdout/stderr (Cross-platform)
+        kwargs = {
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.STDOUT,
+            "text": True,
+            "bufsize": 1 # Line buffered
+        }
+        if sys.platform == "win32":
+            kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            kwargs["preexec_fn"] = os.setsid
+
+        self.process = subprocess.Popen(cmd, **kwargs)
 
         # Start async log reader
         self._reader_task = asyncio.create_task(self._read_logs())
@@ -57,23 +61,31 @@ class GameProcess:
         if not self.is_running():
             return False
 
-        # Send SIGTERM to the process group
-        try:
-            os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-        except ProcessLookupError:
-            pass # Already dead
+        pid = self.process.pid
+        if sys.platform == "win32":
+            try:
+                # Force kill process tree on Windows
+                subprocess.call(["taskkill", "/F", "/T", "/PID", str(pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                self.process.kill()
+        else:
+            # Send SIGTERM to the process group on POSIX
+            try:
+                os.killpg(os.getpgid(pid), signal.SIGTERM)
+            except ProcessLookupError:
+                pass
 
         # Wait gracefully for up to 2 seconds
         try:
             loop = asyncio.get_running_loop()
             await asyncio.wait_for(loop.run_in_executor(None, self.process.wait), timeout=2.0)
         except asyncio.TimeoutError:
-            # Force kill if it didn't terminate in 2s
-            try:
-                os.killpg(os.getpgid(self.process.pid), signal.SIGKILL)
-                self.process.wait()
-            except ProcessLookupError:
-                pass
+            if sys.platform != "win32":
+                try:
+                    os.killpg(os.getpgid(pid), signal.SIGKILL)
+                    self.process.wait()
+                except ProcessLookupError:
+                    pass
 
         if self._reader_task:
             self._reader_task.cancel()

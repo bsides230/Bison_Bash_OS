@@ -1,0 +1,16 @@
+{
+  "players": {
+    "p_a71c00fa": {
+      "id": "p_a71c00fa",
+      "name": "Sarah Connor",
+      "email": "sarah.connor.real@gmail.com",
+      "pin": "6061",
+      "balance": 250,
+      "created_at": 1792728616,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728616.7746437
+    }
+  }
+}

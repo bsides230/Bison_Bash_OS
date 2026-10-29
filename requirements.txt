@@ -4,3 +4,5 @@ jinja2
 httpx
 pydantic
 filelock
+qrcode
+python-multipart

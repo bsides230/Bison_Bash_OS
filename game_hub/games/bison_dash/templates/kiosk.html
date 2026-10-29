@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Bison Dash - Betting Station</title>
+    <script src="/static/js/pin_auth_flow.js?v=2.2"></script>
+    <style>
+        :root {
+            --bg-color: #0a0d14;
+            --panel-bg: #121824;
+            --card-bg: #182232;
+            --card-hover: #1f2c40;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.45);
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --success: #2ed573;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --border: #263445;
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        html, body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header Bar */
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: max(12px, env(safe-area-inset-top, 12px)) 24px 12px 24px;
+            background: var(--panel-bg);
+            border-bottom: 2px solid var(--border);
+            z-index: 20;
+            flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .terminal-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .terminal-brand img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+        }
+
+        .terminal-brand h1 {
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .terminal-brand .station-tag {
+            background: rgba(0, 255, 204, 0.12);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .race-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-open {
+            background: rgba(46, 213, 115, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+            animation: pulseGlow 1.8s infinite alternate;
+        }
+
+        .status-closed {
+            background: rgba(255, 71, 87, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 6px rgba(46, 213, 115, 0.2); }
+            to { box-shadow: 0 0 18px rgba(46, 213, 115, 0.6); }
+        }
+
+        /* Main View Container */
+        main {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* STEP 1: PIN AUTH SCREEN */
+        #scanner-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            position: relative;
+        }
+
+        /* STEP 3: BISON SELECTION VIEW */
+        #selection-view {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: 0; left: 0;
+            background: var(--bg-color);
+            z-index: 30;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .selection-top-bar {
+            background: var(--panel-bg);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .avatar-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #00b894);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 900;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .user-details h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .user-details .pin-tag {
+            font-family: Consolas, monospace;
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .selection-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .balance-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #090e17;
+            border: 2px solid var(--gold);
+            padding: 7px 18px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.25);
+        }
+
+        .btn-cancel-session {
+            background: #251216;
+            color: #ff6b81;
+            border: 1.5px solid var(--danger);
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-cancel-session:active {
+            background: var(--danger);
+            color: #fff;
+            transform: scale(0.96);
+        }
+
+        /* 6-BISON GRID VIEW */
+        .grid-container {
+            flex: 1;
+            padding: 16px 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .selection-instructions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .selection-instructions h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .selection-instructions p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .bison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .bison-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .bison-card:active {
+            transform: scale(0.97);
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .card-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .slot-badge {
+            font-size: 0.8rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 8px;
+            color: #000;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .payout-tag {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--gold);
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .bison-image-wrap {
+            width: 100%;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px 0;
+            position: relative;
+        }
+
+        .bison-image-wrap img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+            transition: transform 0.15s ease;
+        }
+
+        .bison-card:active .bison-image-wrap img {
+            transform: scale(1.04);
+        }
+
+        .bison-meta {
+            text-align: left;
+            margin-bottom: 6px;
+        }
+
+        .bison-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .bison-jockey {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        /* Static Stats Display */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 8px;
+            background: rgba(8, 12, 18, 0.7);
+            border-radius: 8px;
+            padding: 6px 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #b0bac5;
+            font-weight: 600;
+        }
+
+        .stat-val {
+            font-weight: 900;
+            color: #fff;
+            font-family: Consolas, monospace;
+        }
+
+        .card-tap-cta {
+            background: rgba(0, 255, 204, 0.12);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-size: 0.82rem;
+            font-weight: 800;
+            padding: 6px;
+            border-radius: 8px;
+            text-align: center;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* STEP 4: WAGER POPUP MODAL */
+        #wager-modal {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 7, 13, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+            animation: modalFadeIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .wager-box {
+            background: #111722;
+            border: 2px solid var(--accent);
+            border-radius: 24px;
+            padding: 24px 28px;
+            max-width: 580px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9), 0 0 35px var(--accent-glow);
+        }
+
+        .wager-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+        }
+
+        .wager-bison-img {
+            width: 90px;
+            height: 75px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));
+        }
+
+        .wager-bison-info h3 {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .wager-bison-info .wager-slot-tag {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 900;
+            padding: 3px 10px;
+            border-radius: 6px;
+            color: #000;
+            margin-top: 4px;
+        }
+
+        /* Player Total Tokens Banner in Modal */
+        .player-balance-banner {
+            background: #090e17;
+            border: 1.5px solid var(--gold);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-balance-banner .lbl {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .player-balance-banner .val {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Wager Stepper Controls */
+        .wager-stepper-section {
+            background: #0b101a;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .wager-stepper-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+        }
+
+        .stepper-controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            width: 100%;
+        }
+
+        /* Large touch-friendly UP and DOWN arrow buttons for Apple tablet PWA */
+        .btn-arrow-stepper {
+            width: 72px;
+            height: 64px;
+            background: #1c2636;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 2rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transition: all 0.1s ease;
+            touch-action: manipulation;
+        }
+
+        .btn-arrow-stepper:active {
+            background: var(--accent);
+            color: #000;
+            transform: scale(0.92);
+            box-shadow: 0 0 16px var(--accent-glow);
+        }
+
+        .btn-arrow-stepper:disabled {
+            background: #141b24;
+            color: #434c56;
+            border-color: #212832;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Digital Bet Readout Box */
+        .wager-display-box {
+            flex: 1;
+            max-width: 220px;
+            background: #070a10;
+            border: 2px solid var(--accent);
+            border-radius: 14px;
+            padding: 10px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.6), 0 0 16px rgba(0, 255, 204, 0.2);
+        }
+
+        .wager-display-amount {
+            font-size: 2.6rem;
+            font-weight: 900;
+            font-family: Consolas, monospace, sans-serif;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .wager-display-unit {
+            font-size: 0.78rem;
+            color: var(--gold);
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* Quick Shortcut Pills (MIN 1 / MAX ALL-IN) */
+        .stepper-quick-pills {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-quick-pill {
+            background: #161f2c;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 20px;
+            padding: 6px 18px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.1s ease;
+        }
+
+        .btn-quick-pill:active {
+            background: var(--accent);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        .btn-quick-pill.pill-max {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-quick-pill.pill-max:active {
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* Potential Payout Readout */
+        .payout-calculation-box {
+            background: rgba(255, 215, 0, 0.08);
+            border: 1px dashed var(--gold);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            color: var(--gold);
+            font-weight: 800;
+        }
+
+        .payout-calculation-box .payout-num {
+            font-size: 1.3rem;
+            font-weight: 900;
+        }
+
+        /* Wager Modal Action Buttons (Confirm & Cancel) */
+        .wager-modal-actions {
+            display: flex;
+            gap: 14px;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .btn-modal-cancel {
+            flex: 1;
+            background: #1e2633;
+            color: #cbd5e1;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.12s ease;
+        }
+
+        .btn-modal-cancel:active {
+            background: #2a3547;
+            transform: scale(0.97);
+        }
+
+        .btn-modal-confirm {
+            flex: 2;
+            background: linear-gradient(135deg, #00ffcc 0%, #00b894 100%);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            padding: 16px 20px;
+            font-size: 1.25rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all 0.12s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-modal-confirm:active {
+            transform: scale(0.97);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        .btn-modal-confirm:disabled {
+            background: #2b3340;
+            color: #64748b;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* SUCCESS RECEIPT OVERLAY */
+        #success-modal {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 7, 13, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 150;
+            padding: 24px;
+        }
+
+        .success-box {
+            background: #111722;
+            border: 3px solid var(--success);
+            border-radius: 24px;
+            padding: 36px 32px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(46, 213, 115, 0.45);
+            animation: bouncePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bouncePop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 16px rgba(46, 213, 115, 0.8));
+        }
+
+        .success-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .success-details {
+            font-size: 1.2rem;
+            color: #ffffff;
+            font-weight: 800;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .success-balance-box {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1.5px solid var(--gold);
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 1.05rem;
+            color: #fff;
+            margin-bottom: 24px;
+        }
+
+        .success-balance-box strong {
+            color: var(--gold);
+            font-size: 1.3rem;
+        }
+
+        .btn-success-done {
+            width: 100%;
+            background: linear-gradient(135deg, #00ffcc 0%, #00b894 100%);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        /* HANDS-FREE ERROR / LOCKOUT MODAL */
+        #error-lockout-modal {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 5, 8, 0.96);
+            backdrop-filter: blur(10px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 24px;
+        }
+
+        .error-lockout-box {
+            background: #1a0b0e;
+            border: 3px solid var(--danger);
+            border-radius: 24px;
+            padding: 36px 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(255, 71, 87, 0.55);
+            animation: bouncePop 0.3s ease;
+        }
+
+        .error-lockout-icon {
+            font-size: 4rem;
+            margin-bottom: 12px;
+        }
+
+        .error-lockout-title {
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: var(--danger);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+        }
+
+        .error-lockout-msg {
+            font-size: 1.2rem;
+            color: #ffffff;
+            font-weight: 800;
+            margin-bottom: 14px;
+        }
+
+        .error-lockout-details {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            margin-bottom: 22px;
+            background: rgba(0,0,0,0.5);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .error-lockout-timer {
+            display: inline-block;
+            background: rgba(255, 71, 87, 0.15);
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        /* Warning banner if race is closed */
+        .closed-race-banner {
+            display: none;
+            background: rgba(255, 71, 87, 0.2);
+            border-bottom: 2px solid var(--danger);
+            padding: 12px;
+            text-align: center;
+            color: #ff6b81;
+            font-weight: 800;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<header>
+    <div class="terminal-brand">
+        <img src="/static/img/bison_logo.png" alt="Bison Dash" onerror="this.style.display='none'" />
+        <div>
+            <h1>Bison Dash</h1>
+        </div>
+        <span class="station-tag" id="station-label">Betting Station</span>
+    </div>
+</header>
+
+<main>
+    <!-- STEP 1: STANDARDIZED PIN KEYPAD VIEW -->
+    <div id="scanner-view">
+        <div id="kiosk-pin-container" style="width: 100%; display: flex; justify-content: center;"></div>
+    </div>
+
+    <!-- STEP 3: 6-BISON SELECTION VIEW -->
+    <div id="selection-view">
+        <!-- Top Bar with User Info & Cancel Button -->
+        <div class="selection-top-bar">
+            <div class="user-pill">
+                <div class="avatar-circle" id="user-avatar">?</div>
+                <div class="user-details">
+                    <h2 id="user-display-name">Player Name</h2>
+                    <span class="pin-tag" id="user-pin-tag">PIN: —</span>
+                </div>
+            </div>
+
+            <div class="selection-actions">
+                <div class="balance-pill">
+                    <span>🪙</span>
+                    <span id="user-balance-val">0</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800;">TOKENS</span>
+                </div>
+                <!-- Cancel button on bison selection to close out session to keypad -->
+                <button class="btn-cancel-session" onclick="closeSessionToKeypad()" title="Exit session and return to PIN keypad">
+                    <span>✕</span>
+                    <span>Cancel</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="closed-race-banner" class="closed-race-banner">
+            ⚠️ BETTING IS CURRENTLY CLOSED FOR THIS RACE! Watch the live action on the arena screen.
+        </div>
+
+        <!-- 6 Racers Grid -->
+        <div class="grid-container">
+            <div class="selection-instructions">
+                <h3><span>🦬</span> 1. Select a Bison to Bet</h3>
+                <p>Tap any racer card to open the wager controls</p>
+            </div>
+            <div class="bison-grid" id="bison-cards-grid">
+                <!-- Dynamically generated 6 bison cards -->
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 4: WAGER POPUP MODAL -->
+    <div id="wager-modal">
+        <div class="wager-box">
+            <!-- Selected Bison Preview Header -->
+            <div class="wager-header">
+                <img id="wmodal-bison-img" class="wager-bison-img" src="/static/display/512/bison_1.png" alt="Selected Bison" />
+                <div class="wager-bison-info">
+                    <h3 id="wmodal-bison-name">Thunder Stampede</h3>
+                    <div>
+                        <span id="wmodal-slot-tag" class="wager-slot-tag" style="background: #ff4757;">SLOT 1</span>
+                        <span id="wmodal-jockey-name" style="font-size: 0.85rem; color: var(--text-muted); margin-left: 8px;">Jockey: Jax</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Tokens Balance Readout -->
+            <div class="player-balance-banner">
+                <span class="lbl">Your Total Tokens</span>
+                <div class="val">
+                    <span>🪙</span>
+                    <span id="wmodal-total-tokens">50</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Credits</span>
+                </div>
+            </div>
+
+            <!-- Wager Stepper with Clickable UP and DOWN Arrow Buttons -->
+            <div class="wager-stepper-section">
+                <span class="wager-stepper-title">Enter Bet Amount (Min 1 &bull; Max Balance)</span>
+                
+                <div class="stepper-controls-row">
+                    <!-- DOWN ARROW (▼) BUTTON -->
+                    <button class="btn-arrow-stepper" id="btn-stepper-down" onclick="stepWagerDown()" title="Decrease Bet">
+                        ▼
+                    </button>
+
+                    <!-- DIGITAL WAGER READOUT BOX -->
+                    <div class="wager-display-box">
+                        <div class="wager-display-amount" id="wmodal-wager-amount">1</div>
+                        <div class="wager-display-unit">🪙 Tokens</div>
+                    </div>
+
+                    <!-- UP ARROW (▲) BUTTON -->
+                    <button class="btn-arrow-stepper" id="btn-stepper-up" onclick="stepWagerUp()" title="Increase Bet">
+                        ▲
+                    </button>
+                </div>
+
+                <!-- Touch Quick-Pills for 1-Tap Convenience -->
+                <div class="stepper-quick-pills">
+                    <button class="btn-quick-pill" onclick="setWagerTo(1)">MIN (1)</button>
+                    <button class="btn-quick-pill" onclick="adjustWagerBy(5)">+5</button>
+                    <button class="btn-quick-pill" onclick="adjustWagerBy(10)">+10</button>
+                    <button class="btn-quick-pill pill-max" onclick="setWagerMax()">MAX ALL-IN</button>
+                </div>
+            </div>
+
+            <!-- Potential Payout Preview -->
+            <div class="payout-calculation-box">
+                <span>Potential Win (<span id="wmodal-mult-label">2.0</span>x Payout):</span>
+                <span class="payout-num"><span id="wmodal-potential-win">2</span> 🪙 Credits</span>
+            </div>
+
+            <!-- Action Buttons: Cancel (returns to selection) & Confirm (locks in wager) -->
+            <div class="wager-modal-actions">
+                <button class="btn-modal-cancel" onclick="closeWagerModal()">
+                    Cancel
+                </button>
+                <button class="btn-modal-confirm" id="btn-confirm-wager" onclick="submitWager()">
+                    <span>✓</span>
+                    <span>Confirm Bet</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL RECEIPT -->
+    <div id="success-modal">
+        <div class="success-box">
+            <div class="success-icon">🎉</div>
+            <h2 class="success-title">BET CONFIRMED!</h2>
+            <p class="success-details" id="success-summary-text">
+                25 Tokens locked in on Slot 1 (Thunder Stampede).
+            </p>
+            <div class="success-balance-box">
+                Remaining Balance: <strong id="success-new-balance">25</strong> Tokens 🪙
+            </div>
+            <button class="btn-success-done" onclick="closeSessionToKeypad()">
+                DONE &bull; RESETTING IN <span id="success-countdown-num">5</span>s
+            </button>
+        </div>
+    </div>
+
+    <!-- DEDICATED ALREADY-BET / WAIT FOR NEXT RACE MODAL (KISS) -->
+    <div id="already-bet-modal" style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(4, 7, 13, 0.94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 180; padding: 20px;">
+        <div style="background: #111722; border: 2.5px solid var(--gold); border-radius: 24px; padding: 32px 28px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.9), 0 0 35px var(--gold-glow); animation: bouncePop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div style="font-size: 3.5rem; margin-bottom: 8px;">🦬</div>
+            <div style="display: inline-block; background: rgba(255, 215, 0, 0.15); border: 1.5px solid var(--gold); color: var(--gold); font-size: 0.82rem; font-weight: 900; letter-spacing: 1.5px; padding: 4px 16px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px;">
+                BET ALREADY PLACED
+            </div>
+            <h2 id="ab-player-title" style="font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 6px;">Player Name</h2>
+            <p style="font-size: 1.05rem; color: #cbd5e1; font-weight: 700; margin-bottom: 20px;">
+                You already placed a bet for this race! Please wait until the next race to bet again.
+            </p>
+
+            <!-- Current Wager Card -->
+            <div style="background: #090e17; border: 2px solid var(--border); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; gap: 18px; margin-bottom: 22px; text-align: left;">
+                <img id="ab-bison-img" src="/static/display/512/bison_1.png" style="width: 85px; height: 70px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));" alt="Bison" />
+                <div style="flex: 1;">
+                    <span id="ab-slot-badge" style="font-size: 0.78rem; font-weight: 900; padding: 3px 10px; border-radius: 6px; color: #000; background: #ff4757; text-transform: uppercase;">SLOT 1</span>
+                    <h3 id="ab-bison-name" style="font-size: 1.3rem; font-weight: 900; color: #fff; margin: 4px 0 4px 0;">Thunder Stampede</h3>
+                    <div style="display: flex; gap: 10px; align-items: center; font-size: 0.95rem; font-weight: 900;">
+                        <span style="color: var(--gold);">🪙 <span id="ab-amount">25</span> Tokens Bet</span>
+                        <span style="color: var(--text-muted);">&bull;</span>
+                        <span style="color: var(--accent);">To Win: <span id="ab-payout">50</span> 🪙</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-success-done" onclick="closeSessionToKeypad()" style="background: #1b2434; border: 2px solid var(--border); color: #fff; font-size: 1.1rem; padding: 14px;">
+                DONE &bull; NEXT PLAYER IN <span id="ab-countdown-num">6</span>s
+            </button>
+        </div>
+    </div>
+
+    <!-- 5-SECOND HIGH-CONTRAST LOCKOUT MODAL -->
+    <div id="error-lockout-modal">
+        <div class="error-lockout-box">
+            <div class="error-lockout-icon">⛔</div>
+            <div class="error-lockout-title" id="lockout-modal-title">System Error</div>
+            <div class="error-lockout-msg" id="lockout-modal-msg">Player has already placed a bet.</div>
+            <div class="error-lockout-details" id="lockout-modal-details">
+                Only one wager is permitted per player per race. Station will auto-reset.
+            </div>
+            <div class="error-lockout-timer">
+                STATION AUTO-RESET IN <span id="lockout-timer-countdown">5</span>s
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // --- 6 STATIC RACERS DEFINITION WITH DISPLAY ASSETS & STATS ---
+    const STATIC_RACERS = [
+        {
+            slot: 1,
+            id: "bison_1",
+            name: "Thunder Stampede",
+            color: "#ff4757",
+            jockey_name: "Jockey Jax",
+            image: "/static/display/512/bison_1.png",
+            stats: { bison_speed: 65, bison_cornering: 6, bison_stamina: 55, jockey_reaction: 10 }
+        },
+        {
+            slot: 2,
+            id: "bison_2",
+            name: "Cyber Steer",
+            color: "#2ed573",
+            jockey_name: "Dash Volt",
+            image: "/static/display/512/bison_2.png",
+            stats: { bison_speed: 70, bison_cornering: 5, bison_stamina: 50, jockey_reaction: 10 }
+        },
+        {
+            slot: 3,
+            id: "bison_3",
+            name: "Prairie Rocket",
+            color: "#3742fa",
+            jockey_name: "Nova Drift",
+            image: "/static/display/512/bison_3.png",
+            stats: { bison_speed: 60, bison_cornering: 7, bison_stamina: 45, jockey_reaction: 14 }
+        },
+        {
+            slot: 4,
+            id: "bison_4",
+            name: "Iron Horn",
+            color: "#ffa502",
+            jockey_name: "Steel Spur",
+            image: "/static/display/512/bison_4.png",
+            stats: { bison_speed: 75, bison_cornering: 4, bison_stamina: 60, jockey_reaction: 8 }
+        },
+        {
+            slot: 5,
+            id: "bison_5",
+            name: "Neon Goliath",
+            color: "#9b5de5",
+            jockey_name: "Pulse Rider",
+            image: "/static/display/512/bison_5.png",
+            stats: { bison_speed: 62, bison_cornering: 5, bison_stamina: 65, jockey_reaction: 11 }
+        },
+        {
+            slot: 6,
+            id: "bison_6",
+            name: "Solar Flare",
+            color: "#00d2d3",
+            jockey_name: "Blaze Vector",
+            image: "/static/display/512/bison_6.png",
+            stats: { bison_speed: 68, bison_cornering: 6, bison_stamina: 50, jockey_reaction: 13 }
+        }
+    ];
+
+    let currentLineup = [...STATIC_RACERS];
+    let activePlayer = null;
+    let selectedBison = null;
+    let currentWager = 1;
+    let bisonDashMinBet = 1;
+    let bisonDashMultiplier = 2.0;
+    let currentRaceState = "Betting_Open";
+
+    let pinAuth = null;
+    let inactivityTimer = null;
+    let successResetTimer = null;
+    let lockoutTimer = null;
+    let lockoutInterval = null;
+
+    // Detect station port or URL path for header label (supports Tailscale Funnel /bet1 and /bet2)
+    function updateStationLabel() {
+        const port = window.location.port;
+        const path = window.location.pathname.toLowerCase();
+        const lbl = document.getElementById('station-label');
+        if (lbl) {
+            if (port === '8012' || path.includes('bet2') || path.includes('tablet2')) {
+                lbl.innerText = 'Betting Station 2';
+            } else if (port === '8008' || path.includes('bet1') || path.includes('tablet1')) {
+                lbl.innerText = 'Betting Station 1';
+            } else {
+                lbl.innerText = 'Betting Station';
+            }
+        }
+    }
+
+    // Audio Chimes
+    function playBeep(type = 'success') {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.25);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, ctx.currentTime);
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.2);
+            }
+        } catch(e) {}
+    }
+
+    let alreadyBetInterval = null;
+
+    function showAlreadyBetScreen(player, wager) {
+        playBeep('success');
+        const modal = document.getElementById('already-bet-modal');
+        if (!modal) return;
+
+        const titleEl = document.getElementById('ab-player-title');
+        if (titleEl) {
+            const pinStr = player.pin || '••••';
+            const nameStr = player.name || player.display_name || 'Player';
+            titleEl.innerText = `${nameStr} (PIN: ${pinStr})`;
+        }
+
+        const slotNum = Number(wager.slot) || 1;
+        const racer = STATIC_RACERS.find(r => r.slot === slotNum);
+
+        const imgEl = document.getElementById('ab-bison-img');
+        if (imgEl) imgEl.src = `/static/display/512/bison_${slotNum}.png`;
+
+        const badgeEl = document.getElementById('ab-slot-badge');
+        if (badgeEl) {
+            badgeEl.innerText = `SLOT ${slotNum}`;
+            badgeEl.style.background = racer ? racer.color : '#ffd700';
+        }
+
+        const nameEl = document.getElementById('ab-bison-name');
+        if (nameEl) nameEl.innerText = wager.bison_name || (racer ? racer.name : `Slot ${slotNum}`);
+
+        const amtEl = document.getElementById('ab-amount');
+        if (amtEl) amtEl.innerText = wager.amount;
+
+        const payoutEl = document.getElementById('ab-payout');
+        if (payoutEl) payoutEl.innerText = Math.round(wager.amount * (bisonDashMultiplier || 2.0));
+
+        // Hide other views
+        document.getElementById('scanner-view').style.display = 'none';
+        document.getElementById('selection-view').style.display = 'none';
+        document.getElementById('wager-modal').style.display = 'none';
+
+        modal.style.display = 'flex';
+
+        let secondsLeft = 6;
+        const cdEl = document.getElementById('ab-countdown-num');
+        if (cdEl) cdEl.innerText = secondsLeft;
+
+        if (alreadyBetInterval) clearInterval(alreadyBetInterval);
+        alreadyBetInterval = setInterval(() => {
+            secondsLeft--;
+            if (cdEl) cdEl.innerText = secondsLeft;
+            if (secondsLeft <= 0) {
+                clearInterval(alreadyBetInterval);
+                modal.style.display = 'none';
+                closeSessionToKeypad();
+            }
+        }, 1000);
+    }
+
+    // --- STEP 1: INITIALIZE STANDARDIZED PIN AUTH FLOW ---
+    function initPinAuth() {
+        if (typeof PinAuthFlow === 'undefined') {
+            console.warn("PinAuthFlow not ready, attempting reload...");
+            const container = document.getElementById('kiosk-pin-container');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: #cbd5e1;">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px;">⏳</div>
+                        <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 8px;">Keypad Initializing...</h2>
+                        <p style="font-size: 0.95rem; margin-bottom: 20px;">If keypad does not appear automatically, tap below:</p>
+                        <button onclick="window.location.reload(true)" style="background: var(--accent); color: #000; font-weight: 900; font-size: 1rem; padding: 12px 28px; border: none; border-radius: 12px; cursor: pointer;">
+                            🔄 Reload Terminal
+                        </button>
+                    </div>
+                `;
+            }
+            setTimeout(() => {
+                if (typeof PinAuthFlow !== 'undefined') {
+                    initPinAuth();
+                } else {
+                    const s = document.createElement('script');
+                    s.src = '/static/js/pin_auth_flow.js?v=' + Date.now();
+                    s.onload = () => initPinAuth();
+                    document.head.appendChild(s);
+                }
+            }, 800);
+            return;
+        }
+
+        pinAuth = new PinAuthFlow({
+            containerId: 'kiosk-pin-container',
+            isModal: false,
+            title: 'ENTER 4-DIGIT PIN TO BET',
+            subtitle: 'Enter your assigned player PIN on the keypad below',
+            onConfirmed: async (attendee) => {
+                // Identity confirmed! Check if player already placed a bet for this race
+                try {
+                    const res = await fetch(`/api/player/${attendee.pin || attendee.id}`);
+                    const data = await res.json();
+                    const p = (data.status === 'success' && data.player) ? data.player : attendee;
+                    const existingWager = p.current_wager || attendee.current_wager;
+
+                    if (existingWager) {
+                        showAlreadyBetScreen(p, existingWager);
+                        return;
+                    }
+
+                    activePlayer = p;
+                    openBisonSelectionScreen();
+                } catch(err) {
+                    if (attendee.current_wager) {
+                        showAlreadyBetScreen(attendee, attendee.current_wager);
+                        return;
+                    }
+                    activePlayer = attendee;
+                    openBisonSelectionScreen();
+                }
+            },
+            onCancel: () => {
+                if (pinAuth) pinAuth.resetToStep1();
+            }
+        });
+    }
+
+    // --- STEP 3: BISON SELECTION SCREEN ---
+    function openBisonSelectionScreen() {
+        if (!activePlayer) return;
+
+        // Populate user details in top bar
+        const avatarEl = document.getElementById('user-avatar');
+        if (avatarEl) avatarEl.innerText = (activePlayer.name || 'P').charAt(0).toUpperCase();
+
+        const nameEl = document.getElementById('user-display-name');
+        if (nameEl) nameEl.innerText = activePlayer.name || 'Player';
+
+        const pinTagEl = document.getElementById('user-pin-tag');
+        if (pinTagEl) pinTagEl.innerText = `PIN: ${activePlayer.pin || (activePlayer.id ? activePlayer.id.slice(-4) : '••••')}`;
+
+        const balanceEl = document.getElementById('user-balance-val');
+        if (balanceEl) balanceEl.innerText = activePlayer.balance ?? 0;
+
+        // Render the 6 static bison cards
+        renderBisonGrid();
+
+        // Switch views
+        document.getElementById('scanner-view').style.display = 'none';
+        document.getElementById('selection-view').style.display = 'flex';
+
+        // Check race status warning
+        updateRaceClosedWarning();
+
+        // Safety inactivity timer: 45s of no touches closes session
+        resetInactivityTimer();
+    }
+
+    function renderBisonGrid() {
+        const grid = document.getElementById('bison-cards-grid');
+        grid.innerHTML = '';
+
+        currentLineup.forEach(b => {
+            const card = document.createElement('div');
+            card.className = 'bison-card';
+            card.style.borderLeft = `6px solid ${b.color}`;
+            card.onclick = () => onBisonCardClicked(b);
+
+            const spd = b.stats?.bison_speed ?? 60;
+            const crn = b.stats?.bison_cornering ?? 5;
+            const stm = b.stats?.bison_stamina ?? 50;
+            const rct = b.stats?.jockey_reaction ?? 10;
+
+            card.innerHTML = `
+                <div class="card-top-row">
+                    <span class="slot-badge" style="background: ${b.color};">SLOT ${b.slot}</span>
+                    <span class="payout-tag">${bisonDashMultiplier.toFixed(1)}x Payout</span>
+                </div>
+                <div class="bison-image-wrap">
+                    <img src="${b.image}" alt="${b.name}" onerror="this.src='/static/display/512/bison_${b.slot}.png'" />
+                </div>
+                <div class="bison-meta">
+                    <div class="bison-title">${b.name}</div>
+                    <div class="bison-jockey">Jockey: ${b.jockey_name || 'Pro Rider'}</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item"><span>⚡ Speed</span><span class="stat-val">${spd}</span></div>
+                    <div class="stat-item"><span>🎯 Turn</span><span class="stat-val">${crn}</span></div>
+                    <div class="stat-item"><span>🔋 Stamina</span><span class="stat-val">${stm}</span></div>
+                    <div class="stat-item"><span>⏱️ React</span><span class="stat-val">${rct}</span></div>
+                </div>
+                <div class="card-tap-cta">
+                    Tap to Bet &bull; Slot ${b.slot}
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // Cancel / Exit Session button from Bison Selection screen
+    function closeSessionToKeypad() {
+        clearTimeout(inactivityTimer);
+        clearTimeout(successResetTimer);
+        clearTimeout(lockoutTimer);
+        if (lockoutInterval) clearInterval(lockoutInterval);
+        if (alreadyBetInterval) clearInterval(alreadyBetInterval);
+
+        activePlayer = null;
+        selectedBison = null;
+        currentWager = 1;
+
+        // Hide all modals & selection views
+        document.getElementById('wager-modal').style.display = 'none';
+        document.getElementById('success-modal').style.display = 'none';
+        document.getElementById('already-bet-modal').style.display = 'none';
+        document.getElementById('error-lockout-modal').style.display = 'none';
+        document.getElementById('selection-view').style.display = 'none';
+
+        // Show attract PIN keypad screen
+        document.getElementById('scanner-view').style.display = 'flex';
+
+        if (pinAuth) {
+            pinAuth.resetToStep1();
+        }
+    }
+
+    // --- STEP 4: WAGER POPUP MODAL ---
+    function onBisonCardClicked(bison) {
+        resetInactivityTimer();
+        if (!activePlayer) return;
+
+        selectedBison = bison;
+
+        // Populate Wager Modal with Selected Bison info
+        const imgEl = document.getElementById('wmodal-bison-img');
+        if (imgEl) imgEl.src = bison.image;
+
+        const nameEl = document.getElementById('wmodal-bison-name');
+        if (nameEl) nameEl.innerText = bison.name;
+
+        const slotTagEl = document.getElementById('wmodal-slot-tag');
+        if (slotTagEl) {
+            slotTagEl.innerText = `SLOT ${bison.slot}`;
+            slotTagEl.style.background = bison.color;
+        }
+
+        const jockeyEl = document.getElementById('wmodal-jockey-name');
+        if (jockeyEl) jockeyEl.innerText = `Jockey: ${bison.jockey_name || 'Rider'}`;
+
+        // Total tokens
+        const totalTokensEl = document.getElementById('wmodal-total-tokens');
+        const bal = activePlayer.balance ?? 0;
+        if (totalTokensEl) totalTokensEl.innerText = bal;
+
+        // Multiplier label
+        const multEl = document.getElementById('wmodal-mult-label');
+        if (multEl) multEl.innerText = bisonDashMultiplier.toFixed(1);
+
+        // Reset wager to min 1 token (or bounded by balance)
+        if (bal < 1) {
+            currentWager = 0;
+        } else {
+            currentWager = Math.max(1, Math.min(bal, 5));
+        }
+
+        updateWagerModalReadout();
+
+        // Show modal
+        document.getElementById('wager-modal').style.display = 'flex';
+    }
+
+    function closeWagerModal() {
+        resetInactivityTimer();
+        document.getElementById('wager-modal').style.display = 'none';
+        selectedBison = null;
+    }
+
+    // Stepper logic: Clickable UP (▲) and DOWN (▼) arrow buttons
+    function stepWagerUp() {
+        resetInactivityTimer();
+        if (!activePlayer) return;
+        const maxTokens = activePlayer.balance ?? 0;
+
+        if (currentWager < maxTokens) {
+            currentWager++;
+            updateWagerModalReadout();
+        }
+    }
+
+    function stepWagerDown() {
+        resetInactivityTimer();
+        if (currentWager > 1) {
+            currentWager--;
+            updateWagerModalReadout();
+        }
+    }
+
+    function adjustWagerBy(delta) {
+        resetInactivityTimer();
+        if (!activePlayer) return;
+        const maxTokens = activePlayer.balance ?? 0;
+        currentWager = Math.max(1, Math.min(maxTokens, currentWager + delta));
+        updateWagerModalReadout();
+    }
+
+    function setWagerTo(amt) {
+        resetInactivityTimer();
+        if (!activePlayer) return;
+        const maxTokens = activePlayer.balance ?? 0;
+        currentWager = Math.max(1, Math.min(maxTokens, amt));
+        updateWagerModalReadout();
+    }
+
+    function setWagerMax() {
+        resetInactivityTimer();
+        if (!activePlayer) return;
+        const maxTokens = activePlayer.balance ?? 0;
+        currentWager = Math.max(1, maxTokens);
+        updateWagerModalReadout();
+    }
+
+    function updateWagerModalReadout() {
+        const readoutEl = document.getElementById('wmodal-wager-amount');
+        if (readoutEl) readoutEl.innerText = currentWager;
+
+        const maxTokens = activePlayer ? (activePlayer.balance ?? 0) : 0;
+
+        // Button disabled states
+        const btnDown = document.getElementById('btn-stepper-down');
+        if (btnDown) btnDown.disabled = (currentWager <= 1);
+
+        const btnUp = document.getElementById('btn-stepper-up');
+        if (btnUp) btnUp.disabled = (currentWager >= maxTokens);
+
+        // Potential win calculation
+        const potentialWinEl = document.getElementById('wmodal-potential-win');
+        if (potentialWinEl) {
+            potentialWinEl.innerText = Math.round(currentWager * bisonDashMultiplier);
+        }
+
+        // Validate confirm button
+        const confirmBtn = document.getElementById('btn-confirm-wager');
+        if (confirmBtn) {
+            if (maxTokens < 1 || currentWager < 1 || currentWager > maxTokens) {
+                confirmBtn.disabled = true;
+                if (maxTokens < 1) {
+                    confirmBtn.innerHTML = `<span>✕</span><span>Insufficient Tokens</span>`;
+                } else {
+                    confirmBtn.innerHTML = `<span>✕</span><span>Invalid Amount</span>`;
+                }
+            } else {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = `<span>✓</span><span>Confirm Bet (${currentWager} 🪙)</span>`;
+            }
+        }
+    }
+
+    // Submit Wager to API
+    async function submitWager() {
+        if (!activePlayer || !selectedBison || currentWager < 1) return;
+
+        const confirmBtn = document.getElementById('btn-confirm-wager');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = `<span>⏳</span><span>Locking in Wager...</span>`;
+        }
+
+        try {
+            const res = await fetch('/api/bisondash/wager', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    player_id: activePlayer.id,
+                    slot: selectedBison.slot,
+                    amount: currentWager,
+                    bison_name: selectedBison.name
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.status !== 'success') {
+                playBeep('error');
+                if (data.error_code === 'DUPLICATE_WAGER' || (data.message && data.message.includes('already placed'))) {
+                    document.getElementById('wager-modal').style.display = 'none';
+                    const existingWager = data.existing_wager || {
+                        slot: selectedBison.slot,
+                        bison_name: selectedBison.name,
+                        amount: currentWager
+                    };
+                    showAlreadyBetScreen(activePlayer, existingWager);
+                    return;
+                }
+                alert(data.message || "Failed to place bet. Please try again.");
+                if (confirmBtn) confirmBtn.disabled = false;
+                updateWagerModalReadout();
+                return;
+            }
+
+            // SUCCESS!
+            playBeep('success');
+            document.getElementById('wager-modal').style.display = 'none';
+
+            // Show Success Modal
+            const summaryText = `${currentWager} Tokens locked in on Slot ${selectedBison.slot} (${selectedBison.name})!`;
+            document.getElementById('success-summary-text').innerText = summaryText;
+            document.getElementById('success-new-balance').innerText = data.new_balance;
+
+            document.getElementById('success-modal').style.display = 'flex';
+
+            // 5-second countdown to reset for next player
+            let secondsLeft = 5;
+            const cdEl = document.getElementById('success-countdown-num');
+            if (cdEl) cdEl.innerText = secondsLeft;
+
+            clearTimeout(successResetTimer);
+            const interval = setInterval(() => {
+                secondsLeft--;
+                if (cdEl) cdEl.innerText = secondsLeft;
+                if (secondsLeft <= 0) {
+                    clearInterval(interval);
+                    closeSessionToKeypad();
+                }
+            }, 1000);
+
+        } catch(e) {
+            playBeep('error');
+            alert("Network error submitting bet. Please check WiFi connection.");
+            if (confirmBtn) confirmBtn.disabled = false;
+            updateWagerModalReadout();
+        }
+    }
+
+    // 5-Second Hands-Free Lockout Modal
+    function triggerLockout(title, message) {
+        playBeep('error');
+        const modal = document.getElementById('error-lockout-modal');
+        const titleEl = document.getElementById('lockout-modal-title');
+        const msgEl = document.getElementById('lockout-modal-msg');
+        const timerEl = document.getElementById('lockout-timer-countdown');
+
+        if (titleEl) titleEl.innerText = title || "System Error";
+        if (msgEl) msgEl.innerText = message || "Player has already placed a bet.";
+        modal.style.display = 'flex';
+
+        let secondsLeft = 5;
+        if (timerEl) timerEl.innerText = secondsLeft;
+
+        if (lockoutInterval) clearInterval(lockoutInterval);
+        if (lockoutTimer) clearTimeout(lockoutTimer);
+
+        lockoutInterval = setInterval(() => {
+            secondsLeft--;
+            if (secondsLeft >= 0 && timerEl) {
+                timerEl.innerText = secondsLeft;
+            }
+        }, 1000);
+
+        lockoutTimer = setTimeout(() => {
+            clearInterval(lockoutInterval);
+            modal.style.display = 'none';
+            closeSessionToKeypad();
+        }, 5000);
+    }
+
+    // Inactivity Timer: Auto-resets session after 45s of no touches
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            if (activePlayer) {
+                closeSessionToKeypad();
+            }
+        }, 45000);
+    }
+
+    // Update warning if race is closed (KISS: betting is always open for active ledger)
+    function updateRaceClosedWarning() {
+        const banner = document.getElementById('closed-race-banner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+    }
+
+    // Poll current race state
+    async function pollState() {
+        try {
+            const res = await fetch('/api/current_race');
+            const data = await res.json();
+            if (data.status === 'success') {
+                currentRaceState = data.state;
+                const statusEl = document.getElementById('race-status');
+                if (statusEl) {
+                    if (currentRaceState === 'Betting_Open') {
+                        statusEl.className = 'race-status-badge status-open';
+                        statusEl.innerText = '🟢 Betting Open';
+                    } else if (currentRaceState === 'Soft_Closure') {
+                        statusEl.className = 'race-status-badge status-closed';
+                        const remaining = Math.max(0, Math.ceil(10 - (data.elapsed_time || 0)));
+                        statusEl.innerText = `⏳ Closing in ${remaining}s`;
+                    } else {
+                        statusEl.className = 'race-status-badge status-closed';
+                        statusEl.innerText = '🔴 Race in Progress';
+                    }
+                }
+
+                updateRaceClosedWarning();
+            }
+        } catch(e) {}
+    }
+
+    // Load economy configuration
+    async function loadConfig() {
+        try {
+            const res = await fetch('/api/bisondash/config');
+            if (res.ok) {
+                const data = await res.json();
+                bisonDashMinBet = parseInt(data.min_bet) || 1;
+                bisonDashMultiplier = parseFloat(data.multiplier) || 2.0;
+            }
+        } catch(e) {}
+    }
+
+    // Sync lineup with server if dynamic updates occur
+    async function syncLineup() {
+        try {
+            const res = await fetch('/api/bisondash/lineup');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === 'success' && Array.isArray(data.lineup) && data.lineup.length === 6) {
+                    currentLineup = data.lineup.map(b => ({
+                        ...b,
+                        image: `/static/display/512/bison_${b.slot}.png`
+                    }));
+                    if (activePlayer) {
+                        renderBisonGrid();
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
+    window.onload = () => {
+        updateStationLabel();
+        initPinAuth();
+        loadConfig();
+        syncLineup();
+        pollState();
+        setInterval(pollState, 1500);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const testView = urlParams.get('test_view');
+        if (testView) {
+            activePlayer = {
+                id: 'p_55ae49be',
+                name: 'Hank the Cow Dog',
+                pin: '5844',
+                balance: 124
+            };
+            if (testView === 'already_bet') {
+                setTimeout(() => {
+                    showAlreadyBetScreen(activePlayer, {
+                        slot: 2,
+                        bison_name: "Cyber Steer",
+                        amount: 25
+                    });
+                }, 100);
+            } else {
+                openBisonSelectionScreen();
+                if (testView === 'wager') {
+                    const slot = parseInt(urlParams.get('slot')) || 1;
+                    const b = STATIC_RACERS.find(r => r.slot === slot) || STATIC_RACERS[0];
+                    setTimeout(() => onBisonCardClicked(b), 100);
+                }
+            }
+        }
+    };
+</script>
+
+</body>
+</html>

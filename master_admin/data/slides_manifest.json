@@ -1,0 +1,78 @@
+{
+  "default_duration": 10,
+  "slides": [
+    {
+      "id": "slide_e7b2b4a1",
+      "type": "custom_image",
+      "title": "Slide 0",
+      "filename": "slide_e7b2b4a1.jpg",
+      "url": "/static/slides/slide_e7b2b4a1.jpg",
+      "enabled": true,
+      "duration": 10,
+      "order": 0,
+      "created_at": 1792803702,
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "presentation_slides": [
+    {
+      "id": "pres_8412d20b",
+      "type": "presentation_image",
+      "title": "Slide 5",
+      "filename": "pres_8412d20b.jpg",
+      "url": "/static/slides/pres_8412d20b.jpg",
+      "enabled": true,
+      "duration": 0,
+      "order": 0,
+      "created_at": 1792768799,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": "pres_ca6c96ff",
+      "type": "presentation_image",
+      "title": "Slide 6",
+      "filename": "pres_ca6c96ff.jpg",
+      "url": "/static/slides/pres_ca6c96ff.jpg",
+      "enabled": true,
+      "duration": 0,
+      "order": 1,
+      "created_at": 1792768799,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": "pres_39d22ab9",
+      "type": "presentation_image",
+      "title": "Slide 7",
+      "filename": "pres_39d22ab9.jpg",
+      "url": "/static/slides/pres_39d22ab9.jpg",
+      "enabled": true,
+      "duration": 0,
+      "order": 2,
+      "created_at": 1792768799,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": "pres_c2a56f35",
+      "type": "presentation_image",
+      "title": "Slide 8",
+      "filename": "pres_c2a56f35.jpg",
+      "url": "/static/slides/pres_c2a56f35.jpg",
+      "enabled": true,
+      "duration": 0,
+      "order": 3,
+      "created_at": 1792768800,
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "updated_at": 1792803707.7513244,
+  "branding": {
+    "logo_url": "/static/img/bison_logo.png?v=1792786349",
+    "show_header_title": true,
+    "show_clock": true
+  }
+}

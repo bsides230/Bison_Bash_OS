@@ -1,0 +1,88 @@
+{
+  "players": {
+    "p_31f638ad": {
+      "id": "p_31f638ad",
+      "name": "BrokePlayer",
+      "email": "broke@okc.org",
+      "pin": "4852",
+      "balance": 5,
+      "created_at": 1792728676,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728676.267013
+    },
+    "p_23633177": {
+      "id": "p_23633177",
+      "name": "PlayerTwo",
+      "email": "p2@okc.org",
+      "pin": "7842",
+      "balance": 235,
+      "created_at": 1792728676,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728676.6546662
+    },
+    "p_48e988b1": {
+      "id": "p_48e988b1",
+      "name": "Player_0",
+      "email": "user0@test.com",
+      "pin": "6736",
+      "balance": 100,
+      "created_at": 1792728844,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728844.7741213
+    },
+    "p_4d33b153": {
+      "id": "p_4d33b153",
+      "name": "Player_1",
+      "email": "user1@test.com",
+      "pin": "6307",
+      "balance": 100,
+      "created_at": 1792728844,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728844.8278348
+    },
+    "p_d0900a3d": {
+      "id": "p_d0900a3d",
+      "name": "Player_2",
+      "email": "user2@test.com",
+      "pin": "6573",
+      "balance": 100,
+      "created_at": 1792728844,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728844.8874078
+    },
+    "p_d281fabe": {
+      "id": "p_d281fabe",
+      "name": "Player_3",
+      "email": "user3@test.com",
+      "pin": "9983",
+      "balance": 100,
+      "created_at": 1792728844,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728844.9495203
+    },
+    "p_300c8107": {
+      "id": "p_300c8107",
+      "name": "Player_4",
+      "email": "user4@test.com",
+      "pin": "8697",
+      "balance": 100,
+      "created_at": 1792728845,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728845.0733173
+    }
+  }
+}

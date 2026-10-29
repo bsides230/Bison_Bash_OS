@@ -1,0 +1,16 @@
+{
+  "players": {
+    "p_8c0f5ed1": {
+      "id": "p_8c0f5ed1",
+      "name": "Signee Test",
+      "email": "signee_test_user@example.com",
+      "pin": "1523",
+      "balance": 100,
+      "created_at": 1792728646,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728646.9171069
+    }
+  }
+}

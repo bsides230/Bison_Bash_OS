@@ -1,0 +1,52 @@
+{
+  "players": {
+    "p_23633177": {
+      "id": "p_23633177",
+      "name": "PlayerTwo",
+      "email": "p2@okc.org",
+      "pin": "7842",
+      "balance": 102,
+      "created_at": 1792728676,
+      "total_wagers": 0,
+      "total_winnings": 28,
+      "newsletter_opt_in": false,
+      "updated_at": 1792734109.4013178
+    },
+    "p_31f638ad": {
+      "id": "p_31f638ad",
+      "name": "BrokePlayer",
+      "email": "broke@okc.org",
+      "pin": "4852",
+      "balance": 105,
+      "created_at": 1792728676,
+      "total_wagers": 0,
+      "total_winnings": 53,
+      "newsletter_opt_in": false,
+      "updated_at": 1792734619.8674734
+    },
+    "p_e9567ae8": {
+      "id": "p_e9567ae8",
+      "name": "Alice Walker",
+      "email": "alice@venue.com",
+      "pin": "1664",
+      "balance": 135,
+      "created_at": 1792731928,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792731928.4879243
+    },
+    "p_c0b7a67d": {
+      "id": "p_c0b7a67d",
+      "name": "Bob Builder",
+      "email": "bob@venue.com",
+      "pin": "7574",
+      "balance": 150,
+      "created_at": 1792731928,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792731928.395852
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "use_tls": true,
+  "use_ssl": false,
+  "username": "BisonBashGames@gmail.com",
+  "password": "zvdw txid gnbn yxdu",
+  "from_name": "Techlahoma Bison Bash",
+  "from_email": "BisonBashGames@gmail.com",
+  "subject_template": "Your Bison Bash Player Pass & 4-Digit PIN",
+  "body_template": "Hi {name},\n\nWelcome to Bison Bash! Here is your digital venue pass:\n\n----------------------------------------\nYOUR 4-DIGIT PIN: {pin}\nSTARTING BALANCE: {balance} Credits\n----------------------------------------\n\nPunch this 4-digit PIN into any betting kiosk, N64 tournament station, or game booth on the venue floor to play.\n\nSee you at the races!\nThe Techlahoma Team"
+}

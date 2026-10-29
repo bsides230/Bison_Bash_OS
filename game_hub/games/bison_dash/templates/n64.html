@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>N64 Arena - Attendant Match Deck</title>
+    <script src="/static/js/pin_auth_flow.js?v=20261023_02"></script>
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #141923;
+            --n64-red: #e52521;
+            --n64-blue: #0078d7;
+            --n64-yellow: #febb12;
+            --n64-green: #00a651;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --border: #212836;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Mobile App Bar */
+        header {
+            background: #111622;
+            border-bottom: 2px solid var(--border);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 22px;
+            height: 22px;
+            gap: 2px;
+            transform: rotate(45deg);
+        }
+
+        .logo-r { background: var(--n64-red); }
+        .logo-b { background: var(--n64-blue); }
+        .logo-y { background: var(--n64-yellow); }
+        .logo-g { background: var(--n64-green); }
+
+        .brand h1 {
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .bounty-pill {
+            background: rgba(254, 187, 18, 0.15);
+            border: 1px solid var(--n64-yellow);
+            color: var(--n64-yellow);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        /* Main View Container */
+        main {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            max-width: 480px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* STEP 1: PREP & SCAN STAGE */
+        #prep-stage {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .instruction-banner {
+            background: rgba(0, 120, 215, 0.12);
+            border-left: 4px solid var(--n64-blue);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #c9d1d9;
+            line-height: 1.35;
+        }
+
+        /* Player Check-in Cards */
+        .player-slot-card {
+            background: var(--card-bg);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .player-slot-card.ready {
+            border-style: solid;
+        }
+
+        .card-p1.ready {
+            border-color: var(--n64-blue);
+            background: linear-gradient(180deg, rgba(0, 120, 215, 0.15) 0%, var(--card-bg) 100%);
+        }
+
+        .card-p2.ready {
+            border-color: var(--n64-red);
+            background: linear-gradient(180deg, rgba(229, 37, 33, 0.15) 0%, var(--card-bg) 100%);
+        }
+
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slot-tag {
+            font-size: 0.75rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .p1-tag { background: var(--n64-blue); color: white; }
+        .p2-tag { background: var(--n64-red); color: white; }
+
+        .player-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: white;
+            word-break: break-word;
+        }
+
+        .player-balance {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .btn-scan-slot {
+            background: #212836;
+            color: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+
+        .btn-scan-slot:active {
+            background: #2d3748;
+            transform: scale(0.98);
+        }
+
+        .btn-clear-slot {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        /* Match Start Action */
+        .btn-start-match {
+            margin-top: 8px;
+            background: linear-gradient(135deg, #00a651 0%, #0078d7 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 20px rgba(0, 166, 81, 0.35);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-start-match:disabled {
+            background: #1c222e;
+            color: #555d6d;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* STEP 2: ACTIVE MATCH VIEW (TWO HUGE BOXES) */
+        #match-stage {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            gap: 16px;
+        }
+
+        .match-alert {
+            text-align: center;
+            background: rgba(254, 187, 18, 0.1);
+            border: 1px dashed var(--n64-yellow);
+            color: var(--n64-yellow);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .winner-pick-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .btn-winner-target {
+            flex: 1;
+            border: 3px solid;
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .btn-winner-target:active {
+            transform: scale(0.97);
+        }
+
+        .target-p1 {
+            background: linear-gradient(180deg, #0b223d 0%, #06111f 100%);
+            border-color: var(--n64-blue);
+        }
+
+        .target-p1:active {
+            box-shadow: 0 0 35px rgba(0, 120, 215, 0.7);
+        }
+
+        .target-p2 {
+            background: linear-gradient(180deg, #3d0f0e 0%, #1f0606 100%);
+            border-color: var(--n64-red);
+        }
+
+        .target-p2:active {
+            box-shadow: 0 0 35px rgba(229, 37, 33, 0.7);
+        }
+
+        .target-crown {
+            font-size: 2.8rem;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+        }
+
+        .target-player-name {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: white;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .target-tap-label {
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-top: 6px;
+        }
+
+        .p1-label { background: var(--n64-blue); color: white; }
+        .p2-label { background: var(--n64-red); color: white; }
+
+        .btn-cancel-match {
+            background: #141923;
+            border: 1px solid var(--border);
+            color: #ff6b81;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: auto;
+        }
+
+        /* MODALS & OVERLAYS */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(5, 7, 12, 0.94);
+            backdrop-filter: blur(6px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: #141923;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* ARCADE 4-DIGIT PIN KEYPAD */
+        .pin-pad-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .pin-display {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 4px 0;
+        }
+
+        .pin-digit-box {
+            width: 58px;
+            height: 68px;
+            background: #090d14;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: monospace;
+            color: var(--n64-yellow);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+            transition: all 0.15s ease;
+        }
+
+        .pin-digit-box.filled {
+            border-color: var(--n64-blue);
+            box-shadow: 0 0 15px rgba(0, 120, 215, 0.4), inset 0 0 10px rgba(0, 120, 215, 0.2);
+            color: #fff;
+        }
+
+        .pin-digit-box.active {
+            border-color: var(--n64-yellow);
+            box-shadow: 0 0 18px rgba(254, 187, 18, 0.5);
+            animation: pinPulse 1s infinite alternate;
+        }
+
+        @keyframes pinPulse {
+            from { border-color: rgba(254, 187, 18, 0.4); }
+            to { border-color: rgba(254, 187, 18, 1); box-shadow: 0 0 22px rgba(254, 187, 18, 0.7); }
+        }
+
+        .pin-keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .pin-key-btn {
+            background: #182030;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 14px 0;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-key-btn:active {
+            transform: scale(0.94);
+            background: #25334d;
+        }
+
+        .pin-key-btn.btn-action-key {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .pin-status-msg {
+            min-height: 22px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .shake {
+            animation: shakeKeypad 0.4s ease-in-out;
+        }
+
+        @keyframes shakeKeypad {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        /* Winner Celebration Modal */
+        .winner-modal {
+            animation: bounceIn 0.3s ease;
+            border-color: var(--n64-yellow);
+            box-shadow: 0 0 50px rgba(254, 187, 18, 0.4);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <div class="brand-logo">
+            <div class="logo-r"></div>
+            <div class="logo-b"></div>
+            <div class="logo-y"></div>
+            <div class="logo-g"></div>
+        </div>
+        <h1>N64 Arena</h1>
+    </div>
+</header>
+
+<main>
+    <!-- STEP 1: PREPARATION & PLAYER CHECK-IN -->
+    <div id="prep-stage">
+        <div class="instruction-banner">
+            👋 <strong>Attendant Step 1:</strong> Enter both players' 4-digit PINs. When both are checked in, tap <strong>Start Match</strong>!
+        </div>
+
+        <!-- PLAYER 1 SLOT -->
+        <div id="card-p1" class="player-slot-card card-p1">
+            <div class="slot-header">
+                <span class="slot-tag p1-tag">PLAYER 1</span>
+                <button id="p1-clear-btn" class="btn-clear-slot" style="display: none;" onclick="clearPlayer(1)">Remove</button>
+            </div>
+            
+            <div id="p1-empty-state">
+                <button class="btn-scan-slot" onclick="openPinKeypad(1)">
+                    🔢 Enter Player 1 PIN
+                </button>
+            </div>
+
+            <div id="p1-ready-state" style="display: none;">
+                <div class="player-info-row">
+                    <div>
+                        <div id="p1-name" class="player-name">Player Name</div>
+                        <div id="p1-balance" class="player-balance">Balance: 0 Credits</div>
+                        <div id="p1-pin-tag" style="font-size: 0.78rem; color: var(--n64-blue); margin-top: 2px; font-weight: bold; font-family: monospace;">PIN: —</div>
+                    </div>
+                    <span style="font-size: 1.8rem; color: var(--n64-blue);">✓</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PLAYER 2 SLOT -->
+        <div id="card-p2" class="player-slot-card card-p2">
+            <div class="slot-header">
+                <span class="slot-tag p2-tag">PLAYER 2</span>
+                <button id="p2-clear-btn" class="btn-clear-slot" style="display: none;" onclick="clearPlayer(2)">Remove</button>
+            </div>
+
+            <div id="p2-empty-state">
+                <button class="btn-scan-slot" onclick="openPinKeypad(2)">
+                    🔢 Enter Player 2 PIN
+                </button>
+            </div>
+
+            <div id="p2-ready-state" style="display: none;">
+                <div class="player-info-row">
+                    <div>
+                        <div id="p2-name" class="player-name">Player Name</div>
+                        <div id="p2-balance" class="player-balance">Balance: 0 Credits</div>
+                        <div id="p2-pin-tag" style="font-size: 0.78rem; color: var(--n64-red); margin-top: 2px; font-weight: bold; font-family: monospace;">PIN: —</div>
+                    </div>
+                    <span style="font-size: 1.8rem; color: var(--n64-red);">✓</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-start-match" class="btn-start-match" disabled onclick="beginMatch()">
+            START MATCH 🏁
+        </button>
+    </div>
+
+    <!-- STEP 2: ACTIVE MATCH / WINNER SELECTION (TWO HUGE TOUCH BOXES) -->
+    <div id="match-stage">
+        <div class="match-alert">
+            ⚡ Match In Progress &bull; Tap Winner Below
+        </div>
+
+        <div class="winner-pick-container">
+            <!-- PLAYER 1 WIN BUTTON -->
+            <div class="btn-winner-target target-p1" onclick="confirmWinner(1)">
+                <div class="target-crown">👑</div>
+                <div id="match-p1-name" class="target-player-name">Player 1</div>
+                <div class="target-tap-label p1-label">TAP IF WINNER</div>
+            </div>
+
+            <!-- PLAYER 2 WIN BUTTON -->
+            <div class="btn-winner-target target-p2" onclick="confirmWinner(2)">
+                <div class="target-crown">👑</div>
+                <div id="match-p2-name" class="target-player-name">Player 2</div>
+                <div class="target-tap-label p2-label">TAP IF WINNER</div>
+            </div>
+        </div>
+
+        <button class="btn-cancel-match" onclick="cancelMatch()">
+            ✖ Cancel Match (No Payout)
+        </button>
+    </div>
+
+    <!-- STANDARDIZED 3-STEP PIN AUTHENTICATION -->
+    <div id="n64-p1-pin-container"></div>
+    <div id="n64-p2-pin-container"></div>
+
+    <!-- WINNER CELEBRATION MODAL -->
+    <div id="winner-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card winner-modal">
+            <div style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
+            <h2 id="payout-winner-name" style="color: var(--n64-yellow); font-size: 1.8rem; letter-spacing: 0.5px;">Winner Name</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin: 4px 0 15px;">N64 Victory Confirmed!</p>
+            
+            <div style="background: rgba(254, 187, 18, 0.1); border: 2px solid var(--n64-yellow); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Match Resolved</div>
+                <div id="payout-tokens-badge" style="font-size: 2.2rem; font-weight: 900; color: var(--n64-yellow);">VICTORY CONFIRMED</div>
+                <div style="font-size: 0.9rem; color: #fff; margin-top: 4px;">Wallet Balance: <strong id="payout-new-balance" style="color: var(--n64-yellow);">0</strong></div>
+            </div>
+
+            <button class="btn-start-match" style="width: 100%; padding: 14px;" onclick="resetMatchState()">
+                NEXT MATCH &bull; <span id="auto-reset-timer">3</span>s
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    // --- SYNTHESIZER SOUND ENGINE ---
+    class N64Sound {
+        constructor() {
+            this.ctx = null;
+        }
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        playChime() {
+            try {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.08); // E5
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.25);
+            } catch(e) {}
+        }
+        playVictory() {
+            try {
+                this.init();
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.45);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.08);
+                    osc.stop(this.ctx.currentTime + idx * 0.08 + 0.45);
+                });
+            } catch(e) {}
+        }
+    }
+    const audio = new N64Sound();
+
+    let player1 = null;
+    let player2 = null;
+    let scanningSlot = 1;
+    let autoResetInterval = null;
+    let currentPin = "";
+    let n64Cost = 0;
+    let winnerPayout = 8;
+
+    async function loadN64Config() {
+        try {
+            const res = await fetch('/api/n64/config');
+            const data = await res.json();
+            if (data.status === 'success') {
+                if (data.cost !== undefined) n64Cost = parseInt(data.cost) || 0;
+                if (data.winner_payout !== undefined) winnerPayout = parseInt(data.winner_payout) || 8;
+                updateN64Labels();
+            }
+        } catch(e) {}
+    }
+
+    function updateN64Labels() {
+        const p1Label = document.querySelector('.p1-label');
+        const p2Label = document.querySelector('.p2-label');
+        if (p1Label) p1Label.innerText = 'TAP IF WINNER';
+        if (p2Label) p2Label.innerText = 'TAP IF WINNER';
+
+        const btnStart = document.getElementById('btn-start-match');
+        if (btnStart) {
+            if (n64Cost > 0) {
+                btnStart.innerText = `START MATCH (-${n64Cost} 🪙/player) 🏁`;
+            } else {
+                btnStart.innerText = `START MATCH 🏁`;
+            }
+        }
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+        initPinAuth();
+        loadN64Config();
+    });
+
+    // --- STANDARDIZED 3-STEP PIN AUTHENTICATION FLOW ---
+    let p1PinAuth = null;
+    let p2PinAuth = null;
+
+    function initPinAuth() {
+        p1PinAuth = new PinAuthFlow({
+            containerId: 'n64-p1-pin-container',
+            isModal: true,
+            title: 'PLAYER 1 CHECK-IN',
+            subtitle: 'Enter Player 1 4-digit PIN',
+            onConfirmed: (attendee) => {
+                if (player2 && (player2.id === attendee.id || player2.pin === attendee.pin)) {
+                    alert("Attendee is already checked into Slot 2! Select a different competitor.");
+                    p1PinAuth.resetToStep1();
+                    return;
+                }
+                player1 = {
+                    id: attendee.id,
+                    name: attendee.display_name,
+                    email: attendee.email,
+                    balance: attendee.balance,
+                    pin: attendee.pin
+                };
+                audio.playChime();
+                document.getElementById('p1-name').innerText = player1.name;
+                document.getElementById('p1-balance').innerText = `Balance: ${player1.balance} Tokens`;
+                document.getElementById('p1-pin-tag').innerText = `PIN: ${player1.pin}`;
+                document.getElementById('p1-empty-state').style.display = 'none';
+                document.getElementById('p1-ready-state').style.display = 'block';
+                document.getElementById('p1-clear-btn').style.display = 'block';
+                document.getElementById('card-p1').classList.add('ready');
+                checkReadyToStart();
+            },
+            onCancel: () => {
+                // Cancelled
+            }
+        });
+
+        p2PinAuth = new PinAuthFlow({
+            containerId: 'n64-p2-pin-container',
+            isModal: true,
+            title: 'PLAYER 2 CHECK-IN',
+            subtitle: 'Enter Player 2 4-digit PIN',
+            onConfirmed: (attendee) => {
+                if (player1 && (player1.id === attendee.id || player1.pin === attendee.pin)) {
+                    alert("Attendee is already checked into Slot 1! Select a different competitor.");
+                    p2PinAuth.resetToStep1();
+                    return;
+                }
+                player2 = {
+                    id: attendee.id,
+                    name: attendee.display_name,
+                    email: attendee.email,
+                    balance: attendee.balance,
+                    pin: attendee.pin
+                };
+                audio.playChime();
+                document.getElementById('p2-name').innerText = player2.name;
+                document.getElementById('p2-balance').innerText = `Balance: ${player2.balance} Tokens`;
+                document.getElementById('p2-pin-tag').innerText = `PIN: ${player2.pin}`;
+                document.getElementById('p2-empty-state').style.display = 'none';
+                document.getElementById('p2-ready-state').style.display = 'block';
+                document.getElementById('p2-clear-btn').style.display = 'block';
+                document.getElementById('card-p2').classList.add('ready');
+                checkReadyToStart();
+            },
+            onCancel: () => {
+                // Cancelled
+            }
+        });
+    }
+
+    function openPinKeypad(slotNum) {
+        if (slotNum === 1 && p1PinAuth) {
+            p1PinAuth.resetToStep1();
+            p1PinAuth.open();
+        } else if (slotNum === 2 && p2PinAuth) {
+            p2PinAuth.resetToStep1();
+            p2PinAuth.open();
+        }
+    }
+
+    async function loadPlayerIntoSlot(identifier, slotNum) {
+        try {
+            const res = await fetch(`/api/player/${identifier}`);
+            const data = await res.json();
+            if (!res.ok || data.status !== 'success' || !data.player) {
+                alert("Player pass not found. Attendee must register on /signup first!");
+                return;
+            }
+
+            const p = data.player;
+
+            // Prevent duplicate selection of same player
+            if (slotNum === 1 && player2 && player2.id === p.id) {
+                alert("Player is already in Slot 2! Select a different competitor.");
+                return;
+            }
+            if (slotNum === 2 && player1 && player1.id === p.id) {
+                alert("Player is already in Slot 1! Select a different competitor.");
+                return;
+            }
+
+            audio.playChime();
+
+            if (slotNum === 1) {
+                player1 = p;
+                document.getElementById('p1-name').innerText = p.name;
+                document.getElementById('p1-balance').innerText = `Balance: ${p.balance} Tokens`;
+                document.getElementById('p1-pin-tag').innerText = `PIN: ${p.pin || p.id.slice(-4)}`;
+                document.getElementById('p1-empty-state').style.display = 'none';
+                document.getElementById('p1-ready-state').style.display = 'block';
+                document.getElementById('p1-clear-btn').style.display = 'block';
+                document.getElementById('card-p1').classList.add('ready');
+            } else {
+                player2 = p;
+                document.getElementById('p2-name').innerText = p.name;
+                document.getElementById('p2-balance').innerText = `Balance: ${p.balance} Tokens`;
+                document.getElementById('p2-pin-tag').innerText = `PIN: ${p.pin || p.id.slice(-4)}`;
+                document.getElementById('p2-empty-state').style.display = 'none';
+                document.getElementById('p2-ready-state').style.display = 'block';
+                document.getElementById('p2-clear-btn').style.display = 'block';
+                document.getElementById('card-p2').classList.add('ready');
+            }
+
+            checkReadyToStart();
+
+        } catch(e) {
+            alert("Error connecting to server. Please check WiFi.");
+        }
+    }
+
+    function clearPlayer(slotNum) {
+        if (slotNum === 1) {
+            player1 = null;
+            document.getElementById('p1-empty-state').style.display = 'block';
+            document.getElementById('p1-ready-state').style.display = 'none';
+            document.getElementById('p1-clear-btn').style.display = 'none';
+            document.getElementById('card-p1').classList.remove('ready');
+            if (p1PinAuth) p1PinAuth.resetToStep1();
+        } else {
+            player2 = null;
+            document.getElementById('p2-empty-state').style.display = 'block';
+            document.getElementById('p2-ready-state').style.display = 'none';
+            document.getElementById('p2-clear-btn').style.display = 'none';
+            document.getElementById('card-p2').classList.remove('ready');
+            if (p2PinAuth) p2PinAuth.resetToStep1();
+        }
+        checkReadyToStart();
+    }
+
+    function checkReadyToStart() {
+        const btn = document.getElementById('btn-start-match');
+        if (player1 && player2) {
+            btn.disabled = false;
+        } else {
+            btn.disabled = true;
+        }
+    }
+
+    // --- STAGE 2: MATCH VIEW ---
+    async function beginMatch() {
+        if (!player1 || !player2) return;
+
+        if (n64Cost > 0) {
+            try {
+                const res = await fetch('/api/n64/entry', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ p1_id: player1.id, p2_id: player2.id })
+                });
+                const data = await res.json();
+                if (!res.ok || data.status !== 'success') {
+                    alert(data.message || "Could not process match entry fee.");
+                    return;
+                }
+                player1.balance = data.p1_balance;
+                player2.balance = data.p2_balance;
+                document.getElementById('p1-balance').innerText = `Balance: ${player1.balance} Credits`;
+                document.getElementById('p2-balance').innerText = `Balance: ${player2.balance} Credits`;
+            } catch(e) {
+                alert("Network error connecting to N64 server.");
+                return;
+            }
+        }
+
+        audio.playChime();
+
+        document.getElementById('match-p1-name').innerText = player1.name;
+        document.getElementById('match-p2-name').innerText = player2.name;
+
+        document.getElementById('prep-stage').style.display = 'none';
+        document.getElementById('match-stage').style.display = 'flex';
+    }
+
+    function cancelMatch() {
+        if (confirm("Cancel this match without awarding tokens?")) {
+            document.getElementById('match-stage').style.display = 'none';
+            document.getElementById('prep-stage').style.display = 'flex';
+        }
+    }
+
+    async function confirmWinner(winningSlot) {
+        const winner = (winningSlot === 1) ? player1 : player2;
+        const loser = (winningSlot === 1) ? player2 : player1;
+
+        if (!winner) return;
+
+        try {
+            const res = await fetch('/api/n64/payout', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    winner_id: winner.id,
+                    loser_id: loser ? loser.id : null,
+                    tokens: winnerPayout
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok || data.status !== 'success') {
+                alert(data.message || "Error processing winner payout.");
+                return;
+            }
+
+            audio.playVictory();
+
+            document.getElementById('payout-winner-name').innerText = winner.name;
+            document.getElementById('payout-new-balance').innerText = `${data.new_balance} Tokens`;
+            document.getElementById('winner-modal').style.display = 'flex';
+
+            // 3-Second Auto-Reset back to fresh scan stage
+            let secondsLeft = 3;
+            document.getElementById('auto-reset-timer').innerText = secondsLeft;
+            clearInterval(autoResetInterval);
+            autoResetInterval = setInterval(() => {
+                secondsLeft--;
+                document.getElementById('auto-reset-timer').innerText = secondsLeft;
+                if (secondsLeft <= 0) {
+                    clearInterval(autoResetInterval);
+                    resetMatchState();
+                }
+            }, 1000);
+
+        } catch(e) {
+            alert("Network error processing payout. Check WiFi connection.");
+        }
+    }
+
+    function resetMatchState() {
+        clearInterval(autoResetInterval);
+        document.getElementById('winner-modal').style.display = 'none';
+        document.getElementById('match-stage').style.display = 'none';
+        document.getElementById('prep-stage').style.display = 'flex';
+
+        clearPlayer(1);
+        clearPlayer(2);
+    }
+</script>
+
+</body>
+</html>

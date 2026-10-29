@@ -1,0 +1,28 @@
+{
+  "initial_allotment": 50,
+  "tokens_per_dollar": 5,
+  "costs": {
+    "n64": 0,
+    "bughunt": 1,
+    "gauntlet": 4,
+    "bison_dash_min_bet": 1
+  },
+  "payouts": {
+    "n64_winner": 10,
+    "bughunt_bugs_per_token": 5,
+    "bughunt_pity_tokens": 1,
+    "plinko_slots": [1, 1, 2, 2, 5, 2, 2, 1, 1],
+    "gauntlet": {
+      "stage1": 2,
+      "stage2": 3,
+      "stage3": 5,
+      "stage4": 8,
+      "vault_jackpot": 25,
+      "vault_runner_up": 10
+    },
+    "bison_dash_multiplier": 2.0
+  },
+  "timers": {
+    "bughunt_duration": 60
+  }
+}

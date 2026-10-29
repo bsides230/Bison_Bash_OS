@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Token Mint Station - Cash Desk</title>
+    <style>
+        :root {
+            --bg-color: #080c14;
+            --panel-bg: #0f1624;
+            --card-bg: #151f32;
+            --card-inner: #0b111c;
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.45);
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.35);
+            --success: #2ed573;
+            --danger: #ff4757;
+            --border: #233148;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(255, 215, 0, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 50% 90%, rgba(0, 255, 204, 0.05) 0%, transparent 60%);
+        }
+
+        /* Top Admin Bar */
+        header {
+            background: #0d1422;
+            border-bottom: 2px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand h1 {
+            font-size: 1.35rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: var(--gold);
+            text-transform: uppercase;
+            text-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        .station-badge {
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-nav {
+            background: #1c2638;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-nav:hover {
+            background: #2a384f;
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Notification Toast */
+        .mint-toast {
+            position: fixed;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(13, 20, 34, 0.96);
+            border: 2px solid var(--success);
+            color: var(--success);
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(46, 213, 115, 0.4);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mint-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Main Workspace */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        .station-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
+            width: 100%;
+            max-width: 520px;
+            padding: 32px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.97); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Step Header */
+        .step-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--gold);
+            text-transform: uppercase;
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid var(--gold);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+
+        .step-heading {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: #fff;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .step-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        /* STEP 1: PIN PAD */
+        .pin-input-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .pin-hidden-input {
+            position: absolute;
+            opacity: 0.01;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 5;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: transparent;
+        }
+
+        .pin-boxes {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .pin-digit-box {
+            width: 56px;
+            height: 66px;
+            background: var(--card-inner);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-family: Consolas, monospace, sans-serif;
+            font-weight: 900;
+            color: #fff;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .pin-digit-box.filled {
+            border-color: var(--gold);
+            color: var(--gold);
+            box-shadow: 0 0 16px rgba(255, 215, 0, 0.35);
+            transform: scale(1.05);
+        }
+
+        .pin-digit-box.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 204, 0.4);
+            animation: pulseActive 1s infinite alternate;
+        }
+
+        @keyframes pulseActive {
+            from { transform: scale(1); }
+            to { transform: scale(1.06); }
+        }
+
+        .pin-status-msg {
+            font-size: 0.95rem;
+            min-height: 26px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+
+        .pin-status-msg.error {
+            color: var(--danger);
+        }
+
+        .pin-status-msg.success {
+            color: var(--success);
+        }
+
+        .pin-keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .pin-key-btn {
+            height: 60px;
+            background: #182334;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: #f0f6fc;
+            font-size: 1.6rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease;
+            touch-action: manipulation;
+        }
+
+        .pin-key-btn:active {
+            background: var(--gold);
+            color: #000;
+            transform: scale(0.96);
+        }
+
+        .pin-key-btn.btn-action-key {
+            background: #202d42;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .pin-key-btn.btn-action-key:active {
+            background: #2a3b56;
+            color: #fff;
+        }
+
+        /* Shake animation for errors */
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        /* STEP 2: CONFIRMATION INTERSTITIAL */
+        .summary-card {
+            background: var(--card-inner);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 20px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-val {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #fff;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .balance-badge-val {
+            color: var(--gold);
+            font-size: 1.4rem;
+            font-family: Consolas, monospace;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-group-two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            width: 100%;
+        }
+
+        .btn-action {
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .btn-action:active {
+            transform: scale(0.97);
+        }
+
+        .btn-cancel {
+            background: #212c3d;
+            border: 1px solid var(--border);
+            color: #f0f6fc;
+        }
+
+        .btn-cancel:hover {
+            background: #2d3b50;
+            color: var(--danger);
+        }
+
+        .btn-confirm {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-confirm:hover {
+            filter: brightness(1.1);
+        }
+
+        /* STEP 3: DONATION MINTING PAD */
+        .top-summary-bar {
+            background: var(--card-inner);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .summary-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .summary-attendee-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .summary-start-bal {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .summary-bar-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-box {
+            background: #111824;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .metric-val {
+            font-size: 1.35rem;
+            font-weight: 900;
+            font-family: Consolas, monospace;
+        }
+
+        .metric-val.donated {
+            color: var(--accent);
+        }
+
+        .metric-val.resulting {
+            color: var(--gold);
+        }
+
+        /* Preset Chips */
+        .section-label {
+            align-self: flex-start;
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .chip-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .chip-btn {
+            background: #162030;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 6px;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 900;
+            font-family: Consolas, monospace;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            text-align: center;
+            touch-action: manipulation;
+            line-height: 1.2;
+        }
+
+        .chip-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .chip-btn:active {
+            background: var(--accent);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        /* Manual Input Row */
+        .manual-input-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .manual-input {
+            flex: 1;
+            background: var(--card-inner);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 800;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .manual-input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-add-manual {
+            background: #23344d;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            touch-action: manipulation;
+        }
+
+        .btn-add-manual:active {
+            background: var(--accent);
+            color: #000;
+            transform: scale(0.96);
+        }
+
+        /* Reset Total Button */
+        .reset-row {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 22px;
+        }
+
+        .btn-reset-total {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 4px 8px;
+            transition: color 0.15s ease;
+        }
+
+        .btn-reset-total:hover {
+            color: var(--danger);
+        }
+
+        /* Done & Cancel Mint Buttons */
+        .btn-done {
+            background: var(--success);
+            color: #05140b;
+            box-shadow: 0 0 25px rgba(46, 213, 115, 0.4);
+        }
+
+        .btn-done:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-cancel-mint {
+            background: #212c3d;
+            border: 1px solid var(--border);
+            color: #f0f6fc;
+        }
+
+        .btn-cancel-mint:hover {
+            background: #2d3b50;
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="brand">
+            <span style="font-size: 1.6rem;">🪙</span>
+            <div>
+                <h1>Token Mint Station</h1>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Volunteer Cash Desk &bull; Port 8005</div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="station-badge">
+                <span>●</span> Cash Desk Active
+            </div>
+        </div>
+    </header>
+
+    <!-- Success Toast Notification -->
+    <div id="mint-toast" class="mint-toast">
+        <span style="font-size: 1.4rem;">✅</span>
+        <span id="mint-toast-msg">Successfully minted tokens!</span>
+    </div>
+
+    <!-- Main Step Interface -->
+    <main id="mint-pin-container">
+        <!-- ======================================================== -->
+        <!-- STEP 1: BLANK PIN PAD                                    -->
+        <!-- ======================================================== -->
+        <div id="step-1-pin-pad" class="station-card" style="display: flex;">
+            <div class="step-tag">Step 1 of 3</div>
+            <h2 class="step-heading">Attendee Check-In</h2>
+            <p class="step-subtitle">Enter the attendee's 4-digit PIN code on the keypad below to load wallet</p>
+
+            <div class="pin-input-wrapper">
+                <input type="tel" id="pin-input" maxlength="4" pattern="[0-9]*" inputmode="none" readonly class="pin-hidden-input" autocomplete="off" />
+                <div class="pin-boxes" id="pin-boxes-container">
+                    <div class="pin-digit-box active" id="pin-box-0">&bull;</div>
+                    <div class="pin-digit-box" id="pin-box-1">&bull;</div>
+                    <div class="pin-digit-box" id="pin-box-2">&bull;</div>
+                    <div class="pin-digit-box" id="pin-box-3">&bull;</div>
+                </div>
+            </div>
+
+            <div id="pin-status-msg" class="pin-status-msg">Tap digits or use keyboard</div>
+
+            <div class="pin-keypad-grid">
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('1')">1</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('2')">2</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('3')">3</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('4')">4</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('5')">5</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('6')">6</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('7')">7</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('8')">8</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('9')">9</button>
+                <button type="button" class="pin-key-btn btn-action-key" onclick="clearPinInput()">CLR</button>
+                <button type="button" class="pin-key-btn" onclick="pressPinDigit('0')">0</button>
+                <button type="button" class="pin-key-btn btn-action-key" onclick="backspacePinDigit()">&#9003;</button>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- STEP 2: CONFIRMATION INTERSTITIAL                        -->
+        <!-- ======================================================== -->
+        <div id="step-2-confirm" class="station-card" style="display: none;">
+            <div class="step-tag">Step 2 of 3</div>
+            <h2 class="step-heading">Confirm Attendee</h2>
+            <p class="step-subtitle">Verify attendee identity before proceeding with token minting</p>
+
+            <div class="summary-card">
+                <div class="detail-row">
+                    <span class="detail-label">Display Name</span>
+                    <span class="detail-val" id="attendee-display-name">—</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-val" id="attendee-email">—</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Starting Token Balance</span>
+                    <span class="detail-val balance-badge-val">
+                        <span>🪙</span> <span id="attendee-starting-balance">0</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="btn-group-two">
+                <button type="button" id="cancel-btn" class="btn-action btn-cancel" onclick="cancelToStep1()">Cancel</button>
+                <button type="button" id="confirm-btn" class="btn-action btn-confirm" onclick="confirmToStep3()">Confirm</button>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- STEP 3: DONATION MINTING PAD                             -->
+        <!-- ======================================================== -->
+        <div id="step-3-mint" class="station-card" style="display: none;">
+            <div class="step-tag">Step 3 of 3</div>
+            <h2 class="step-heading">Donation Minting Pad</h2>
+            <p class="step-subtitle">Select donation amount to mint and credit tokens to wallet</p>
+
+            <div style="background: rgba(255, 215, 0, 0.12); border: 1px solid var(--gold); border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 800; color: var(--gold); margin: 6px 0 12px; display: inline-flex; align-items: center; gap: 6px;">
+                <span>🪙 Exchange Rate:</span> $1.00 USD = <span id="mint-rate-badge">5</span> Tokens
+            </div>
+
+            <!-- Top Summary Bar -->
+            <div class="top-summary-bar">
+                <div class="summary-bar-header">
+                    <div class="summary-attendee-title" id="summary-attendee-name">Attendee Name</div>
+                    <div class="summary-start-bal">Starting: <span id="summary-starting-balance">150 tokens</span></div>
+                </div>
+                <div class="summary-bar-metrics">
+                    <div class="metric-box">
+                        <div class="metric-label">Cumulative Donated</div>
+                        <div class="metric-val donated" id="summary-cumulative-donated">$0.00</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Resulting Token Balance</div>
+                        <div class="metric-val resulting" id="summary-resulting-balance">150 tokens</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick-Tap Preset Chips -->
+            <div class="section-label">Quick-Tap Preset Chips</div>
+            <div class="chip-grid">
+                <button type="button" class="chip-btn" id="chip-btn-1" onclick="addDonation(1)">+$1</button>
+                <button type="button" class="chip-btn" id="chip-btn-5" onclick="addDonation(5)">+$5</button>
+                <button type="button" class="chip-btn" id="chip-btn-10" onclick="addDonation(10)">+$10</button>
+                <button type="button" class="chip-btn" id="chip-btn-20" onclick="addDonation(20)">+$20</button>
+                <button type="button" class="chip-btn" id="chip-btn-50" onclick="addDonation(50)">+$50</button>
+                <button type="button" class="chip-btn" id="chip-btn-100" onclick="addDonation(100)">+$100</button>
+            </div>
+
+            <!-- Manual Entry Input -->
+            <div class="section-label">Manual Amount Entry</div>
+            <div class="manual-input-row">
+                <input type="number" id="manual-amount-input" class="manual-input" min="1" step="any" placeholder="Enter custom $ amount" onkeydown="handleManualKey(event)">
+                <button type="button" id="add-manual-btn" class="btn-add-manual" onclick="addManualAmount()">Add</button>
+            </div>
+
+            <!-- Clear / Reset Selection Button -->
+            <div class="reset-row">
+                <button type="button" id="reset-total-btn" class="btn-reset-total" onclick="resetDonationTotal()">Reset Total</button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="btn-group-two">
+                <button type="button" id="cancel-mint-btn" class="btn-action btn-cancel-mint" onclick="cancelToStep1()">Cancel</button>
+                <button type="button" id="done-btn" class="btn-action btn-done" onclick="submitMintTokens()">Done</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Standard PinAuthFlow Component Dependency -->
+    <script src="/static/js/pin_auth_flow.js"></script>
+
+    <!-- Cash Register Sound Effect Synthesizer -->
+    <script>
+        class MintSound {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playKaChing() {
+                try {
+                    this.init();
+                    const now = this.ctx.currentTime;
+                    
+                    // Bell 1: B5
+                    const osc1 = this.ctx.createOscillator();
+                    const gain1 = this.ctx.createGain();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(987.77, now);
+                    gain1.gain.setValueAtTime(0.25, now);
+                    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                    osc1.connect(gain1);
+                    gain1.connect(this.ctx.destination);
+                    osc1.start(now);
+                    osc1.stop(now + 0.4);
+
+                    // Bell 2: E6
+                    const osc2 = this.ctx.createOscillator();
+                    const gain2 = this.ctx.createGain();
+                    osc2.type = 'triangle';
+                    osc2.frequency.setValueAtTime(1318.51, now + 0.08);
+                    gain2.gain.setValueAtTime(0.3, now + 0.08);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc2.connect(gain2);
+                    gain2.connect(this.ctx.destination);
+                    osc2.start(now + 0.08);
+                    osc2.stop(now + 0.6);
+                } catch(e) {}
+            }
+        }
+        const audio = new MintSound();
+
+        // Application State (Pure in-memory transient state; zero web storage persistence)
+        let currentPin = "";
+        let isLookingUp = false;
+        let activeAttendee = null;
+        let cumulativeDonation = 0;
+        let toastTimeout = null;
+        let tokensPerDollar = 5;
+
+        async function loadMintConfig() {
+            try {
+                const res = await fetch('/api/mint/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.tokens_per_dollar !== undefined) {
+                        tokensPerDollar = Math.max(1, parseInt(data.tokens_per_dollar) || 5);
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not load mint config:", e);
+            }
+            updateRateDisplay();
+        }
+
+        function updateRateDisplay() {
+            const rateBadge = document.getElementById('mint-rate-badge');
+            if (rateBadge) rateBadge.innerText = `${tokensPerDollar}`;
+
+            const presets = [1, 5, 10, 20, 50, 100];
+            presets.forEach(amt => {
+                const btn = document.getElementById(`chip-btn-${amt}`);
+                if (btn) {
+                    btn.innerHTML = `+$${amt}<br><span style="font-size:0.75rem; color:var(--accent); font-weight:800;">+${amt * tokensPerDollar} 🪙</span>`;
+                }
+            });
+            updateDonationDisplays();
+        }
+
+        // --- STEP 1: PIN PAD LOGIC ---
+        function pressPinDigit(digit) {
+            if (isLookingUp || currentPin.length >= 4) return;
+            currentPin += digit;
+            updatePinDisplay();
+
+            if (currentPin.length === 4) {
+                lookupAttendee(currentPin);
+            }
+        }
+
+        function backspacePinDigit() {
+            if (isLookingUp || currentPin.length === 0) return;
+            currentPin = currentPin.slice(0, -1);
+            updatePinDisplay();
+            setPinStatus("Tap digits or use keyboard", "");
+        }
+
+        function clearPinInput() {
+            currentPin = "";
+            isLookingUp = false;
+            updatePinDisplay();
+            setPinStatus("Tap digits or use keyboard", "");
+            const input = document.getElementById('pin-input');
+            if (input) input.value = "";
+        }
+
+        function updatePinDisplay() {
+            for (let i = 0; i < 4; i++) {
+                const box = document.getElementById(`pin-box-${i}`);
+                if (!box) continue;
+                if (i < currentPin.length) {
+                    box.innerText = currentPin[i];
+                    box.className = 'pin-digit-box filled';
+                } else if (i === currentPin.length) {
+                    box.innerText = '•';
+                    box.className = 'pin-digit-box active';
+                } else {
+                    box.innerText = '•';
+                    box.className = 'pin-digit-box';
+                }
+            }
+            const input = document.getElementById('pin-input');
+            if (input && input.value !== currentPin) {
+                input.value = currentPin;
+            }
+        }
+
+        function setPinStatus(msg, type = '') {
+            const el = document.getElementById('pin-status-msg');
+            if (!el) return;
+            el.innerText = msg;
+            el.className = 'pin-status-msg' + (type ? ` ${type}` : '');
+        }
+
+        function shakePinBoxes() {
+            const container = document.getElementById('pin-boxes-container');
+            if (container) {
+                container.classList.add('shake');
+                setTimeout(() => {
+                    container.classList.remove('shake');
+                }, 400);
+            }
+        }
+
+        async function lookupAttendee(pin) {
+            isLookingUp = true;
+            setPinStatus("Looking up attendee...", "");
+
+            try {
+                const res = await fetch('/api/attendee/lookup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: pin })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    setPinStatus("✓ Attendee found!", "success");
+                    activeAttendee = {
+                        pin: pin,
+                        display_name: data.display_name || "Attendee",
+                        email: data.email || "No email on record",
+                        balance: Number(data.balance || 0)
+                    };
+
+                    setTimeout(() => {
+                        goToStep2();
+                    }, 250);
+                } else {
+                    setPinStatus("PIN not found", "error");
+                    shakePinBoxes();
+                    setTimeout(() => {
+                        clearPinInput();
+                        focusPinInput();
+                    }, 650);
+                }
+            } catch (err) {
+                console.error("Lookup error:", err);
+                setPinStatus("PIN not found", "error");
+                shakePinBoxes();
+                setTimeout(() => {
+                    clearPinInput();
+                    focusPinInput();
+                }, 650);
+            } finally {
+                isLookingUp = false;
+            }
+        }
+
+        function focusPinInput() {
+            const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            if (!isTouch) {
+                setTimeout(() => {
+                    const input = document.getElementById('pin-input');
+                    if (input) input.focus();
+                }, 100);
+            }
+        }
+
+        // Physical Keyboard Input
+        window.addEventListener('keydown', (e) => {
+            const step1 = document.getElementById('step-1-pin-pad');
+            if (!step1 || step1.style.display === 'none') {
+                if (e.key === 'Escape') {
+                    cancelToStep1();
+                }
+                return;
+            }
+
+            if (e.key >= '0' && e.key <= '9') {
+                pressPinDigit(e.key);
+            } else if (e.key === 'Backspace') {
+                backspacePinDigit();
+            } else if (e.key === 'Escape') {
+                clearPinInput();
+            }
+        });
+
+        const pinInput = document.getElementById('pin-input');
+        if (pinInput) {
+            pinInput.addEventListener('input', () => {
+                const clean = pinInput.value.replace(/\D/g, '').slice(0, 4);
+                currentPin = clean;
+                pinInput.value = clean;
+                updatePinDisplay();
+                if (currentPin.length === 4) {
+                    lookupAttendee(currentPin);
+                }
+            });
+        }
+
+        // --- STEP 2: CONFIRMATION INTERSTITIAL LOGIC ---
+        function goToStep2() {
+            if (!activeAttendee) return cancelToStep1();
+
+            document.getElementById('attendee-display-name').innerText = activeAttendee.display_name;
+            document.getElementById('attendee-email').innerText = activeAttendee.email;
+            document.getElementById('attendee-starting-balance').innerText = activeAttendee.balance;
+
+            document.getElementById('step-1-pin-pad').style.display = 'none';
+            document.getElementById('step-2-confirm').style.display = 'flex';
+            document.getElementById('step-3-mint').style.display = 'none';
+        }
+
+        function confirmToStep3() {
+            if (!activeAttendee) return cancelToStep1();
+            cumulativeDonation = 0;
+            goToStep3();
+        }
+
+        // --- STEP 3: DONATION MINTING PAD LOGIC ---
+        function goToStep3() {
+            if (!activeAttendee) return cancelToStep1();
+
+            document.getElementById('summary-attendee-name').innerText = activeAttendee.display_name;
+            document.getElementById('summary-starting-balance').innerText = `${activeAttendee.balance} tokens`;
+            document.getElementById('manual-amount-input').value = "";
+            document.getElementById('done-btn').disabled = false;
+
+            updateDonationDisplays();
+
+            document.getElementById('step-1-pin-pad').style.display = 'none';
+            document.getElementById('step-2-confirm').style.display = 'none';
+            document.getElementById('step-3-mint').style.display = 'flex';
+        }
+
+        function addDonation(amount) {
+            const val = Number(amount);
+            if (isNaN(val) || val <= 0) return;
+            cumulativeDonation += val;
+            updateDonationDisplays();
+        }
+
+        function addManualAmount() {
+            const input = document.getElementById('manual-amount-input');
+            const val = parseFloat(input.value);
+            if (isNaN(val) || val <= 0) {
+                alert("Please enter a valid positive dollar amount.");
+                return;
+            }
+            cumulativeDonation += val;
+            input.value = "";
+            updateDonationDisplays();
+        }
+
+        function handleManualKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addManualAmount();
+            }
+        }
+
+        function resetDonationTotal() {
+            cumulativeDonation = 0;
+            updateDonationDisplays();
+        }
+
+        function updateDonationDisplays() {
+            const startBal = activeAttendee ? (Number(activeAttendee.balance) || 0) : 0;
+            const tokensToAdd = Math.round(cumulativeDonation * tokensPerDollar);
+            const resultingBal = startBal + tokensToAdd;
+
+            document.getElementById('summary-cumulative-donated').innerText = `$${cumulativeDonation.toFixed(2)}`;
+            const resultEl = document.getElementById('summary-resulting-balance');
+            if (resultEl) {
+                resultEl.innerText = `${resultingBal} tokens (+${tokensToAdd} 🪙)`;
+            }
+        }
+
+        async function submitMintTokens() {
+            if (!activeAttendee) return cancelToStep1();
+
+            const tokensToAdd = Math.round(cumulativeDonation * tokensPerDollar);
+            if (tokensToAdd <= 0) {
+                alert("Please select or enter a donation amount before completing transaction.");
+                return;
+            }
+
+            const doneBtn = document.getElementById('done-btn');
+            doneBtn.disabled = true;
+            doneBtn.innerText = "Minting...";
+
+            try {
+                const res = await fetch('/api/mint/tokens', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pin: activeAttendee.pin,
+                        donation_amount: cumulativeDonation,
+                        tokens_to_add: tokensToAdd
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    audio.playKaChing();
+                    showToast(`✅ Minted +${tokensToAdd} Tokens! New Balance: ${data.new_balance} 🪙`);
+                    setTimeout(() => {
+                        cancelToStep1();
+                    }, 1200);
+                } else {
+                    alert(`Error minting tokens: ${data.error || 'Server error'}`);
+                    doneBtn.disabled = false;
+                    doneBtn.innerText = "Done";
+                }
+            } catch (err) {
+                console.error("Mint error:", err);
+                alert("Network error communicating with Mint server.");
+                doneBtn.disabled = false;
+                doneBtn.innerText = "Done";
+            }
+        }
+
+        // --- RESET / CANCEL TO STEP 1 ---
+        function cancelToStep1() {
+            currentPin = "";
+            isLookingUp = false;
+            activeAttendee = null;
+            cumulativeDonation = 0;
+
+            document.getElementById('step-1-pin-pad').style.display = 'flex';
+            document.getElementById('step-2-confirm').style.display = 'none';
+            document.getElementById('step-3-mint').style.display = 'none';
+
+            const doneBtn = document.getElementById('done-btn');
+            if (doneBtn) {
+                doneBtn.disabled = false;
+                doneBtn.innerText = "Done";
+            }
+
+            clearPinInput();
+            focusPinInput();
+        }
+
+        // Standardized reset method for system compatibility
+        function resetToStep1() {
+            cancelToStep1();
+        }
+
+        // Ensure PinAuthFlow compatibility reference
+        if (typeof PinAuthFlow !== 'undefined') {
+            window.PinAuthFlow = PinAuthFlow;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('mint-toast');
+            const msgEl = document.getElementById('mint-toast-msg');
+            msgEl.innerText = msg;
+            toast.classList.add('show');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // Initialize on page load
+        window.onload = () => {
+            loadMintConfig();
+            cancelToStep1();
+        };
+    </script>
+</body>
+</html>

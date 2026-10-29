@@ -1,0 +1,17 @@
+{
+  "mode": "slideshow",
+  "countdown": {
+    "active": false,
+    "duration_seconds": 300,
+    "target_timestamp": 1792803303.170933,
+    "title": "Next Bison Dash Race",
+    "started_at": 1792803003.170933
+  },
+  "presentation": {
+    "active": false,
+    "current_index": 0,
+    "title": "Stage Presentation"
+  },
+  "restart_trigger": 1792803379.622457,
+  "manifest_updated_at": 1792803273.7515085
+}

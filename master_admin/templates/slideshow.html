@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bison Bash - Stadium Projector Slideshow</title>
+    <script>
+        const urlPrefix = window.location.pathname.startsWith('/slideshow') ? '/slideshow' : '';
+        function resolveUrl(url) {
+            if (!url) return url;
+            if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//') || url.startsWith('data:')) {
+                return url;
+            }
+            const clean = url.startsWith('/') ? url : '/' + url;
+            if (clean.startsWith('/api/')) {
+                return clean;
+            }
+            if (clean.startsWith('/projector')) {
+                return clean;
+            }
+            if (urlPrefix && (clean === urlPrefix || clean.startsWith(urlPrefix + '/'))) {
+                return clean;
+            }
+            return urlPrefix ? (urlPrefix + clean) : clean;
+        }
+        document.write('<script src="' + resolveUrl('/static/js/qrcode.min.js') + '"><\/script>');
+    </script>
+    <style>
+        :root {
+            --bg-color: #080c14;
+            --card-bg: #111722;
+            --accent-cyan: #00ffcc;
+            --accent-gold: #ffd700;
+            --accent-green: #2ed573;
+            --accent-purple: #9b5de5;
+            --accent-red: #ff4757;
+            --border: #222d3d;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        /* 16:9 Aspect Ratio Viewport */
+        #viewport {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 56.25vw;
+            max-height: 100vh;
+            max-width: 177.78vh;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 20%, #151d2d 0%, #080c14 70%);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Top HUD Bar */
+        .hud-bar {
+            position: absolute;
+            top: 24px;
+            left: 36px;
+            right: 36px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .hud-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .hud-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hud-logo-img {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.45));
+            display: block;
+        }
+
+        .hud-title-box h1 {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .hud-title-box h1 span {
+            color: var(--accent-gold);
+        }
+
+        .hud-title-box p {
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hud-time-pill {
+            background: rgba(17, 23, 34, 0.85);
+            border: 1px solid var(--border);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-family: monospace;
+            font-size: 1rem;
+            color: var(--accent-gold);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .hud-fs-btn {
+            background: rgba(17, 23, 34, 0.85);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hud-fs-btn:hover {
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            background: rgba(0, 255, 204, 0.12);
+        }
+
+        /* Slide Deck Container */
+        .slide-deck {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 60px 50px 60px;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Full 1920x1080 Image Slide */
+        .slide.custom-image-slide {
+            padding: 0;
+            background: #080c14;
+        }
+
+        .image-slide-img-full {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Slide: Welcome */
+        .welcome-hero {
+            text-align: center;
+            max-width: 900px;
+        }
+
+        .welcome-badge {
+            display: inline-block;
+            background: rgba(0, 255, 204, 0.12);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.25);
+        }
+
+        .welcome-hero h2 {
+            font-size: 4.2rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #ffffff 40%, var(--accent-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .welcome-hero p {
+            font-size: 1.4rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .feature-cards {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .f-card {
+            background: rgba(17, 23, 34, 0.7);
+            border: 1px solid var(--border);
+            padding: 18px 24px;
+            border-radius: 12px;
+            backdrop-filter: blur(6px);
+            text-align: center;
+            width: 220px;
+        }
+
+        .f-card-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .f-card h4 {
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .f-card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Slide: QR Pass & Sign-Up */
+        .qr-slide-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            max-width: 1050px;
+        }
+
+        .qr-box-card {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.35);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-box-card #slide-qr-target {
+            width: 260px;
+            height: 260px;
+        }
+
+        .qr-box-card p {
+            margin-top: 12px;
+            color: #111;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .qr-info-content h2 {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .qr-info-content h2 span {
+            color: var(--accent-cyan);
+        }
+
+        .qr-info-content p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .qr-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .qr-step-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-gold);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.95rem;
+        }
+
+        /* Slide: Leaderboard (In the Regular Mix) */
+        .board-container {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .board-title {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .board-title h2 {
+            font-size: 2.6rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .board-title p {
+            color: var(--accent-gold);
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .board-item {
+            background: rgba(17, 23, 34, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(6px);
+            transition: transform 0.2s;
+        }
+
+        .board-item.rank-1 {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            background: rgba(30, 35, 48, 0.9);
+        }
+
+        .board-item.rank-2 { border-color: #c0c0c0; }
+        .board-item.rank-3 { border-color: #cd7f32; }
+
+        .board-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .board-rank {
+            font-size: 1.3rem;
+            font-weight: 900;
+            width: 38px;
+            color: var(--text-muted);
+        }
+
+        .rank-1 .board-rank { color: var(--accent-gold); font-size: 1.6rem; }
+        .rank-2 .board-rank { color: #e0e0e0; font-size: 1.5rem; }
+        .rank-3 .board-rank { color: #cd7f32; font-size: 1.4rem; }
+
+        .board-player-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .board-player-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .board-balance .tokens {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--accent-gold);
+        }
+
+        /* Slide: Mini-Game Stations */
+        .games-slide {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .game-showcase-card {
+            background: rgba(17, 23, 34, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px 18px;
+            text-align: center;
+        }
+
+        .game-icon-circle {
+            font-size: 2.4rem;
+            margin-bottom: 12px;
+        }
+
+        .game-showcase-card h3 {
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .game-showcase-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .game-port-tag {
+            display: inline-block;
+            margin-top: 14px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--accent-gold);
+        }
+
+        /* Bottom Progress Bar */
+        .bottom-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 36px;
+            right: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .slide-dots {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            width: 28px;
+            border-radius: 6px;
+        }
+
+        .progress-bar-container {
+            width: 160px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent-gold);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .nav-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* =========================================================================
+           BISON DASH MANUAL ACTIVATION OVERLAY (COUNTDOWN, PRE-RACE, RACE)
+           ========================================================================= */
+        #bison-override-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 200;
+            background: radial-gradient(circle at 50% 30%, #172338 0%, #060910 85%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 60px;
+            animation: fadeInOverlay 0.5s ease-in-out;
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; transform: scale(1.02); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .countdown-hero {
+            text-align: center;
+            max-width: 1100px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .race-alert-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 71, 87, 0.15);
+            border: 2px solid var(--accent-red);
+            color: #ff6b81;
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 0 25px rgba(255, 71, 87, 0.4);
+            margin-bottom: 12px;
+        }
+
+        .live-pulse-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-red);
+            animation: pulseGlow 1s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { transform: scale(0.9); opacity: 0.7; }
+            to { transform: scale(1.3); opacity: 1; }
+        }
+
+        .race-title {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+        }
+
+        /* Giant Digital Countdown Timer */
+        .timer-jumbo-box {
+            background: rgba(10, 16, 26, 0.85);
+            border: 2px solid var(--accent-cyan);
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.35), inset 0 0 30px rgba(0, 255, 204, 0.1);
+            border-radius: 24px;
+            padding: 24px 70px 18px 70px;
+            margin-bottom: 25px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timer-number {
+            font-family: "Consolas", monospace, sans-serif;
+            font-size: 7.2rem;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 30px rgba(0, 255, 204, 0.8);
+            line-height: 1;
+        }
+
+        .timer-label {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        /* Animated Track Progress Line */
+        .track-progress-wrapper {
+            width: 100%;
+            max-width: 860px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .track-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-cyan) 0%, var(--accent-gold) 100%);
+            border-radius: 8px;
+            box-shadow: 0 0 15px var(--accent-gold);
+            transition: width 0.3s ease;
+        }
+
+        .track-runner-icon {
+            position: absolute;
+            top: -14px;
+            left: 0%;
+            font-size: 1.8rem;
+            transform: translateX(-50%);
+            transition: left 0.3s ease;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+        }
+
+        /* Countdown Cards Row */
+        .countdown-cards-row {
+            display: flex;
+            gap: 25px;
+            width: 100%;
+            max-width: 900px;
+            justify-content: center;
+        }
+
+        .countdown-card {
+            flex: 1;
+            background: rgba(17, 23, 34, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 22px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            backdrop-filter: blur(8px);
+        }
+
+        .c-card-icon {
+            font-size: 2.5rem;
+        }
+
+        .c-card-info h4 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .c-card-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .c-card-highlight {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+        }
+
+        .countdown-card.qr-card {
+            border-color: rgba(0, 255, 204, 0.4);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.15);
+        }
+
+        #bison-countdown-qr {
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            padding: 4px;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .c-card-url {
+            display: block;
+            margin-top: 4px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+        }
+
+        /* Generic Subview container */
+        .bison-subview {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="viewport">
+        <!-- Top HUD -->
+        <div class="hud-bar" id="hudBar">
+            <div class="hud-brand" id="hudBrand">
+                <div class="hud-logo" id="hudLogoWrapper">
+                    <img id="hudLogoImg" src="/static/img/bison_logo.png" alt="Bison Bash Logo" class="hud-logo-img" onerror="this.onerror=null; this.src=resolveUrl('/static/img/bison_placeholder.png');" />
+                    <script>
+                        (function() {
+                            const el = document.getElementById('hudLogoImg');
+                            if (el) el.src = resolveUrl('/static/img/bison_logo.png');
+                        })();
+                    </script>
+                </div>
+                <div class="hud-title-box" id="hudTitleBox">
+                    <h1>Techlahoma <span>Bison Bash</span></h1>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;" id="hudClockContainer">
+                <div class="hud-time-pill" id="live-clock">12:00:00 PM</div>
+            </div>
+        </div>
+
+        <!-- Regular Slide Deck (Dynamic Slides + Leaderboard) -->
+        <div class="slide-deck" id="slideDeck">
+            <!-- Dynamically generated slides appear here -->
+        </div>
+
+        <!-- BISON DASH ARENA OVERLAY (MANUAL ACTIVATION FROM ADMIN) -->
+        <div id="bison-override-layer" style="display: none;">
+            
+            <!-- 1. TIME LEFT TILL RACE (COUNTDOWN SLIDE) -->
+            <div id="bison-countdown-view" class="bison-subview">
+                <div class="countdown-hero">
+                    <div class="race-alert-badge">
+                        <span class="live-pulse-dot"></span>
+                        <span id="countdown-badge-text">UPCOMING ARENA RACE • WAGERS OPEN</span>
+                    </div>
+
+                    <h1 class="race-title" id="countdown-race-title">Bison Dash: Championship Track</h1>
+
+                    <!-- Giant Stadium Digital Countdown Display -->
+                    <div class="timer-jumbo-box">
+                        <div class="timer-number" id="bison-timer-clock">05:00</div>
+                        <div class="timer-label" id="bison-timer-label">TIME LEFT TILL RACE</div>
+                    </div>
+
+                    <!-- Visual Track Progress Line -->
+                    <div class="track-progress-wrapper">
+                        <div class="track-progress-fill" id="countdown-progress-bar"></div>
+                        <div class="track-runner-icon" id="countdown-runner-icon"><img src="/static/img/bison_logo.png" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 0 6px rgba(0,255,204,0.7)); vertical-align: middle;" alt="Bison" /></div>
+                    </div>
+
+                    <!-- Cycling Bison Showcase Spotlight -->
+                    <div id="countdown-bison-showcase" style="margin: 12px auto 16px auto; width: 100%; max-width: 840px; background: rgba(14, 20, 32, 0.94); border: 2px solid var(--border-color); border-radius: 20px; padding: 14px 28px; display: flex; align-items: center; gap: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.7);">
+                        <div style="position: relative; width: 200px; height: 130px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <img id="cd-bison-img" src="/static/display/512/bison_1.png" style="max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.8)); transition: all 0.3s ease;" alt="Bison" onerror="this.onerror=null; this.src=resolveUrl('/static/display/512/bison_1.png');" />
+                        </div>
+                        <div style="flex: 1; text-align: left;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                                <span id="cd-bison-slot" style="font-size: 0.82rem; font-weight: 900; padding: 3px 12px; border-radius: 6px; color: #000; background: #ff4757; text-transform: uppercase;">SLOT 1</span>
+                                <span id="cd-bison-jockey" style="font-size: 0.95rem; font-weight: 800; color: var(--text-muted);">Jockey: Jockey Jax</span>
+                                <span style="margin-left: auto; font-size: 0.8rem; font-weight: 900; color: var(--accent-gold); letter-spacing: 1px;" id="cd-cycler-indicator">CONTENDER 1 OF 6</span>
+                            </div>
+                            <h2 id="cd-bison-name" style="font-size: 1.85rem; font-weight: 900; color: #fff; margin: 0 0 8px 0; letter-spacing: 0.5px;">Thunder Stampede</h2>
+                            <div style="display: flex; gap: 20px; font-size: 0.9rem; font-weight: 800; color: #cbd5e1;">
+                                <div>SPEED: <span id="cd-bison-speed" style="color: var(--accent-cyan);">65</span></div>
+                                <div>CORNERING: <span id="cd-bison-cornering" style="color: var(--accent-gold);">6</span></div>
+                                <div>STAMINA: <span id="cd-bison-stamina" style="color: #2ed573;">55</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Cards: Betting Guidance & Fast QR Pass Check-In -->
+                    <div class="countdown-cards-row">
+                        <div class="countdown-card">
+                            <div class="c-card-icon">🎰</div>
+                            <div class="c-card-info">
+                                <h4>Tablet Betting Kiosks (/bet1 & /bet2)</h4>
+                                <p>Punch in your 4-digit PIN at any tablet station to back a cyber-bison!</p>
+                                <div class="c-card-highlight">2.0x Odds &bull; Min Bet: 1 Token</div>
+                            </div>
+                        </div>
+
+                        <div class="countdown-card qr-card">
+                            <div id="bison-countdown-qr"></div>
+                            <div class="c-card-info">
+                                <h4>Instant Mobile Pass</h4>
+                                <p>Scan to claim starter tokens, view odds, and check wallet balance.</p>
+                                <span class="c-card-url" id="countdown-qr-url">http://127.0.0.1:8009/</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. PRE-RACE SLIDE -->
+            <div id="bison-prerace-view" class="bison-subview" style="display: none;">
+                <div class="countdown-hero">
+                    <div class="race-alert-badge" style="border-color: var(--accent-gold); color: var(--accent-gold);">
+                        <span class="live-pulse-dot" style="background: var(--accent-gold); box-shadow: 0 0 10px var(--accent-gold);"></span>
+                        <span>PRE-RACE LINEUP &bull; BETTING CLOSING</span>
+                    </div>
+                    <h1 class="race-title">Contenders on the Track</h1>
+                    <div class="f-card" style="width: 500px; padding: 25px;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🏇</div>
+                        <h3 style="color:#fff; margin-bottom: 8px;">Pre-Race Contender Briefing</h3>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">Wagers are locking. Final odds calculations in progress.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. LIVE 1080P RACE ARENA TRACK -->
+            <div id="bison-race-view" class="bison-subview" style="display: none; position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; margin: 0; background: #000; z-index: 220; overflow: hidden;">
+                <iframe id="bison-race-iframe" src="" style="width: 100%; height: 100%; border: none; overflow: hidden; display: block;" allow="autoplay"></iframe>
+            </div>
+        </div>
+
+        <!-- STAGE PRESENTATION OVERLAY (CLEAN SCREEN - NO BUTTONS OR HUD OVERLAYS) -->
+        <div id="presentation-override-layer" style="display: none; position: absolute; inset: 0; z-index: 250; background: #000; justify-content: center; align-items: center; overflow: hidden; animation: fadeInOverlay 0.4s ease-in-out;">
+            <img id="presentation-image" src="" alt="Presentation Slide" style="max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; display: none;">
+            <div id="presentation-blank-test-slide" style="display: none; width: 100%; height: 100%; background: #080c14; justify-content: center; align-items: center; flex-direction: column;">
+                <div id="presentation-blank-title" style="color: #4b5d78; font-size: 3.5rem; font-family: monospace; font-weight: 800; letter-spacing: 2px;">Slide 1</div>
+                <div style="color: #222d3d; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 3px; margin-top: 10px; font-weight: bold;">Test Blank Screen</div>
+            </div>
+            <div id="presentation-empty-message" style="display: none; text-align: center; color: var(--text-muted); font-size: 1.2rem;">
+                <div style="font-size: 3rem; margin-bottom: 12px;">📢</div>
+                <h2 style="color: #fff; margin-bottom: 6px;">Stage Presentation Active</h2>
+                <p>Waiting for slides from Venue Command...</p>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation & Indicators -->
+        <div class="bottom-nav" id="bottomNav">
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div id="paused-indicator" style="display: none; position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); background: rgba(255, 71, 87, 0.95); color: #fff; padding: 8px 22px; border-radius: 24px; font-weight: 800; font-size: 0.9rem; letter-spacing: 1.5px; z-index: 300; box-shadow: 0 4px 20px rgba(0,0,0,0.7); cursor: pointer;" onclick="togglePause()">
+            ⏸️ SLIDESHOW PAUSED &bull; PRESS SPACE OR CLICK TO RESUME
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        let slideDeckData = [];
+        let presentationDeckData = [];
+        let slideElements = [];
+        let slideStartTime = Date.now();
+        let currentSlideDuration = 10000;
+        let isPaused = false;
+        let localIp = window.location.hostname || "127.0.0.1";
+
+        // Current Projector Override Mode
+        let currentProjectorMode = "slideshow";
+        let lastRestartTrigger = 0;
+        let lastManifestVersion = 0;
+        let lastCutInActive = false;
+        let countdownData = null;
+        let countdownQrInit = false;
+
+        // Clock Update
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 1. DYNAMIC SLIDES LOADER ---
+        async function loadSlideDeck() {
+            try {
+                const res = await fetch(resolveUrl('/api/slides'));
+                const data = await res.json();
+                if (data.status === 'success') {
+                    if (data.branding) {
+                        applyBranding(data.branding);
+                    }
+                    const prevSlideId = slideElements[currentSlide]?.id;
+                    if (data.slides) {
+                        slideDeckData = data.slides.filter(s => s.enabled !== false).sort((a, b) => (a.order || 0) - (b.order || 0));
+                        renderSlidesDOM(prevSlideId);
+                    }
+                    if (data.presentation_slides) {
+                        presentationDeckData = data.presentation_slides.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not fetch slides manifest, rendering fallback", e);
+            }
+        }
+
+        function applyBranding(branding) {
+            if (!branding) return;
+            const showTitle = branding.show_header_title !== false;
+            const showClock = branding.show_clock !== false;
+            const logoUrl = resolveUrl(branding.logo_url || '/static/img/bison_logo.png');
+
+            const brandEl = document.getElementById('hudBrand');
+            if (brandEl) {
+                brandEl.style.display = showTitle ? 'flex' : 'none';
+            }
+
+            const clockEl = document.getElementById('hudClockContainer');
+            if (clockEl) {
+                clockEl.style.display = showClock ? 'flex' : 'none';
+            }
+
+            const logoImg = document.getElementById('hudLogoImg');
+            if (logoImg && logoUrl) {
+                if (logoImg.src !== logoUrl && !logoImg.src.endsWith(logoUrl)) {
+                    logoImg.src = logoUrl;
+                }
+            }
+        }
+
+        function renderSlidesDOM(prevSlideId) {
+            const container = document.getElementById('slideDeck');
+            container.innerHTML = '';
+
+            if (slideDeckData.length === 0) {
+                container.innerHTML = `
+                    <div class="slide active">
+                        <div class="welcome-hero">
+                            <h2>Bison Bash Arena</h2>
+                            <p>No active slides configured. Upload slides in the Admin Panel or Slideshow Builder!</p>
+                        </div>
+                    </div>
+                `;
+                slideElements = Array.from(container.querySelectorAll('.slide'));
+                renderDots();
+                return;
+            }
+
+            slideDeckData.forEach((s, idx) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = `slide ${idx === currentSlide ? 'active' : ''}`;
+                slideDiv.id = `slide-${idx}`;
+                slideDiv.dataset.type = s.type;
+                slideDiv.dataset.duration = (s.duration || 10) * 1000;
+
+                if (s.type === 'custom_image') {
+                    slideDiv.classList.add('custom-image-slide');
+                    slideDiv.innerHTML = `<img src="${resolveUrl(s.url)}" alt="${s.title}" class="image-slide-img-full" />`;
+                } else if (s.type === 'leaderboard') {
+                    slideDiv.innerHTML = `
+                        <div class="board-container">
+                            <div class="board-title">
+                                <h2>🏆 Stadium Leaderboard</h2>
+                                <p>Top contenders in the live token rankings</p>
+                            </div>
+                            <div class="board-grid" id="leaderboard-grid">
+                                <div style="color: var(--text-muted); padding: 20px;">Loading live leaderboard...</div>
+                            </div>
+                        </div>
+                    `;
+                } else if (s.type === 'builtin_welcome') {
+                    slideDiv.innerHTML = `
+                        <div class="welcome-hero">
+                            <div class="welcome-badge">Community Tech Celebration</div>
+                            <h2>Welcome to the Arena</h2>
+                            <p>Compete in tactile mini-games, back cyber-bisons in high-stakes track races, and claim the champion's cup on the live leaderboard.</p>
+                            <div class="feature-cards">
+                                <div class="f-card"><div class="f-card-icon">🐛</div><h4>Bug Bounty</h4><p>Tactile kids' debugging booth</p></div>
+                                <div class="f-card"><div class="f-card-icon">🎮</div><h4>N64 Match Deck</h4><p>Classic retro bracket showdowns</p></div>
+                                <div class="f-card"><div class="f-card-icon">🏇</div><h4>Bison Dash</h4><p>Multi-stage algorithmic track</p></div>
+                                <div class="f-card"><div class="f-card-icon">⚡</div><h4>AI Gauntlet</h4><p>High-stakes biometric door runs</p></div>
+                            </div>
+                        </div>
+                    `;
+                } else if (s.type === 'builtin_qr') {
+                    slideDiv.innerHTML = `
+                        <div class="qr-slide-wrapper">
+                            <div class="qr-box-card">
+                                <div id="slide-qr-target"></div>
+                            </div>
+                            <div class="qr-info-content">
+                                <h2>Join the <span>Token Economy</span></h2>
+                                <p>No passwords required. Enter your email to mint your attendee pass, receive starter tokens, and track your standings.</p>
+                                <div class="qr-steps">
+                                    <div class="qr-step-item"><div class="step-num">1</div><span>Scan the QR code with your phone camera</span></div>
+                                    <div class="qr-step-item"><div class="step-num">2</div><span>Enter your handle to show up on the arena scoreboard</span></div>
+                                    <div class="qr-step-item"><div class="step-num">3</div><span>Get your 4-digit PIN pass to enter and play at any game station!</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (s.type === 'builtin_booths') {
+                    slideDiv.innerHTML = `
+                        <div class="games-slide">
+                            <div class="board-title">
+                                <h2>🕹️ Mini-Game Stations</h2>
+                                <p>Connect from your mobile browser or visit physical booths</p>
+                            </div>
+                            <div class="games-grid">
+                                <div class="game-showcase-card"><div class="game-icon-circle">🐛</div><h3>Bug Bounty</h3><p>5:1 token payout. Clear server racks of physical bugs!</p><div class="game-port-tag">Port 8003</div></div>
+                                <div class="game-showcase-card"><div class="game-icon-circle">🎮</div><h3>N64 Tourney</h3><p>Winner payouts on retro classics.</p><div class="game-port-tag">Port 8004</div></div>
+                                <div class="game-showcase-card"><div class="game-icon-circle">🪙</div><h3>Token Mint</h3><p>Cashier desk & donations to Techlahoma.</p><div class="game-port-tag">Port 8005</div></div>
+                                <div class="game-showcase-card"><div class="game-icon-circle">⚡</div><h3>AI Gauntlet</h3><p>Survive multi-stage logic chambers for massive payouts.</p><div class="game-port-tag">Port 8007</div></div>
+                            </div>
+                        </div>
+                    `;
+                }
+                container.appendChild(slideDiv);
+            });
+
+            slideElements = Array.from(container.querySelectorAll('.slide'));
+            if (prevSlideId) {
+                const foundIdx = slideElements.findIndex(el => el.id === prevSlideId);
+                if (foundIdx !== -1) {
+                    currentSlide = foundIdx;
+                } else {
+                    currentSlide = Math.min(currentSlide, Math.max(0, slideElements.length - 1));
+                }
+            } else {
+                currentSlide = Math.min(currentSlide, Math.max(0, slideElements.length - 1));
+            }
+            if (currentSlide < 0) currentSlide = 0;
+            renderDots();
+            activateSlide(currentSlide);
+        }
+
+        function renderDots() {
+            const dotsContainer = document.getElementById('slideDots');
+            if (!dotsContainer) return;
+            dotsContainer.innerHTML = '';
+            slideElements.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `dot ${idx === currentSlide ? 'active' : ''}`;
+                dot.onclick = () => goToSlide(idx);
+                dotsContainer.appendChild(dot);
+            });
+        }
+
+        function activateSlide(idx) {
+            slideElements.forEach((s, i) => s.classList.toggle('active', i === idx));
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+
+            const cur = slideElements[idx];
+            if (!cur) return;
+            currentSlideDuration = parseInt(cur.dataset.duration) || 10000;
+            slideStartTime = Date.now();
+
+            // Dynamic hooks per slide type
+            const type = cur.dataset.type;
+            if (type === 'leaderboard') {
+                fetchLeaderboard();
+            } else if (type === 'builtin_qr') {
+                initQrCode();
+            }
+        }
+
+        function goToSlide(idx) {
+            if (slideElements.length === 0) return;
+            currentSlide = (idx + slideElements.length) % slideElements.length;
+            activateSlide(currentSlide);
+        }
+
+        function nextSlide() {
+            goToSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            goToSlide(currentSlide - 1);
+        }
+
+        function updateProgressBar() {
+            if (isPaused || currentProjectorMode !== 'slideshow' || slideElements.length === 0) return;
+            const elapsed = Date.now() - slideStartTime;
+            const pct = Math.min(100, (elapsed / currentSlideDuration) * 100);
+            document.getElementById('progressBar').style.width = `${pct}%`;
+
+            if (elapsed >= currentSlideDuration) {
+                nextSlide();
+            }
+        }
+        setInterval(updateProgressBar, 50);
+
+        // --- 2. LEADERBOARD IN THE MIX ---
+        async function fetchLeaderboard() {
+            try {
+                const res = await fetch(resolveUrl('/api/players/manifest'));
+                const data = await res.json();
+                if (data.status === 'success' && data.players) {
+                    const sorted = [...data.players].sort((a, b) => (b.balance || 0) - (a.balance || 0)).slice(0, 6);
+                    const container = document.getElementById('leaderboard-grid');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    if (sorted.length === 0) {
+                        container.innerHTML = `<div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 30px;">No players registered yet. Scan the QR code to join!</div>`;
+                        return;
+                    }
+                    sorted.forEach((p, idx) => {
+                        const rank = idx + 1;
+                        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+                        const div = document.createElement('div');
+                        div.className = `board-item ${rankClass}`;
+                        div.innerHTML = `
+                            <div class="board-left">
+                                <div class="board-rank">${medal}</div>
+                                <div>
+                                    <div class="board-player-name">${p.name || 'Anonymous'}</div>
+                                    <div class="board-player-sub">${p.email ? p.email.substring(0, 3) + '***' : 'Floor Pass'}</div>
+                                </div>
+                            </div>
+                            <div class="board-balance">
+                                <div class="tokens">🪙 ${p.balance || 0}</div>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            } catch (e) {
+                console.warn("Error loading leaderboard:", e);
+            }
+        }
+
+        // QR Code Generator
+        function initQrCode() {
+            const target = document.getElementById('slide-qr-target');
+            if (!target) return;
+            target.innerHTML = '';
+            const signupUrl = 'https://bsidesbook3.stern-lenok.ts.net/portal';
+            new QRCode(target, {
+                text: signupUrl,
+                width: 260,
+                height: 260,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function initCountdownQr() {
+            if (countdownQrInit) return;
+            const target = document.getElementById('bison-countdown-qr');
+            if (!target) return;
+            target.innerHTML = '';
+            const portalUrl = 'https://bsidesbook3.stern-lenok.ts.net/portal';
+            new QRCode(target, {
+                text: portalUrl,
+                width: 72,
+                height: 72,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+            const cdUrl = document.getElementById('countdown-qr-url');
+            if (cdUrl) cdUrl.innerText = portalUrl;
+            countdownQrInit = true;
+        }
+
+        // --- 3. BISON DASH MANUAL ACTIVATION & COUNTDOWN ---
+        async function pollSlideshowState() {
+            try {
+                const res = await fetch(resolveUrl('/api/slideshow/state'));
+                const data = await res.json();
+                if (data.status === 'success' && data.state) {
+                    handleSlideshowState(data.state);
+                }
+            } catch (e) {
+                console.warn("Error polling slideshow state", e);
+            }
+        }
+
+        function handleSlideshowState(state) {
+            // Auto-refresh deck if manifest was modified (e.g. from Slideshow Builder or Presentation Builder)
+            if (state.manifest_updated_at && state.manifest_updated_at !== lastManifestVersion) {
+                lastManifestVersion = state.manifest_updated_at;
+                loadSlideDeck();
+            }
+
+            const newMode = state.mode || "slideshow";
+            const isCutInNow = (newMode !== 'slideshow') || (state.presentation && state.presentation.active);
+
+            // Detect transition from regular slideshow to cut-in and vice versa
+            if (!lastCutInActive && isCutInNow) {
+                // Cut-in starting: Pause rotation right at currentSlide
+                lastCutInActive = true;
+                console.log(`[Slideshow] Cut-in active (${newMode}). Pausing regular rotation at slide #${currentSlide + 1}`);
+            } else if (lastCutInActive && !isCutInNow) {
+                // Cut-in ended: Resume rotation right at the paused slide with a fresh timer
+                lastCutInActive = false;
+                slideStartTime = Date.now();
+                const bar = document.getElementById('progressBar');
+                if (bar) bar.style.width = '0%';
+                console.log(`[Slideshow] Cut-in ended. Resuming rotation order at slide #${currentSlide + 1}`);
+                if (slideElements.length > 0) {
+                    activateSlide(currentSlide);
+                }
+            }
+
+            currentProjectorMode = newMode;
+            const overrideLayer = document.getElementById('bison-override-layer');
+            const presLayer = document.getElementById('presentation-override-layer');
+            const countdownView = document.getElementById('bison-countdown-view');
+            const preraceView = document.getElementById('bison-prerace-view');
+            const raceView = document.getElementById('bison-race-view');
+            const bottomNav = document.getElementById('bottomNav');
+
+            // Handle restart regular slideshow trigger from venue command
+            if (state.restart_trigger && state.restart_trigger !== lastRestartTrigger) {
+                lastRestartTrigger = state.restart_trigger;
+                currentSlide = 0;
+                slideStartTime = Date.now();
+                const bar = document.getElementById('progressBar');
+                if (bar) bar.style.width = '0%';
+                if (slideElements.length > 0) activateSlide(0);
+            }
+
+            const hudBar = document.getElementById('hudBar');
+            if (currentProjectorMode === 'presentation' || (state.presentation && state.presentation.active)) {
+                if (hudBar) hudBar.style.display = 'none';
+                if (overrideLayer) overrideLayer.style.display = 'none';
+                if (bottomNav) bottomNav.style.display = 'none';
+                if (presLayer) presLayer.style.display = 'flex';
+                const presIdx = state.presentation ? (state.presentation.current_index || 0) : 0;
+                renderPresentationSlide(presIdx);
+                return;
+            }
+
+            if (presLayer) presLayer.style.display = 'none';
+            if (hudBar) hudBar.style.display = 'flex';
+
+            if (currentProjectorMode === 'slideshow') {
+                overrideLayer.style.display = 'none';
+                bottomNav.style.display = 'flex';
+                return;
+            }
+
+            // Bison Dash manual mode active
+            overrideLayer.style.display = 'flex';
+            bottomNav.style.display = 'none';
+
+            countdownView.style.display = currentProjectorMode === 'bison_countdown' ? 'flex' : 'none';
+            preraceView.style.display = currentProjectorMode === 'bison_prerace' ? 'flex' : 'none';
+            raceView.style.display = currentProjectorMode === 'bison_race' ? 'flex' : 'none';
+
+            if (currentProjectorMode === 'bison_race') {
+                const iframe = document.getElementById('bison-race-iframe');
+                if (iframe) {
+                    const targetUrl = resolveUrl('/projector');
+                    if (iframe.src !== targetUrl && !iframe.src.endsWith('/projector')) {
+                        iframe.src = targetUrl;
+                    }
+                }
+                if (!window._bisonRaceSafetyTimeout) {
+                    window._bisonRaceSafetyTimeout = setTimeout(async () => {
+                        try {
+                            await fetch(resolveUrl('/api/slideshow/bison/stop'), { method: 'POST' });
+                        } catch(e) {}
+                        window._bisonRaceSafetyTimeout = null;
+                    }, 72000);
+                }
+                return;
+            } else {
+                if (window._bisonRaceSafetyTimeout) {
+                    clearTimeout(window._bisonRaceSafetyTimeout);
+                    window._bisonRaceSafetyTimeout = null;
+                }
+            }
+
+            if (currentProjectorMode === 'bison_countdown') {
+                initCountdownQr();
+                renderCountdownTimer(state.countdown);
+            }
+        }
+
+        async function renderPresentationSlide(index) {
+            const imgEl = document.getElementById('presentation-image');
+            const emptyEl = document.getElementById('presentation-empty-message');
+            const blankEl = document.getElementById('presentation-blank-test-slide');
+
+            if (!presentationDeckData || presentationDeckData.length === 0) {
+                try {
+                    const res = await fetch(resolveUrl('/api/slides/presentation'));
+                    const data = await res.json();
+                    if (data.status === 'success' && data.slides && data.slides.length > 0) {
+                        presentationDeckData = data.slides;
+                    }
+                } catch(e) {}
+            }
+
+            // Fallback to 3 blank test slides so projector cut-in is immediately interactive for testing
+            const activeDeck = (presentationDeckData && presentationDeckData.length > 0)
+                ? presentationDeckData
+                : [
+                    { id: 'test_1', title: 'Slide 1', url: null },
+                    { id: 'test_2', title: 'Slide 2', url: null },
+                    { id: 'test_3', title: 'Slide 3', url: null }
+                ];
+
+            const validIdx = Math.max(0, Math.min(index, activeDeck.length - 1));
+            const slide = activeDeck[validIdx];
+
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            if (slide && slide.url) {
+                if (blankEl) blankEl.style.display = 'none';
+                if (imgEl) {
+                    imgEl.style.display = 'block';
+                    const targetUrl = resolveUrl(slide.url);
+                    if (imgEl.src !== targetUrl && !imgEl.src.endsWith(targetUrl)) {
+                        imgEl.src = targetUrl;
+                    }
+                }
+            } else {
+                if (imgEl) imgEl.style.display = 'none';
+                if (blankEl) {
+                    blankEl.style.display = 'flex';
+                    const titleEl = document.getElementById('presentation-blank-title');
+                    if (titleEl) titleEl.innerText = (slide && slide.title) ? slide.title : `Slide ${validIdx + 1}`;
+                }
+            }
+        }
+
+        const BISON_CONTENDERS = [
+            { slot: 1, id: "bison_1", name: "Thunder Stampede", color: "#ff4757", jockey: "Jockey Jax", speed: 65, cornering: 6, stamina: 55 },
+            { slot: 2, id: "bison_2", name: "Cyber Steer", color: "#2ed573", jockey: "Dash Volt", speed: 70, cornering: 5, stamina: 50 },
+            { slot: 3, id: "bison_3", name: "Prairie Rocket", color: "#3742fa", jockey: "Nova Drift", speed: 60, cornering: 7, stamina: 45 },
+            { slot: 4, id: "bison_4", name: "Iron Horn", color: "#ffa502", jockey: "Steel Spur", speed: 75, cornering: 4, stamina: 60 },
+            { slot: 5, id: "bison_5", name: "Neon Goliath", color: "#9b5de5", jockey: "Pulse Rider", speed: 62, cornering: 5, stamina: 65 },
+            { slot: 6, id: "bison_6", name: "Solar Flare", color: "#00d2d3", jockey: "Blaze Vector", speed: 68, cornering: 6, stamina: 50 }
+        ];
+
+        let bisonCycleIndex = 0;
+        let lastBisonCycleTime = 0;
+
+        function updateBisonShowcase() {
+            const now = Date.now();
+            if (now - lastBisonCycleTime > 3500) { // Cycle every 3.5 seconds
+                lastBisonCycleTime = now;
+                bisonCycleIndex = (bisonCycleIndex + 1) % BISON_CONTENDERS.length;
+            }
+            const b = BISON_CONTENDERS[bisonCycleIndex];
+            const imgEl = document.getElementById('cd-bison-img');
+            const slotEl = document.getElementById('cd-bison-slot');
+            const nameEl = document.getElementById('cd-bison-name');
+            const jockeyEl = document.getElementById('cd-bison-jockey');
+            const indEl = document.getElementById('cd-cycler-indicator');
+            const spdEl = document.getElementById('cd-bison-speed');
+            const corEl = document.getElementById('cd-bison-cornering');
+            const staEl = document.getElementById('cd-bison-stamina');
+
+            if (imgEl) {
+                const targetSrc = resolveUrl(`/static/display/512/bison_${b.slot}.png`);
+                if (imgEl.src !== targetSrc && !imgEl.src.endsWith(`/bison_${b.slot}.png`)) {
+                    imgEl.src = targetSrc;
+                }
+            }
+            if (slotEl) {
+                slotEl.innerText = `SLOT ${b.slot}`;
+                slotEl.style.background = b.color;
+            }
+            if (nameEl) nameEl.innerText = b.name;
+            if (jockeyEl) jockeyEl.innerText = `Jockey: ${b.jockey}`;
+            if (indEl) indEl.innerText = `CONTENDER ${b.slot} OF 6`;
+            if (spdEl) spdEl.innerText = b.speed;
+            if (corEl) corEl.innerText = b.cornering;
+            if (staEl) staEl.innerText = b.stamina;
+        }
+
+        // Listen for iframe complete message from arena projector
+        window.addEventListener('message', async (e) => {
+            if (e.data && e.data.type === 'BISON_RACE_COMPLETE') {
+                console.log("[Slideshow] Received BISON_RACE_COMPLETE from arena projector. Resuming regular slideshow.");
+                try {
+                    await fetch(resolveUrl('/api/slideshow/bison/stop'), { method: 'POST' });
+                } catch(err) {}
+            }
+        });
+
+        function renderCountdownTimer(countdown) {
+            if (!countdown || !countdown.active) return;
+
+            const nowSec = Date.now() / 1000;
+            const target = countdown.target_timestamp || (nowSec + 300);
+            const totalDuration = countdown.duration_seconds || 300;
+            const remaining = Math.max(0, Math.floor(target - nowSec));
+
+            const mins = Math.floor(remaining / 60);
+            const secs = Math.floor(remaining % 60);
+            const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            const clockEl = document.getElementById('bison-timer-clock');
+            const badgeText = document.getElementById('countdown-badge-text');
+            const titleEl = document.getElementById('countdown-race-title');
+
+            if (titleEl && countdown.title) titleEl.innerText = countdown.title;
+
+            if (remaining > 0) {
+                window._raceTransitionTriggered = false;
+                clockEl.innerText = formatted;
+                clockEl.style.color = remaining <= 30 ? "var(--accent-red)" : "var(--accent-cyan)";
+                badgeText.innerText = "UPCOMING ARENA RACE • WAGERS OPEN";
+
+                // Progress track (0% to 100%)
+                const elapsed = Math.max(0, totalDuration - remaining);
+                const pct = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+                document.getElementById('countdown-progress-bar').style.width = `${pct}%`;
+                document.getElementById('countdown-runner-icon').style.left = `${pct}%`;
+
+                updateBisonShowcase();
+            } else {
+                clockEl.innerText = "00:00";
+                clockEl.style.color = "var(--accent-red)";
+                badgeText.innerText = "🚨 WAGERS LOCKED • RACE STARTING NOW!";
+                document.getElementById('countdown-progress-bar').style.width = "100%";
+                document.getElementById('countdown-runner-icon').style.left = "100%";
+
+                // Automatically transition into the live race sprint!
+                if (!window._raceTransitionTriggered) {
+                    window._raceTransitionTriggered = true;
+                    setTimeout(async () => {
+                        try {
+                            await fetch(resolveUrl('/api/bisondash/test_race'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+                        } catch(e) {}
+                        try {
+                            await fetch(resolveUrl('/api/slideshow/bison/set_mode'), {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ mode: 'bison_race' })
+                            });
+                        } catch(e) {}
+                    }, 1500);
+                }
+            }
+        }
+
+        // Fullscreen Toggle (Compatible with Chrome, Safari, macOS)
+        function toggleFullscreen() {
+            const doc = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (doc.requestFullscreen) {
+                    doc.requestFullscreen().catch(() => {});
+                } else if (doc.webkitRequestFullscreen) {
+                    doc.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        // Double click anywhere to toggle fullscreen
+        document.addEventListener('dblclick', (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                toggleFullscreen();
+            }
+        });
+
+        // Physical Keyboard Controls
+        function togglePause() {
+            isPaused = !isPaused;
+            const pi = document.getElementById('paused-indicator');
+            if (pi) pi.style.display = isPaused ? 'block' : 'none';
+        }
+
+        window.addEventListener('keydown', (e) => {
+            // Fullscreen shortcuts: F11 (Standard & Mac), F key, Escape to exit
+            if (e.key === 'F11' || e.code === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+                return;
+            }
+            if ((e.key === 'f' || e.key === 'F' || e.code === 'KeyF') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                toggleFullscreen();
+                return;
+            }
+            if (e.key === 'Escape') {
+                const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+                if (isFull) {
+                    toggleFullscreen();
+                }
+                return;
+            }
+
+            if (currentProjectorMode === 'presentation') {
+                if (e.code === 'ArrowRight' || e.code === 'Space') {
+                    fetch(resolveUrl('/api/slideshow/presentation/step'), {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ delta: 1 })
+                    }).then(() => pollSlideshowState());
+                } else if (e.code === 'ArrowLeft') {
+                    fetch(resolveUrl('/api/slideshow/presentation/step'), {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ delta: -1 })
+                    }).then(() => pollSlideshowState());
+                }
+                return;
+            }
+
+            if (e.code === 'Space') {
+                togglePause();
+            } else if (e.code === 'ArrowRight') {
+                nextSlide();
+            } else if (e.code === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Initialize
+        loadSlideDeck();
+        setInterval(pollSlideshowState, 500);
+        pollSlideshowState();
+    </script>
+</body>
+</html>

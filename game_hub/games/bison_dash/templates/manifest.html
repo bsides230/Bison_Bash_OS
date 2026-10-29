@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bison Bash - Player Tracker & Manifest</title>
+    <script src="/static/js/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d0f12;
+            --panel-bg: #161b22;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.35);
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --success: #2ed573;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --border: #30363d;
+            --gold: #ffd700;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 25px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-card .val {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin-top: 5px;
+        }
+
+        .stat-card .lbl {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            background: #090d13;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .btn-action {
+            background: #21262d;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-action:hover {
+            background: #30363d;
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: black;
+            border: none;
+        }
+
+        .btn-accent:hover {
+            background: #00e6b8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #090d13;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #1c222b;
+        }
+
+        .badge-balance {
+            display: inline-block;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .btn-mini {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            background: #21262d;
+            color: white;
+            cursor: pointer;
+            margin-right: 4px;
+        }
+
+        .btn-mini:hover { background: var(--accent); color: black; }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 440px;
+            width: 90%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>Player Tracker & Manifest</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+            Real-time Attendee Credit & Wagering Ledger &bull; October 23rd Event
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-action btn-accent" onclick="openPublicQrModal()">📲 Event Signup QR Code</button>
+        <button class="btn-action" onclick="resetAll()">🔄 Reset All Balances</button>
+        <button class="btn-action" onclick="window.location.href='/admin'">⬅️ Bison Dash Admin</button>
+    </div>
+</div>
+
+<div class="stats-bar">
+    <div class="stat-card">
+        <div class="lbl">Registered Players</div>
+        <div class="val" id="stat-total-players">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="lbl">Circulating Credits</div>
+        <div class="val" style="color: var(--gold);" id="stat-total-credits">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="lbl">Total Bets Placed</div>
+        <div class="val" id="stat-total-wagers">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="lbl">Total Payouts Credited</div>
+        <div class="val" style="color: var(--success);" id="stat-total-winnings">0</div>
+    </div>
+</div>
+
+<div class="controls-bar">
+    <input type="text" id="search-input" class="search-box" placeholder="Search by name, email, or player ID..." oninput="filterPlayers()">
+    <button class="btn-action" onclick="loadManifest()">🔄 Refresh</button>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Player Name</th>
+            <th>PIN</th>
+            <th>Email</th>
+            <th>Player ID</th>
+            <th>Current Balance</th>
+            <th>Total Bets</th>
+            <th>Total Won</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="player-table-body">
+        <!-- Populated via JS -->
+    </tbody>
+</table>
+
+<!-- QR Code Modal -->
+<div id="qr-modal" class="modal">
+    <div class="modal-content">
+        <h2 id="modal-title" style="margin-bottom: 6px; color: var(--accent);">Player Pass QR</h2>
+        <p id="modal-subtitle" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Attendee ID</p>
+        <div id="modal-qr-container" style="background: white; padding: 15px; border-radius: 10px; display: inline-block; margin-bottom: 20px;"></div>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button class="btn-action" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Public Event Signup QR Modal -->
+<div id="public-qr-modal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <h2 style="color: var(--accent); margin-bottom: 6px;">Event Signup QR Code</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+            Attendees scan this QR code with their phones to register and get their Player Pass:
+        </p>
+        <div id="public-qr-container" style="background: white; padding: 20px; border-radius: 12px; display: inline-block; margin-bottom: 15px;"></div>
+        <div id="public-url-text" style="font-family: monospace; font-size: 0.9rem; color: var(--accent); margin-bottom: 20px; word-break: break-all;"></div>
+        <button class="btn-action btn-accent" onclick="window.print()">🖨️ Print This Page / QR</button>
+        <button class="btn-action" onclick="closePublicQrModal()">Close</button>
+    </div>
+</div>
+
+<script>
+    let players = [];
+
+    async function loadManifest() {
+        try {
+            const res = await fetch('/api/players/manifest');
+            const data = await res.json();
+            if (data.status === 'success') {
+                players = data.players || [];
+                renderTable(players);
+                updateStats(players);
+            }
+        } catch(e) {
+            console.error("Failed to load manifest", e);
+        }
+    }
+
+    function updateStats(list) {
+        document.getElementById('stat-total-players').innerText = list.length;
+        const totalCredits = list.reduce((sum, p) => sum + (p.balance || 0), 0);
+        document.getElementById('stat-total-credits').innerText = totalCredits;
+        const totalWagers = list.reduce((sum, p) => sum + (p.total_wagers || 0), 0);
+        document.getElementById('stat-total-wagers').innerText = totalWagers;
+        const totalWinnings = list.reduce((sum, p) => sum + (p.total_winnings || 0), 0);
+        document.getElementById('stat-total-winnings').innerText = totalWinnings;
+    }
+
+    function renderTable(list) {
+        const tbody = document.getElementById('player-table-body');
+        tbody.innerHTML = '';
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">No players registered yet.</td></tr>`;
+            return;
+        }
+
+        list.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${p.name || p.id}</strong></td>
+                <td style="font-family: monospace; font-size: 0.95rem; font-weight: 800; color: var(--accent); letter-spacing: 1px;">${p.pin || '—'}</td>
+                <td style="color: var(--text-muted);">${p.email || '—'}</td>
+                <td style="font-family: monospace; font-size: 0.8rem; color: var(--accent);">${p.id}</td>
+                <td><span class="badge-balance">🪙 ${p.balance || 0}</span></td>
+                <td>${p.total_wagers || 0}</td>
+                <td style="color: var(--success); font-weight: 700;">+${p.total_winnings || 0}</td>
+                <td>
+                    <button class="btn-mini" onclick="adjustBalance('${p.id}', 50)">+50</button>
+                    <button class="btn-mini" onclick="adjustBalance('${p.id}', 100)">+100</button>
+                    <button class="btn-mini" onclick="adjustBalance('${p.id}', -50)">-50</button>
+                    <button class="btn-mini" style="border-color: var(--accent);" onclick="showPlayerQr('${p.id}', '${p.name}')">QR Pass</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterPlayers() {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        if (!query) {
+            renderTable(players);
+            return;
+        }
+        const filtered = players.filter(p => 
+            (p.name && p.name.toLowerCase().includes(query)) ||
+            (p.email && p.email.toLowerCase().includes(query)) ||
+            (p.id && p.id.toLowerCase().includes(query)) ||
+            (p.pin && String(p.pin).includes(query))
+        );
+        renderTable(filtered);
+    }
+
+    async function adjustBalance(playerId, delta) {
+        try {
+            const res = await fetch('/api/players/adjust-balance', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ player_id: playerId, delta: delta })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                loadManifest();
+            }
+        } catch(e) {}
+    }
+
+    async function resetAll() {
+        const amt = prompt("Reset all players' credit balances to what amount?", "100");
+        if (amt === null) return;
+        const parsed = parseInt(amt);
+        if (isNaN(parsed) || parsed < 0) return alert("Invalid amount.");
+
+        if (confirm(`Are you sure you want to reset ALL registered players to ${parsed} credits?`)) {
+            await fetch('/api/players/reset-all', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ default_balance: parsed })
+            });
+            loadManifest();
+        }
+    }
+
+    function showPlayerQr(playerId, playerName) {
+        document.getElementById('modal-title').innerText = playerName;
+        document.getElementById('modal-subtitle').innerText = `ID: ${playerId}`;
+        const container = document.getElementById('modal-qr-container');
+        container.innerHTML = '';
+
+        new QRCode(container, {
+            text: playerId,
+            width: 220,
+            height: 220
+        });
+
+        document.getElementById('qr-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('qr-modal').style.display = 'none';
+    }
+
+    function openPublicQrModal() {
+        const signupUrl = `${window.location.protocol}//${window.location.hostname}:8009/`;
+        document.getElementById('public-url-text').innerText = signupUrl;
+        const container = document.getElementById('public-qr-container');
+        container.innerHTML = '';
+
+        new QRCode(container, {
+            text: signupUrl,
+            width: 240,
+            height: 240
+        });
+
+        document.getElementById('public-qr-modal').style.display = 'flex';
+    }
+
+    function closePublicQrModal() {
+        document.getElementById('public-qr-modal').style.display = 'none';
+    }
+
+    window.onload = loadManifest;
+</script>
+
+</body>
+</html>

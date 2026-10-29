@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bison Bash - Player Registration</title>
+    <script src="/static/js/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d0f12;
+            --card-bg: #161b22;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.35);
+            --danger: #ff4757;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --border: #30363d;
+            --gold: #ffd700;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(0, 255, 204, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 50% 90%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            background: #090d13;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            color: white;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.15);
+        }
+
+        .input-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #00ffcc 0%, #00b894 100%);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.3);
+            transition: transform 0.1s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 18px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .alert-danger {
+            background: rgba(255, 71, 87, 0.15);
+            border: 1px solid var(--danger);
+            color: #ff6b81;
+        }
+
+        .alert-success {
+            background: rgba(0, 255, 204, 0.15);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        /* Pass Display */
+        #pass-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .pass-badge {
+            display: inline-block;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .player-name-display {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .player-email-display {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .credits-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #090d13;
+            border: 1px solid var(--border);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        .qr-card {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.15);
+        }
+
+        #qr-canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #qr-canvas-container img, #qr-canvas-container canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .instruction-box {
+            background: rgba(0, 255, 204, 0.08);
+            border: 1px dashed var(--accent);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background: #21262d;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #30363d;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Bison Dash</h1>
+        <p>Official Event Player Registration</p>
+    </div>
+
+    <!-- Registration Form -->
+    <div id="form-screen" class="card">
+        <div id="error-alert" class="alert alert-danger"></div>
+        <div id="success-alert" class="alert alert-success"></div>
+
+        <form id="signup-form" onsubmit="handleFormSubmit(event)">
+            <!-- STEP 1: Single-Input High-Visibility Entrance Node -->
+            <div class="form-group" id="email-group">
+                <label for="player-email">Email Address</label>
+                <div style="position: relative;">
+                    <input type="email" id="player-email" placeholder="you@example.com" required autocomplete="email">
+                    <button type="button" id="btn-change-email" onclick="resetToEmailStep()" style="display:none; position:absolute; right:10px; top:50%; transform:translateY(-50%); background:#21262d; border:1px solid var(--border); color:var(--accent); font-size:0.75rem; padding:4px 8px; border-radius:6px; cursor:pointer;">Change</button>
+                </div>
+                <div class="input-hint">
+                    <span id="email-hint">Enter your email to retrieve your pass or create a new one</span>
+                </div>
+            </div>
+
+            <!-- STEP 2: Seamless Inline Expansion for New Registrations (Doc 01A) -->
+            <div id="new-player-expansion" style="display: none; animation: fadeIn 0.3s ease;">
+                <div class="form-group">
+                    <label for="player-name">Player Name (Screen Name)</label>
+                    <input type="text" id="player-name" placeholder="e.g. Thunder Rider" maxlength="24" autocomplete="off">
+                    <div class="input-hint">
+                        <span id="char-count">0 / 24</span>
+                        <span>No profanity allowed</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn-primary">
+                Continue ➔
+            </button>
+        </form>
+    </div>
+
+    <!-- Player Pass / QR Display -->
+    <div id="pass-screen" class="card">
+        <div class="pass-badge">Official Event Pass</div>
+        <div id="pass-player-name" class="player-name-display">Player Name</div>
+        <div id="pass-player-email" class="player-email-display">email@example.com</div>
+
+        <div class="credits-pill">
+            <span>🪙</span>
+            <span id="pass-credits">0 Credits</span>
+        </div>
+
+        <div style="background: rgba(0, 255, 204, 0.08); border: 2px solid var(--accent); border-radius: 12px; padding: 12px; margin: 15px 0; text-align: center;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Station Check-In PIN</div>
+            <div id="pass-player-pin" style="font-size: 2.2rem; font-weight: 900; font-family: monospace; color: var(--accent); letter-spacing: 6px; margin-top: 4px;">----</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Type or tap this 4-digit code at any arcade game station</div>
+        </div>
+
+        <div class="qr-card">
+            <div id="qr-canvas-container"></div>
+        </div>
+
+        <div class="instruction-box">
+            📲 <strong>How to Play:</strong> Use your 4-Digit PIN or QR code at any game station (Bison Dash Kiosk, N64, Bug Hunt, AI Gauntlet)!
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="downloadPassImage()">
+                💾 Save Pass to Photos
+            </button>
+            <button class="btn-secondary" onclick="refreshBalance()">
+                🔄 Refresh Balance
+            </button>
+            <button class="btn-secondary" style="border-color: #444;" onclick="switchPlayer()">
+                Switch / Register Another Player
+            </button>
+        </div>
+    </div>
+
+    <div class="footer">
+        Bison Bash 2026 &bull; October 23rd Event
+    </div>
+</div>
+
+<script>
+    let activePlayer = null;
+    let qrInstance = null;
+
+    const nameInput = document.getElementById('player-name');
+    const charCount = document.getElementById('char-count');
+
+    nameInput.addEventListener('input', () => {
+        charCount.innerText = `${nameInput.value.length} / 24`;
+    });
+
+    // Check localStorage for saved session on load
+    window.addEventListener('load', () => {
+        const savedPlayer = localStorage.getItem('bison_bash_player');
+        if (savedPlayer) {
+            try {
+                activePlayer = JSON.parse(savedPlayer);
+                displayPass(activePlayer);
+                refreshBalance();
+            } catch(e) {}
+        }
+    });
+
+    function showError(msg) {
+        const alert = document.getElementById('error-alert');
+        alert.innerText = msg;
+        alert.style.display = 'block';
+        document.getElementById('success-alert').style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+        const alert = document.getElementById('success-alert');
+        alert.innerText = msg;
+        alert.style.display = 'block';
+        document.getElementById('error-alert').style.display = 'none';
+    }
+
+    let isNewPlayerFlow = false;
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const emailInput = document.getElementById('player-email');
+        const email = emailInput.value.trim().toLowerCase();
+        const submitBtn = document.getElementById('submit-btn');
+
+        if (!email || !email.includes('@')) {
+            return showError("Please enter a valid email address.");
+        }
+
+        if (!isNewPlayerFlow) {
+            // STEP 1: Silent cross-check against players database (Doc 01A)
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Checking Registry...";
+            try {
+                const res = await fetch(`/api/player/${encodeURIComponent(email)}`);
+                const data = await res.json();
+
+                if (res.ok && data.status === 'success' && data.player) {
+                    // Scenario A: Existing User -> Seamless Pass Recovery!
+                    activePlayer = data.player;
+                    localStorage.setItem('bison_bash_player', JSON.stringify(activePlayer));
+                    showSuccess(`Welcome back, ${activePlayer.name}! Pass recovered.`);
+                    setTimeout(() => {
+                        displayPass(activePlayer);
+                    }, 400);
+                    return;
+                }
+
+                // Scenario B: User Absent from Database -> Seamless Inline Expansion!
+                isNewPlayerFlow = true;
+                emailInput.readOnly = true;
+                document.getElementById('btn-change-email').style.display = 'block';
+                document.getElementById('email-hint').innerText = "New player! Choose your screen name below to generate your PIN.";
+                document.getElementById('new-player-expansion').style.display = 'block';
+                document.getElementById('player-name').required = true;
+                document.getElementById('player-name').focus();
+
+                submitBtn.disabled = false;
+                submitBtn.innerText = "⚡ Claim Pass";
+
+            } catch(err) {
+                showError("Network error. Please check your connection and try again.");
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Continue ➔";
+            }
+        } else {
+            // STEP 2: Register New Credential
+            const name = document.getElementById('player-name').value.trim();
+
+            if (!name) {
+                return showError("Please enter your display name.");
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Generating Pass...";
+
+            try {
+                const res = await fetch('/api/player/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        email: email,
+                        name: name
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok || data.status !== 'success') {
+                    showError(data.message || "Registration failed. Please check your inputs.");
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "⚡ Claim Pass";
+                    return;
+                }
+
+                activePlayer = data.player;
+                localStorage.setItem('bison_bash_player', JSON.stringify(activePlayer));
+                displayPass(activePlayer);
+            } catch(err) {
+                showError("Network error. Please check your connection and try again.");
+                submitBtn.disabled = false;
+                submitBtn.innerText = "⚡ Claim Pass";
+            }
+        }
+    }
+
+    function resetToEmailStep() {
+        isNewPlayerFlow = false;
+        const emailInput = document.getElementById('player-email');
+        emailInput.readOnly = false;
+        document.getElementById('btn-change-email').style.display = 'none';
+        document.getElementById('new-player-expansion').style.display = 'none';
+        document.getElementById('player-name').required = false;
+        document.getElementById('email-hint').innerText = "Enter your email to retrieve your pass or create a new one";
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Continue ➔";
+        emailInput.focus();
+    }
+
+    function displayPass(player) {
+        document.getElementById('form-screen').style.display = 'none';
+        document.getElementById('pass-screen').style.display = 'block';
+
+        document.getElementById('pass-player-name').innerText = player.name;
+        document.getElementById('pass-player-email').innerText = player.email;
+        document.getElementById('pass-credits').innerText = `${player.balance} Credits`;
+        const pinEl = document.getElementById('pass-player-pin');
+        if (pinEl && player.pin) {
+            pinEl.innerText = player.pin;
+        }
+
+        // Render QR Code
+        const qrContainer = document.getElementById('qr-canvas-container');
+        qrContainer.innerHTML = '';
+
+        // Payload encodes standard player identifier
+        const qrPayload = player.id;
+
+        qrInstance = new QRCode(qrContainer, {
+            text: qrPayload,
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+
+    async function refreshBalance() {
+        if (!activePlayer || !activePlayer.id) return;
+        try {
+            const res = await fetch(`/api/player/${activePlayer.id}`);
+            const data = await res.json();
+            if (data.status === 'success' && data.player) {
+                activePlayer.balance = data.player.balance;
+                document.getElementById('pass-credits').innerText = `${activePlayer.balance} Credits`;
+                localStorage.setItem('bison_bash_player', JSON.stringify(activePlayer));
+            }
+        } catch(e) {}
+    }
+
+    function switchPlayer() {
+        if (confirm("Sign out and register or switch to another player?")) {
+            localStorage.removeItem('bison_bash_player');
+            activePlayer = null;
+            document.getElementById('pass-screen').style.display = 'none';
+            document.getElementById('form-screen').style.display = 'block';
+            document.getElementById('player-email').value = '';
+            document.getElementById('player-name').value = '';
+            document.getElementById('error-alert').style.display = 'none';
+            document.getElementById('success-alert').style.display = 'none';
+            resetToEmailStep();
+        }
+    }
+
+    function downloadPassImage() {
+        if (!activePlayer) return;
+
+        // Composite a branded pass image using HTML5 Canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = 600;
+        canvas.height = 800;
+        const ctx = canvas.getContext('2d');
+
+        // Background
+        ctx.fillStyle = '#0d0f12';
+        ctx.fillRect(0, 0, 600, 800);
+
+        // Gradient border
+        const grad = ctx.createLinearGradient(0, 0, 600, 800);
+        grad.addColorStop(0, '#00ffcc');
+        grad.addColorStop(1, '#ffd700');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 10;
+        ctx.strokeRect(10, 10, 580, 780);
+
+        // Header Title
+        ctx.fillStyle = '#00ffcc';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('BISON DASH 2026', 300, 70);
+
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('Official Player Pass', 300, 105);
+
+        // Player Name
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 40px sans-serif';
+        ctx.fillText(activePlayer.name, 300, 170);
+
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '18px sans-serif';
+        ctx.fillText(activePlayer.email, 300, 205);
+
+        // Credits Pill
+        ctx.fillStyle = '#161b22';
+        ctx.fillRect(150, 230, 300, 50);
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(150, 230, 300, 50);
+
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText(`🪙 ${activePlayer.balance} CREDITS`, 300, 265);
+
+        // Draw QR Code
+        const qrImg = document.querySelector('#qr-canvas-container img') || document.querySelector('#qr-canvas-container canvas');
+        if (qrImg) {
+            // White card behind QR
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(125, 310, 350, 350);
+            ctx.drawImage(qrImg, 150, 335, 300, 300);
+        }
+
+        // Instructions
+        ctx.fillStyle = '#00ffcc';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText('Scan at Betting Tablet to Place Wagers', 300, 700);
+
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('October 23, 2026', 300, 740);
+
+        // Trigger Download
+        const a = document.createElement('a');
+        a.download = `Bison_Pass_${activePlayer.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+    }
+</script>
+
+</body>
+</html>

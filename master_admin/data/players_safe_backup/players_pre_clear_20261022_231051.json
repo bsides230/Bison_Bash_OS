@@ -1,0 +1,64 @@
+{
+  "players": {
+    "p_bfb5613c": {
+      "id": "p_bfb5613c",
+      "name": "Player_0",
+      "email": "user0@test.com",
+      "pin": "2896",
+      "balance": 100,
+      "created_at": 1792728651,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728651.4554694
+    },
+    "p_fdabc750": {
+      "id": "p_fdabc750",
+      "name": "Player_1",
+      "email": "user1@test.com",
+      "pin": "2626",
+      "balance": 100,
+      "created_at": 1792728651,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728651.4745286
+    },
+    "p_bed3e563": {
+      "id": "p_bed3e563",
+      "name": "Player_2",
+      "email": "user2@test.com",
+      "pin": "4841",
+      "balance": 100,
+      "created_at": 1792728651,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728651.4937823
+    },
+    "p_21c00e5a": {
+      "id": "p_21c00e5a",
+      "name": "Player_3",
+      "email": "user3@test.com",
+      "pin": "3804",
+      "balance": 100,
+      "created_at": 1792728651,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728651.5092804
+    },
+    "p_9d9b9ec0": {
+      "id": "p_9d9b9ec0",
+      "name": "Player_4",
+      "email": "user4@test.com",
+      "pin": "7551",
+      "balance": 100,
+      "created_at": 1792728651,
+      "total_wagers": 0,
+      "total_winnings": 0,
+      "newsletter_opt_in": false,
+      "updated_at": 1792728651.5258105
+    }
+  }
+}

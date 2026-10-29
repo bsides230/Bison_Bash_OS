@@ -2,278 +2,666 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bison Dash Projector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bison Dash - 1080p Arena Projector Display</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #fff;
+        }
+
+        /* Responsive 16:9 Canvas Viewport */
+        #canvas-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 56.25vw; /* 16:9 aspect */
+            max-height: 100vh;
+            max-width: 177.78vh; /* 16:9 aspect */
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            background: #080b10;
+        }
+
         canvas {
+            width: 100%;
+            height: 100%;
             display: block;
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: #111;
-            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
         }
 
-        #overlay {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 6rem;
-            text-align: center;
-            font-weight: bold;
-            text-shadow: 2px 2px 10px #000;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        #leaderboard {
+        /* Sleek Broadcast Live Standings Bar (Top Center, Auto-Fitting, No Screen Edge Clipping) */
+        #live-standings-bar {
             position: absolute;
             top: 20px;
-            right: 20px;
-            width: 350px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #555;
-            border-radius: 10px;
-            color: white;
-            padding: 15px;
+            left: 50%;
+            transform: translateX(-50%);
             display: none;
-            z-index: 20;
+            align-items: center;
+            gap: 10px;
+            max-width: 90%;
+            box-sizing: border-box;
+            background: rgba(8, 12, 20, 0.96);
+            border: 2px solid rgba(0, 255, 204, 0.45);
+            border-radius: 32px;
+            padding: 6px 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 255, 204, 0.18);
+            backdrop-filter: blur(12px);
+            z-index: 30;
+            pointer-events: none;
         }
 
-        .leaderboard-title {
-            text-align: center;
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #555;
-            padding-bottom: 10px;
-        }
-
-        .leaderboard-item {
+        .standings-title {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 1.5rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 10px solid;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #ffd700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding-right: 12px;
+            border-right: 2px solid rgba(255, 255, 255, 0.18);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
+        .standings-title .live-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff3b30;
+            box-shadow: 0 0 8px #ff3b30;
+            animation: livePulse 1.2s infinite ease-in-out;
+            flex-shrink: 0;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.8); }
+        }
+
+        #standings-chips {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+        }
+
+        .standings-chip {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: #121927;
+            border-radius: 22px;
+            padding: 4px 10px;
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+        .standings-chip.leader {
+            box-shadow: 0 0 16px rgba(255, 215, 0, 0.45);
+            border-color: #ffd700 !important;
+            background: #182236;
+        }
+
+        .standings-chip .chip-rank {
+            font-size: 0.85rem;
+            font-weight: 900;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #202b3d;
+            color: #ccd6e0;
+            flex-shrink: 0;
+        }
+
+        .standings-chip .chip-rank.rank-1 {
+            background: #ffd700;
+            color: #000000;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+        }
+
+        .standings-chip .chip-rank.rank-2 {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .standings-chip .chip-rank.rank-3 {
+            background: #d97706;
+            color: #ffffff;
+        }
+
+        .standings-chip .chip-name {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+        }
+
+        .standings-chip .chip-slot {
+            font-size: 0.78rem;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+
+        /* Closed Intros Showcase Spotlight Card (Center Infield) */
+        #intro-spotlight {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 720px;
+            background: rgba(10, 14, 20, 0.95);
+            border: 3px solid #00ffcc;
+            border-radius: 20px;
+            padding: 24px 32px;
+            display: none;
+            z-index: 40;
+            box-shadow: 0 0 60px rgba(0, 255, 204, 0.4), inset 0 0 30px rgba(0, 255, 204, 0.1);
+            backdrop-filter: blur(12px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .spotlight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #273347;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .spotlight-slot-tag {
+            background: #ffd700;
+            color: black;
+            font-size: 1.1rem;
+            font-weight: 900;
+            padding: 6px 16px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+        }
+
+        .spotlight-grid {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .spotlight-avatar-box {
+            width: 220px;
+            height: 220px;
+            background: #06090e;
+            border: 2px solid #273347;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spotlight-details h2 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+        }
+
+        .spotlight-jockey {
+            margin-top: 6px;
+            color: #00ffcc;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .spotlight-stats-row {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stat-bar-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #8b949e;
+        }
+
+        .stat-bar-wrapper span { width: 70px; }
+
+        .stat-progress-bg {
+            flex: 1;
+            height: 10px;
+            background: #17202e;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .stat-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffcc, #ffd700);
+            border-radius: 5px;
+        }
+
+        .spotlight-backers {
+            margin-top: 18px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 8px 14px;
+        }
+
+        /* Winner Celebration Ceremony */
         #winner-screen {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 880px;
+            background: rgba(8, 12, 20, 0.97);
+            border: 4px solid #ffd700;
+            border-radius: 28px;
+            padding: 30px 40px;
+            text-align: center;
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            z-index: 100;
-            color: white;
+            z-index: 50;
+            box-shadow: 0 0 90px rgba(255, 215, 0, 0.45), 0 0 40px rgba(0, 0, 0, 0.9), inset 0 0 35px rgba(255, 215, 0, 0.12);
+            backdrop-filter: blur(16px);
+            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .winner-trophy {
+            font-size: 4rem;
+            margin-bottom: 2px;
+            animation: bounce 1.2s infinite alternate;
         }
 
         #winner-title {
-            font-size: 8rem;
-            font-weight: bold;
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #ffd700;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            letter-spacing: 5px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px #fff;
-            animation: pulse 1s infinite alternate;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
         }
 
-        @keyframes pulse {
-            from { transform: scale(1); text-shadow: 0 0 20px #fff; }
-            to { transform: scale(1.05); text-shadow: 0 0 40px #ffea00; color: #ffea00; }
-        }
-
-        #winner-image-container {
-            width: 500px;
-            height: 500px;
-            border: 15px solid #fff;
-            border-radius: 20px;
-            background: #222;
+        #winner-image-box {
+            margin: 14px 0 8px 0;
+            width: 540px;
+            height: 270px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
-            box-shadow: 0 0 50px rgba(255,255,255,0.5);
-            overflow: hidden;
-            position: relative;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.16) 0%, rgba(15, 22, 34, 0.5) 65%, transparent 100%);
+            border-radius: 22px;
         }
 
-        #winner-sprite {
-            width: 100%;
-            height: 100%;
+        #winner-bison-img {
+            max-width: 520px;
+            max-height: 260px;
             object-fit: contain;
-            display: none;
+            filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.9));
         }
 
-        #winner-fallback {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #555;
-            text-align: center;
+        #winner-card {
+            margin-top: 8px;
+            background: #111824;
+            border: 2px solid #233146;
+            border-radius: 20px;
+            padding: 18px 36px;
+            width: 90%;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
         }
 
-        #winner-slot-indicator {
-            font-size: 6rem;
-            font-weight: bold;
+        #winner-name {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 1px;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+        }
+
+        #winner-slot-badge {
+            margin-top: 10px;
+            display: inline-block;
+            background: #ffd700;
+            color: #000;
+            font-size: 1.2rem;
+            font-weight: 900;
+            padding: 6px 24px;
+            border-radius: 30px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+        }
+
+        #winner-jockey {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #94a3b8;
+        }
+
+        #winner-payout-summary {
+            margin-top: 12px;
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -46%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        @keyframes zoomIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-12px); }
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="1920" height="1080"></canvas>
 
-    <div id="overlay">WAITING FOR NEXT RACE...</div>
+    <div id="canvas-wrapper">
+        <canvas id="gameCanvas" width="1920" height="1080"></canvas>
 
-    <div id="leaderboard">
-        <div class="leaderboard-title">LEADERBOARD</div>
-        <div id="leaderboard-items"></div>
-    </div>
+        <!-- Top Sleek Broadcast Standings Bar -->
+        <div id="live-standings-bar">
+            <div class="standings-title"><span class="live-indicator"></span>LIVE STANDINGS</div>
+            <div id="standings-chips"></div>
+        </div>
 
-    <div id="winner-screen">
-        <div id="winner-title">WINNER!</div>
-        <div id="winner-image-container">
-            <img id="winner-sprite" src="" alt="Winner">
-            <div id="winner-fallback">
-                SLOT <br><span id="winner-slot-indicator"></span>
+        <!-- Infield Spotlight Card (During Closed_Intros 60s) -->
+        <div id="intro-spotlight">
+            <div class="spotlight-header">
+                <span class="spotlight-slot-tag" id="spotlight-slot-tag">SLOT 1</span>
+                <span style="font-weight: 800; color: #8b949e; font-size: 0.9rem;" id="spotlight-timer">INTRO CAROUSEL</span>
+            </div>
+            <div class="spotlight-grid">
+                <div class="spotlight-avatar-box" id="spotlight-avatar-container">
+                    <canvas id="spotlightCanvas" width="200" height="200"></canvas>
+                </div>
+                <div class="spotlight-details">
+                    <h2 id="spotlight-name">Thunder Stampede</h2>
+                    <div class="spotlight-jockey" id="spotlight-jockey">Jockey: Rider</div>
+                    <div class="spotlight-stats-row">
+                        <div class="stat-bar-wrapper">
+                            <span>Speed:</span>
+                            <div class="stat-progress-bg"><div class="stat-progress-fill" id="spotlight-bar-speed" style="width: 75%;"></div></div>
+                        </div>
+                        <div class="stat-bar-wrapper">
+                            <span>Torque:</span>
+                            <div class="stat-progress-bg"><div class="stat-progress-fill" id="spotlight-bar-torque" style="width: 60%;"></div></div>
+                        </div>
+                        <div class="stat-bar-wrapper">
+                            <span>Stamina:</span>
+                            <div class="stat-progress-bg"><div class="stat-progress-fill" id="spotlight-bar-stamina" style="width: 80%;"></div></div>
+                        </div>
+                    </div>
+                    <div class="spotlight-backers" id="spotlight-backers">
+                        🪙 Backers: 0 bets placed on this slot
+                    </div>
+                </div>
             </div>
         </div>
-        <div id="winner-name" style="font-size: 5rem; font-weight: bold;"></div>
+
+        <!-- Winner Celebration Ceremony -->
+        <div id="winner-screen">
+            <div class="winner-trophy">🏆</div>
+            <div id="winner-title">RACE WINNER!</div>
+            <div id="winner-image-box">
+                <img id="winner-bison-img" src="" alt="Winner Bison" />
+            </div>
+            <div id="winner-card">
+                <div id="winner-name">Thunder Stampede</div>
+                <div id="winner-slot-badge">SLOT 1 • 2.0x PAYOUT</div>
+                <div id="winner-jockey">Jockey: Jax</div>
+                <div id="winner-payout-summary">
+                    Automated payouts credited to all winning wallets!
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // =========================================================================
+        // TRACK GEOMETRY & VISUAL CONFIGURATION
+        // Scaled to fit 1920x1080 screen with 105px side margins and smooth circular turns
+        // =========================================================================
+        const CX1 = 1440;       // East Turn Center (1440 + 375 = 1815px -> 105px right margin)
+        const CX2 = 480;        // West Turn Center (480 - 375 = 105px -> 105px left margin)
+        const CY = 580;         // Track vertical center
+        const R_BASE = 260;     // Centerline track radius
+        const LANE_WIDTH = 35;  // 35px per lane across all 6 lanes
+        const START_X = 960;    // Checkered Start/Finish line X
+
+        const TRACK_CONFIG = {
+            outfieldColor: '#0a0d13',
+            surfaceBaseColor: '#281f18',
+            surfaceEdgeColor: '#3d3024',
+            infieldGrassColor: '#122316',
+            innerWallColor: '#1a222d',
+            outerBarrierColor: '#303947',
+            laneLineColor: 'rgba(255, 255, 255, 0.35)',
+            enableParticleDust: true,
+            enableDynamicHeading: true,
+            enableInfieldDecor: true
+        };
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const overlay = document.getElementById('overlay');
-        const leaderboard = document.getElementById('leaderboard');
-        const leaderboardItems = document.getElementById('leaderboard-items');
 
-        const winnerScreen = document.getElementById('winner-screen');
-        const winnerNameDisplay = document.getElementById('winner-name');
-        const winnerImageContainer = document.getElementById('winner-image-container');
-        const winnerSprite = document.getElementById('winner-sprite');
-        const winnerFallbackText = document.getElementById('winner-fallback');
-        const winnerSlot = document.getElementById('winner-slot-indicator');
+        function getLaneRadius(slot) {
+            return R_BASE + (slot - 3.5) * LANE_WIDTH; // 172.5, 207.5, 242.5, 277.5, 312.5, 347.5
+        }
 
-        // Oval Track Boundaries (Counter-Clockwise)
-        const waypoints = [
-            {x: 960, y: 900},   // Start/Bottom Straight
-            {x: 1520, y: 900},  // Turn 1 Start
-            {x: 1720, y: 700},  // Turn 1 Apex
-            {x: 1720, y: 500},  // Turn 2 Apex
-            {x: 1520, y: 300},  // Back Straight Start
-            {x: 400, y: 300},   // Turn 3 Start
-            {x: 200, y: 500},   // Turn 3 Apex
-            {x: 200, y: 700},   // Turn 4 Apex
-            {x: 400, y: 900},   // Home Straight Start
-            {x: 960, y: 900}    // Finish
-        ];
+        function getLanePath(slot) {
+            const r = getLaneRadius(slot);
+            return [{ x: START_X, y: CY + r, angle: 0 }];
+        }
 
         let state = "Betting_Open";
         let elapsed = 0;
         let lineup = [];
         let telemetry = {};
         let raceDuration = 90.0;
+        let activeWagersList = [];
+        let particles = [];
 
-        function getNormal(p1, p2) {
-            let dx = p2.x - p1.x;
-            let dy = p2.y - p1.y;
-            let dist = Math.hypot(dx, dy);
-            if (dist === 0) return {nx: 0, ny: 0};
-            return {nx: dy/dist, ny: -dx/dist};
-        }
-
-        function getLanePath(laneIndex) {
-            // Offset logic identically matching simulator.py
-            const offset = (laneIndex - 3.5) * 40;
-            const lanePath = [];
-
-            for(let i=0; i<waypoints.length; i++) {
-                let p_prev = i > 0 ? waypoints[i-1] : waypoints[waypoints.length-2];
-                let p_curr = waypoints[i];
-                let p_next = i < waypoints.length - 1 ? waypoints[i+1] : waypoints[1];
-
-                let n1 = getNormal(p_prev, p_curr);
-                let n2 = getNormal(p_curr, p_next);
-
-                let nx = n1.nx + n2.nx;
-                let ny = n1.ny + n2.ny;
-
-                let n_dist = Math.hypot(nx, ny);
-                if (n_dist !== 0) {
-                    nx /= n_dist;
-                    ny /= n_dist;
-                } else {
-                    nx = n1.nx;
-                    ny = n1.ny;
-                }
-
-                lanePath.push({
-                    x: p_curr.x + nx * offset,
-                    y: p_curr.y + ny * offset
-                });
-            }
-            if (waypoints[0].x === waypoints[waypoints.length-1].x && waypoints[0].y === waypoints[waypoints.length-1].y) {
-                lanePath[lanePath.length-1] = {x: lanePath[0].x, y: lanePath[0].y};
-            }
-            return lanePath;
-        }
+        // =========================================================================
+        // TRACK RENDERING PIPELINE (Smooth Circular Sides, Sized to 1080p Screen)
+        // =========================================================================
 
         function drawTrack() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw field
-            ctx.beginPath();
-            ctx.moveTo(waypoints[0].x, waypoints[0].y);
-            for(let i=1; i<waypoints.length; i++) {
-                ctx.lineTo(waypoints[i].x, waypoints[i].y);
-            }
-            ctx.fillStyle = '#2d5a27'; // Dark grass green
-            ctx.fill();
+            // Layer 1: Outer Terrain & Cyber Grid
+            drawStadiumTerrain();
 
-            // Draw main track background
-            ctx.beginPath();
-            ctx.moveTo(waypoints[0].x, waypoints[0].y);
-            for(let i=1; i<waypoints.length; i++) {
-                ctx.lineTo(waypoints[i].x, waypoints[i].y);
-            }
-            ctx.strokeStyle = '#6a4d3a';
-            ctx.lineWidth = 320; // Expanded for 6 full 40px lanes + padding
-            ctx.lineJoin = 'round';
-            ctx.stroke();
+            // Layer 2: Main Track Roadbed Surface (Semicircular Ends)
+            drawRoadbedSurface();
 
-            // Draw 6 parallel lane lines
-            for (let lane = 1; lane <= 6; lane++) {
-                const lanePath = getLanePath(lane);
+            // Layer 3: Infield Grass & Stadium Oval Center Crest
+            if (TRACK_CONFIG.enableInfieldDecor) {
+                drawInfieldPaddock();
+            }
+
+            // Layer 4: 6 Concentric Lanes & Checkered Start/Finish Line
+            drawLanesAndFinish();
+        }
+
+        function drawStadiumTerrain() {
+            ctx.fillStyle = TRACK_CONFIG.outfieldColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Subtle cyber grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 80) {
                 ctx.beginPath();
-                ctx.moveTo(lanePath[0].x, lanePath[0].y);
-                for(let i=1; i<lanePath.length; i++) {
-                    ctx.lineTo(lanePath[i].x, lanePath[i].y);
-                }
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([15, 15]);
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
                 ctx.stroke();
             }
-            ctx.setLineDash([]);
+            for (let y = 0; y < canvas.height; y += 80) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
 
-            // Draw Start/Finish line covering all lanes
-            ctx.strokeStyle = '#ff0';
-            ctx.lineWidth = 10;
+        function drawRoadbedSurface() {
+            const outerR = 375;
+
+            // Outer roadbed body (Smooth semicircles on East and West)
             ctx.beginPath();
-            ctx.moveTo(960, 725);
-            ctx.lineTo(960, 1075);
+            ctx.arc(CX1, CY, outerR, Math.PI / 2, -Math.PI / 2, true);
+            ctx.lineTo(CX2, CY - outerR);
+            ctx.arc(CX2, CY, outerR, -Math.PI / 2, Math.PI / 2, true);
+            ctx.closePath();
+
+            ctx.fillStyle = TRACK_CONFIG.surfaceBaseColor;
+            ctx.fill();
+
+            // Outer safety barrier outline
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = TRACK_CONFIG.outerBarrierColor;
             ctx.stroke();
         }
 
+        function drawInfieldPaddock() {
+            const innerR = 145;
+
+            // Infield Grass Fill (Smooth semicircles bounding infield)
+            ctx.beginPath();
+            ctx.arc(CX1, CY, innerR, Math.PI / 2, -Math.PI / 2, true);
+            ctx.lineTo(CX2, CY - innerR);
+            ctx.arc(CX2, CY, innerR, -Math.PI / 2, Math.PI / 2, true);
+            ctx.closePath();
+
+            ctx.fillStyle = TRACK_CONFIG.infieldGrassColor;
+            ctx.fill();
+
+            // Inner Wall Stroke
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = TRACK_CONFIG.innerWallColor;
+            ctx.stroke();
+
+            // Stylized Center Crest: OVAL matching the track stadium curve
+            const crestCX1 = 1160, crestCX2 = 760, crestR = 85;
+            ctx.beginPath();
+            ctx.arc(crestCX1, CY, crestR, Math.PI / 2, -Math.PI / 2, true);
+            ctx.lineTo(crestCX2, CY - crestR);
+            ctx.arc(crestCX2, CY, crestR, -Math.PI / 2, Math.PI / 2, true);
+            ctx.closePath();
+
+            ctx.fillStyle = 'rgba(0, 255, 204, 0.04)';
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(0, 255, 204, 0.22)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Center Branding Text (without Oct 23)
+            const cx = 960, cy = CY;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.font = '900 24px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('TECHLAHOMA ARENA', cx, cy - 10);
+            ctx.font = '700 16px sans-serif';
+            ctx.fillStyle = 'rgba(0, 255, 204, 0.5)';
+            ctx.fillText('BISON DASH SPEEDWAY', cx, cy + 18);
+        }
+
+        function drawLanesAndFinish() {
+            // 5 dividing dashed lines separating the 6 lanes (radii: 190, 225, 260, 295, 330)
+            const dividingRadii = [190, 225, 260, 295, 330];
+            ctx.setLineDash([16, 16]);
+            ctx.strokeStyle = TRACK_CONFIG.laneLineColor;
+            ctx.lineWidth = 2;
+
+            dividingRadii.forEach(r => {
+                ctx.beginPath();
+                ctx.arc(CX1, CY, r, Math.PI / 2, -Math.PI / 2, true);
+                ctx.lineTo(CX2, CY - r);
+                ctx.arc(CX2, CY, r, -Math.PI / 2, Math.PI / 2, true);
+                ctx.closePath();
+                ctx.stroke();
+            });
+            ctx.setLineDash([]);
+
+            // Lane numbers stamped at the start
+            for (let slot = 1; slot <= 6; slot++) {
+                const r = getLaneRadius(slot);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+                ctx.font = '900 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(slot, START_X - 35, CY + r);
+            }
+
+            // Draw Checkered Start/Finish Line across lanes 1-6
+            drawCheckerboardFinish();
+        }
+
+        function drawCheckerboardFinish() {
+            const startX = START_X;
+            const topY = CY + 155;    // 735 (Inner shoulder)
+            const bottomY = CY + 365; // 945 (Outer shoulder)
+            const checkSize = 10;
+            const cols = 2;
+            const rows = Math.floor((bottomY - topY) / checkSize);
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    ctx.fillStyle = ((r + c) % 2 === 0) ? '#ffffff' : '#000000';
+                    ctx.fillRect(startX - checkSize + c * checkSize, topY + r * checkSize, checkSize, checkSize);
+                }
+            }
+
+            // Gantry Overhead Markers
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(startX - 14, topY - 8, 28, 7);
+            ctx.fillRect(startX - 14, bottomY + 1, 28, 7);
+        }
+
+        // =========================================================================
+        // RACER AVATAR DRAWING & PARTICLES
+        // =========================================================================
+
         const spriteImages = {};
+        const displayImages = {};
 
         function loadSprite(bison_id) {
             if (!spriteImages[bison_id]) {
@@ -283,29 +671,121 @@
             }
         }
 
-        function drawBison(x, y, color, id, slotIndex) {
-            if (id) loadSprite(id);
-            const img = spriteImages[id];
+        function loadDisplayImage(bison_id) {
+            if (!displayImages[bison_id]) {
+                const img = new Image();
+                img.src = `/static/display/512/${bison_id}.png`;
+                displayImages[bison_id] = img;
+            }
+        }
 
-            // Fixed top-down bounding box dimensions fitting within 40px lane
-            const size = 32;
+        // Eagerly preload all 6 racer assets
+        for (let s = 1; s <= 6; s++) {
+            loadSprite(`bison_${s}`);
+            loadDisplayImage(`bison_${s}`);
+        }
 
-            if(img && img.complete && img.naturalHeight !== 0) {
-                // Render single static clean image directly
-                ctx.drawImage(img, x - size/2, y - size/2, size, size);
+        function drawBison(x, y, color, id, slotIndex, headingAngle = 0) {
+            const bisonKey = id || (`bison_${slotIndex}`);
+            loadSprite(bisonKey);
+            const img = spriteImages[bisonKey];
+
+            ctx.save();
+            ctx.translate(x, y);
+
+            if (TRACK_CONFIG.enableDynamicHeading) {
+                ctx.rotate(headingAngle);
+            }
+
+            const drawSize = 74; // Shrunk pure PNG to fit smoothly inside the 35px lane
+            if (img && img.complete && img.naturalHeight !== 0) {
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
             } else {
-                // Fallback colored rectangle only if image is missing
-                ctx.fillStyle = color;
-                ctx.fillRect(x - size/2, y - size/2, size, size);
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(x - size/2, y - size/2, size, size);
+                drawProceduralMechBison(ctx, color, slotIndex);
+            }
 
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 16px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(slotIndex, x, y);
+            ctx.restore();
+        }
+
+        function drawProceduralMechBison(ctx, color, slotIndex) {
+            // Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(0, 2, 18, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bison Body (Rounded Hull)
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(-16, -11, 32, 22, 7);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Broad Shoulders / Hump
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(3, 0, 10, -Math.PI/2, Math.PI/2);
+            ctx.fill();
+
+            // Horns (Curved out forward)
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(10, -7);
+            ctx.lineTo(18, -12);
+            ctx.moveTo(10, 7);
+            ctx.lineTo(18, 12);
+            ctx.stroke();
+
+            // Visor Light
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(12, -3, 3, 6);
+
+            // Slot Number on Spine
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(slotIndex, -3, 0);
+        }
+
+        // Particle System for Gallop Dust Trails
+        function spawnDust(x, y, heading) {
+            if (!TRACK_CONFIG.enableParticleDust) return;
+            const angle = heading + Math.PI + (Math.random() - 0.5) * 0.5;
+            const speed = Math.random() * 2 + 1;
+            particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.0,
+                decay: Math.random() * 0.05 + 0.04,
+                size: Math.random() * 4 + 2.5
+            });
+        }
+
+        function updateAndDrawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.fillStyle = `rgba(160, 140, 120, ${p.life * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
 
@@ -315,203 +795,275 @@
 
             if(t >= raceDuration) {
                 const last = data[data.length - 1];
-                return {x: last.x, y: last.y};
+                return {x: last.x, y: last.y, angle: last.angle || 0, progress: last.progress !== undefined ? last.progress : 1.0};
             }
             if(t <= 0.0) {
-                return {x: data[0].x, y: data[0].y};
+                return {x: data[0].x, y: data[0].y, angle: data[0].angle || 0, progress: data[0].progress !== undefined ? data[0].progress : 0.0};
             }
 
             for(let i=0; i<data.length-1; i++) {
                 if(t >= data[i].t && t <= data[i+1].t) {
-                    const progress = (t - data[i].t) / (data[i+1].t - data[i].t);
-                    const x = data[i].x + (data[i+1].x - data[i].x) * progress;
-                    const y = data[i].y + (data[i+1].y - data[i].y) * progress;
-                    return {x, y};
+                    const frac = (t - data[i].t) / (data[i+1].t - data[i].t);
+                    const x = data[i].x + (data[i+1].x - data[i].x) * frac;
+                    const y = data[i].y + (data[i+1].y - data[i].y) * frac;
+                    let angle = data[i].angle || 0;
+                    if (data[i+1].angle !== undefined && data[i].angle !== undefined) {
+                        let a1 = data[i].angle;
+                        let a2 = data[i+1].angle;
+                        let diff = a2 - a1;
+                        while (diff < -Math.PI) diff += Math.PI * 2;
+                        while (diff > Math.PI) diff -= Math.PI * 2;
+                        angle = a1 + diff * frac;
+                    }
+                    let trackProgress = 0;
+                    if (data[i].progress !== undefined && data[i+1].progress !== undefined) {
+                        trackProgress = data[i].progress + (data[i+1].progress - data[i].progress) * frac;
+                    }
+                    return {x, y, angle, progress: trackProgress};
                 }
             }
-            return {x: data[data.length-1].x, y: data[data.length-1].y};
+            const last = data[data.length-1];
+            return {x: last.x, y: last.y, angle: last.angle || 0, progress: last.progress !== undefined ? last.progress : 1.0};
         }
 
-        function updateLeaderboard(currentRaceTime) {
+        function updateLiveStandingsBar(currentRaceTime) {
             let rankings = [];
 
             lineup.forEach(b => {
                 const pos = getInterpolatedPosition(b.id, currentRaceTime);
                 if(pos) {
-                    const data = telemetry[b.id];
-                    let dist = 0;
-                    if (data) {
-                        for(let i=0; i<data.length-1; i++) {
-                            if(data[i].t <= currentRaceTime) {
-                                let x1 = data[i].x; let y1 = data[i].y;
-                                let x2 = (data[i+1].t <= currentRaceTime) ? data[i+1].x : pos.x;
-                                let y2 = (data[i+1].t <= currentRaceTime) ? data[i+1].y : pos.y;
-                                dist += Math.hypot(x2-x1, y2-y1);
-                            } else {
-                                break;
-                            }
-                        }
-                    }
-                    rankings.push({bison: b, dist: dist});
+                    rankings.push({bison: b, progress: (pos.progress !== undefined) ? pos.progress : 0});
                 }
             });
 
-            rankings.sort((a, b) => b.dist - a.dist);
+            rankings.sort((a, b) => b.progress - a.progress);
 
-            leaderboardItems.innerHTML = '';
+            const container = document.getElementById('standings-chips');
+            if (!container) return;
+            container.innerHTML = '';
             rankings.forEach((r, idx) => {
-                const item = document.createElement('div');
-                item.className = 'leaderboard-item';
-                item.style.borderColor = r.bison.color;
-                item.innerHTML = `
-                    <span>${idx + 1}. ${r.bison.name}</span>
-                    <span style="font-size: 1rem; opacity: 0.7;">Slot ${r.bison.slot}</span>
+                const chip = document.createElement('div');
+                chip.className = 'standings-chip' + (idx === 0 ? ' leader' : '');
+                chip.style.borderLeft = `5px solid ${r.bison.color || '#00ffcc'}`;
+                chip.innerHTML = `
+                    <span class="chip-rank rank-${idx + 1}">P${idx + 1}</span>
+                    <span class="chip-name">${r.bison.name}</span>
+                    <span class="chip-slot" style="background:${r.bison.color}25; color:${r.bison.color}; border: 1px solid ${r.bison.color}66;">S${r.bison.slot}</span>
                 `;
-                leaderboardItems.appendChild(item);
+                container.appendChild(chip);
             });
         }
 
+        // Closed Intros Carousel Manager
+        function updateIntroSpotlight(elapsedTime) {
+            const spotlightEl = document.getElementById('intro-spotlight');
+            if (!lineup || lineup.length === 0) {
+                spotlightEl.style.display = 'none';
+                return;
+            }
+
+            const slotIndex = Math.min(5, Math.floor(elapsedTime / 10));
+            const activeBison = lineup[slotIndex] || lineup[0];
+
+            spotlightEl.style.display = 'block';
+            document.getElementById('spotlight-slot-tag').innerText = `SLOT ${activeBison.slot}`;
+            document.getElementById('spotlight-slot-tag').style.background = activeBison.color;
+            document.getElementById('spotlight-name').innerText = activeBison.name;
+            document.getElementById('spotlight-jockey').innerText = `Jockey: ${activeBison.jockey_name || 'Rider'}`;
+
+            const stats = activeBison.stats || {};
+            document.getElementById('spotlight-bar-speed').style.width = `${Math.min(100, (stats.bison_speed || 50))}%`;
+            document.getElementById('spotlight-bar-torque').style.width = `${Math.min(100, (stats.bison_cornering || 5) * 10)}%`;
+            document.getElementById('spotlight-bar-stamina').style.width = `${Math.min(100, (stats.bison_stamina || 50))}%`;
+
+            // Draw spotlight avatar
+            loadDisplayImage(activeBison.id);
+            const dImg = displayImages[activeBison.id];
+            const sCanvas = document.getElementById('spotlightCanvas');
+            const sCtx = sCanvas.getContext('2d');
+            sCtx.clearRect(0, 0, 200, 200);
+            if (dImg && dImg.complete && dImg.naturalHeight !== 0) {
+                sCtx.drawImage(dImg, 5, 5, 190, 190);
+            } else {
+                sCtx.save();
+                sCtx.translate(100, 100);
+                sCtx.scale(2.2, 2.2);
+                drawProceduralMechBison(sCtx, activeBison.color, activeBison.slot);
+                sCtx.restore();
+            }
+
+            const slotBets = activeWagersList.filter(w => w.slot === activeBison.slot);
+            const slotTokens = slotBets.reduce((sum, w) => sum + (w.amount || 0), 0);
+            document.getElementById('spotlight-backers').innerText = 
+                `🪙 Backers: ${slotBets.length} player wagers (${slotTokens} tokens on Slot ${activeBison.slot})`;
+        }
+
+        // =========================================================================
+        // MAIN ANIMATION RENDER LOOP
+        // =========================================================================
+
         function renderFrame() {
             drawTrack();
+            updateAndDrawParticles();
 
-            if (state === "Betting_Open") {
-                leaderboard.style.display = 'none';
+            const standingsBar = document.getElementById('live-standings-bar');
+            const spotlight = document.getElementById('intro-spotlight');
+            const winnerScreen = document.getElementById('winner-screen');
+
+            if (state === "Betting_Open" || state === "Soft_Closure") {
+                standingsBar.style.display = 'none';
+                spotlight.style.display = 'none';
                 winnerScreen.style.display = 'none';
-                overlay.innerText = "WAITING FOR NEXT RACE...\n\nPLACE YOUR BETS!";
+
+                // Display bisons stationary in starting boxes (facing East)
                 lineup.forEach(b => {
-                    const lanePath = getLanePath(b.slot);
-                    drawBison(lanePath[0].x, lanePath[0].y, b.color, b.id, b.slot);
-                });
-            }
-            else if (state === "Soft_Closure") {
-                leaderboard.style.display = 'none';
-                winnerScreen.style.display = 'none';
-                const remaining = Math.max(0, 10 - elapsed);
-                overlay.innerText = `BETS CLOSING IN: ${Math.ceil(remaining)}s`;
-                lineup.forEach(b => {
-                    const lanePath = getLanePath(b.slot);
-                    drawBison(lanePath[0].x, lanePath[0].y, b.color, b.id, b.slot);
+                    const r = getLaneRadius(b.slot);
+                    drawBison(START_X, CY + r, b.color, b.id, b.slot, 0);
                 });
             }
             else if (state === "Closed_Intros") {
-                leaderboard.style.display = 'none';
+                standingsBar.style.display = 'none';
                 winnerScreen.style.display = 'none';
-                overlay.innerText = "RACE STARTING SOON!";
+
+                updateIntroSpotlight(elapsed);
+
+                // Bisons staging at start line
                 lineup.forEach(b => {
-                    const lanePath = getLanePath(b.slot);
-                    drawBison(lanePath[0].x, lanePath[0].y, b.color, b.id, b.slot);
+                    const r = getLaneRadius(b.slot);
+                    drawBison(START_X, CY + r, b.color, b.id, b.slot, 0);
                 });
             }
             else if (state === "Race_Sprint") {
-                overlay.innerText = "";
-                leaderboard.style.display = 'block';
-                winnerScreen.style.display = 'none';
+                spotlight.style.display = 'none';
 
                 const currentRaceTime = Math.min(elapsed, raceDuration);
-                updateLeaderboard(currentRaceTime);
+                updateLiveStandingsBar(currentRaceTime);
 
                 lineup.forEach(b => {
                     const pos = getInterpolatedPosition(b.id, currentRaceTime);
                     if(pos) {
-                        drawBison(pos.x, pos.y, b.color, b.id, b.slot);
+                        drawBison(pos.x, pos.y, b.color, b.id, b.slot, pos.angle);
+                        if (currentRaceTime < raceDuration) {
+                            spawnDust(pos.x, pos.y, pos.angle);
+                        }
                     }
                 });
+
+                // Show winner ceremony immediately when race finishes (at 40s)
+                if (elapsed >= raceDuration) {
+                    if (winnerScreen.style.display !== 'flex') {
+                        displayWinnerCeremony();
+                    }
+                } else {
+                    winnerScreen.style.display = 'none';
+                    if (window._resultsResumeTimer) {
+                        clearTimeout(window._resultsResumeTimer);
+                        window._resultsResumeTimer = null;
+                    }
+                    standingsBar.style.display = 'flex';
+                }
             }
             else if (state === "Results_Payout") {
-                overlay.innerText = "";
-                leaderboard.style.display = 'none';
+                spotlight.style.display = 'none';
+                standingsBar.style.display = 'flex';
+                updateLiveStandingsBar(raceDuration);
 
                 lineup.forEach(b => {
                     const pos = getInterpolatedPosition(b.id, raceDuration);
                     if(pos) {
-                        drawBison(pos.x, pos.y, b.color, b.id, b.slot);
+                        drawBison(pos.x, pos.y, b.color, b.id, b.slot, pos.angle);
                     }
                 });
 
                 if (winnerScreen.style.display !== 'flex') {
-                    let winner = lineup[0];
-                    let maxDist = -Infinity;
+                    displayWinnerCeremony();
+                }
+            }
 
-                    lineup.forEach(b => {
-                         const data = telemetry[b.id];
-                         let dist = 0;
-                         if (data) {
-                             for(let i=0; i<data.length-1; i++) {
-                                 dist += Math.hypot(data[i+1].x - data[i].x, data[i+1].y - data[i].y);
-                             }
-                         }
-                         if(dist > maxDist) {
-                             maxDist = dist;
-                             winner = b;
-                         }
-                    });
+            requestAnimationFrame(renderFrame);
+        }
 
-                    if(winner) {
-                        winnerNameDisplay.innerText = winner.name;
-                        winnerImageContainer.style.borderColor = winner.color;
-                        winnerSlot.innerText = winner.slot;
-                        winnerSlot.style.color = winner.color;
+        function displayWinnerCeremony() {
+            const winnerScreen = document.getElementById('winner-screen');
+            winnerScreen.style.display = 'flex';
 
-                        const img = spriteImages[winner.id];
-                        if (img && img.complete && img.naturalHeight !== 0) {
-                            winnerSprite.src = img.src;
-                            winnerSprite.style.display = 'block';
-                            winnerFallbackText.style.display = 'none';
-                        } else {
-                            winnerSprite.style.display = 'none';
-                            winnerFallbackText.style.display = 'block';
-                        }
-                    }
-                    winnerScreen.style.display = 'flex';
+            // Auto-resume slideshow after 30s of results ceremony (KISS)
+            if (!window._resultsResumeTimer) {
+                window._resultsResumeTimer = setTimeout(async () => {
+                    try {
+                        window.parent.postMessage({ type: 'BISON_RACE_COMPLETE' }, '*');
+                    } catch(e) {}
+                    try {
+                        await fetch('/api/slideshow/bison/stop', { method: 'POST' });
+                    } catch(e) {}
+                    try {
+                        await fetch('http://' + window.location.hostname + ':8010/api/slideshow/bison/stop', { method: 'POST' });
+                    } catch(e) {}
+                }, 30000);
+            }
+
+            let winner = null;
+            if (telemetry && telemetry._winner && telemetry._winner.name) {
+                winner = telemetry._winner;
+            } else if (lineup && lineup.length > 0) {
+                winner = lineup[0];
+            }
+
+            if (winner) {
+                const wId = winner.id || (`bison_${winner.slot}`);
+                const winnerBison = (lineup && lineup.find(b => (b.id === wId || b.slot === winner.slot))) || winner;
+
+                document.getElementById('winner-name').textContent = winner.name || winnerBison.name || 'WINNER';
+                document.getElementById('winner-name').style.color = winner.color || winnerBison.color || '#ffd700';
+
+                const slotNum = winner.slot || winnerBison.slot || 1;
+                document.getElementById('winner-slot-badge').textContent = `SLOT ${slotNum} • 2.0x PAYOUT`;
+                document.getElementById('winner-slot-badge').style.background = winner.color || winnerBison.color || '#ffd700';
+
+                const jockeyName = winner.jockey_name || winnerBison.jockey_name || 'Rider';
+                const jockeyEl = document.getElementById('winner-jockey');
+                if (jockeyEl) {
+                    jockeyEl.textContent = `Jockey: ${jockeyName}`;
+                }
+
+                // Show 1024px winning bison display image
+                const imgEl = document.getElementById('winner-bison-img');
+                if (imgEl) {
+                    imgEl.src = `/static/display/1024/${wId}.png`;
                 }
             }
         }
 
-        async function pollState() {
+        // Server Polling Loop
+        async function fetchRaceState() {
             try {
                 const res = await fetch('/api/current_race');
                 const data = await res.json();
-                if(data.status === 'success') {
-                    state = data.state;
-                    elapsed = data.elapsed_time;
-                    lineup = data.lineup;
-                    if (data.race_duration) {
-                        raceDuration = data.race_duration;
-                    }
-                    if(Object.keys(data.telemetry).length > 0) {
-                        telemetry = data.telemetry;
-                    }
+
+                state = data.state;
+                elapsed = data.elapsed_time;
+                lineup = data.lineup || [];
+                telemetry = data.telemetry || {};
+                raceDuration = data.race_duration || 90.0;
+
+                // Fetch full wagers for backer display in Closed_Intros
+                if (state === "Closed_Intros") {
+                    try {
+                        const wRes = await fetch('/api/bisondash/wagers');
+                        const wData = await wRes.json();
+                        activeWagersList = wData.wagers || [];
+                    } catch(e) {}
                 }
             } catch(e) {
-                console.error("Polling error", e);
+                console.error("Poll error", e);
             }
         }
 
-        function loop() {
-            if (state === "Race_Sprint") {
-                elapsed += (1/60);
-            }
-            renderFrame();
-            requestAnimationFrame(loop);
-        }
-
-        setInterval(pollState, 1000);
-        pollState();
-        requestAnimationFrame(loop);
-
-        function resize() {
-            const windowRatio = window.innerWidth / window.innerHeight;
-            const canvasRatio = 1920 / 1080;
-            if(windowRatio < canvasRatio) {
-                canvas.style.width = window.innerWidth + 'px';
-                canvas.style.height = (window.innerWidth / canvasRatio) + 'px';
-            } else {
-                canvas.style.height = window.innerHeight + 'px';
-                canvas.style.width = (window.innerHeight * canvasRatio) + 'px';
-            }
-        }
-        window.addEventListener('resize', resize);
-        resize();
+        // Launch
+        setInterval(fetchRaceState, 1000);
+        fetchRaceState().then(() => {
+            requestAnimationFrame(renderFrame);
+        });
     </script>
 </body>
 </html>

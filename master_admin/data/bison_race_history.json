@@ -1,0 +1,607 @@
+[
+  {
+    "settled_at": "2026-10-23T13:43:55.807728",
+    "winner_slot": 3,
+    "multiplier": 2.0,
+    "total_wagers": 2,
+    "total_paid_out": 20,
+    "winners": [
+      {
+        "player_id": "p_55ae49be",
+        "player_name": "Hank the Cow Dog",
+        "pin": "5844",
+        "slot": 3,
+        "bison_name": "Prairie Rocket",
+        "bet_amount": 10,
+        "win_payout": 20,
+        "new_balance": 126
+      }
+    ],
+    "losers": [
+      {
+        "player_id": "p_f3cdb8a5",
+        "player_name": "Alice Walker",
+        "pin": "6021",
+        "slot": 1,
+        "bison_name": "Thunder Stampede",
+        "bet_amount": 20
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T14:34:46.759350",
+    "winner_slot": 3,
+    "multiplier": 2.0,
+    "total_wagers": 1,
+    "total_paid_out": 0,
+    "winners": [],
+    "losers": [
+      {
+        "player_id": "p_55ae49be",
+        "player_name": "Hank the Cow Dog",
+        "pin": "5844",
+        "slot": 1,
+        "bison_name": "Thunder Stampede",
+        "bet_amount": 5
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T15:01:09.055547",
+    "winner_slot": 3,
+    "multiplier": 2.0,
+    "total_wagers": 18,
+    "total_paid_out": 20,
+    "winners": [
+      {
+        "player_id": "p_b55251f1",
+        "player_name": "SpeedTester_004",
+        "pin": "6318",
+        "slot": 3,
+        "bison_name": "Bison #3",
+        "bet_amount": 5,
+        "win_payout": 10,
+        "new_balance": 165
+      },
+      {
+        "player_id": "p_b891f3e2",
+        "player_name": "SpeedTester_005",
+        "pin": "6645",
+        "slot": 3,
+        "bison_name": "Bison #3",
+        "bet_amount": 5,
+        "win_payout": 10,
+        "new_balance": 120
+      }
+    ],
+    "losers": [
+      {
+        "player_id": "p_47b52b3f",
+        "player_name": "SpeedTester_021",
+        "pin": "7739",
+        "slot": 1,
+        "bison_name": "Bison #1",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_947f299e",
+        "player_name": "SpeedTester_020",
+        "pin": "3731",
+        "slot": 1,
+        "bison_name": "Bison #1",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_8dea84c6",
+        "player_name": "SpeedTester_006",
+        "pin": "4055",
+        "slot": 4,
+        "bison_name": "Bison #4",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_21a211c2",
+        "player_name": "SpeedTester_023",
+        "pin": "9443",
+        "slot": 1,
+        "bison_name": "Bison #1",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_d1e08471",
+        "player_name": "SpeedTester_022",
+        "pin": "5095",
+        "slot": 6,
+        "bison_name": "Bison #6",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_94c91abf",
+        "player_name": "SpeedTester_045",
+        "pin": "6246",
+        "slot": 4,
+        "bison_name": "Bison #4",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_366bc9f7",
+        "player_name": "SpeedTester_019",
+        "pin": "9400",
+        "slot": 1,
+        "bison_name": "Bison #1",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_36e37a60",
+        "player_name": "SpeedTester_017",
+        "pin": "2400",
+        "slot": 2,
+        "bison_name": "Bison #2",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_dfa798e5",
+        "player_name": "SpeedTester_036",
+        "pin": "4241",
+        "slot": 1,
+        "bison_name": "Bison #1",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_2e08d2bb",
+        "player_name": "SpeedTester_037",
+        "pin": "4554",
+        "slot": 4,
+        "bison_name": "Bison #4",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_16cbc1c2",
+        "player_name": "SpeedTester_011",
+        "pin": "2981",
+        "slot": 1,
+        "bison_name": "Bison #1",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_5d911aab",
+        "player_name": "SpeedTester_015",
+        "pin": "8877",
+        "slot": 1,
+        "bison_name": "Bison #1",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_d5975d8b",
+        "player_name": "SpeedTester_000",
+        "pin": "6785",
+        "slot": 5,
+        "bison_name": "Bison #5",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_f6851fbd",
+        "player_name": "SpeedTester_008",
+        "pin": "2649",
+        "slot": 2,
+        "bison_name": "Bison #2",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_22d65dd3",
+        "player_name": "SpeedTester_034",
+        "pin": "6731",
+        "slot": 4,
+        "bison_name": "Bison #4",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_54532bc2",
+        "player_name": "SpeedTester_013",
+        "pin": "5853",
+        "slot": 6,
+        "bison_name": "Bison #6",
+        "bet_amount": 5
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T16:30:58.481745",
+    "winner_slot": 1,
+    "multiplier": 2.0,
+    "total_wagers": 0,
+    "total_paid_out": 0,
+    "winners": [],
+    "losers": []
+  },
+  {
+    "settled_at": "2026-10-23T18:13:07.390463",
+    "winner_slot": 2,
+    "multiplier": 2.0,
+    "total_wagers": 1,
+    "total_paid_out": 20,
+    "winners": [
+      {
+        "player_id": "p_7c53f52c",
+        "player_name": "PayoutTester",
+        "pin": "7816",
+        "slot": 2,
+        "bison_name": "Cyber Steer",
+        "bet_amount": 10,
+        "win_payout": 20,
+        "new_balance": 289
+      }
+    ],
+    "losers": []
+  },
+  {
+    "settled_at": "2026-10-23T18:14:59.032213",
+    "winner_slot": 2,
+    "multiplier": 2.0,
+    "total_wagers": 1,
+    "total_paid_out": 20,
+    "winners": [
+      {
+        "player_id": "p_0feb735e",
+        "player_name": "PayoutTester",
+        "pin": "4606",
+        "slot": 2,
+        "bison_name": "Cyber Steer",
+        "bet_amount": 10,
+        "win_payout": 20,
+        "new_balance": 289
+      }
+    ],
+    "losers": []
+  },
+  {
+    "settled_at": "2026-10-23T18:34:35.577674",
+    "winner_slot": 6,
+    "multiplier": 2.0,
+    "total_wagers": 4,
+    "total_paid_out": 20,
+    "winners": [
+      {
+        "player_id": "p_2620d1d5",
+        "player_name": "cindsta",
+        "pin": "1494",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 10,
+        "win_payout": 20,
+        "new_balance": 60
+      }
+    ],
+    "losers": [
+      {
+        "player_id": "p_2065a615",
+        "player_name": "Michelle D",
+        "pin": "8211",
+        "slot": 5,
+        "bison_name": "Neon Goliath",
+        "bet_amount": 2
+      },
+      {
+        "player_id": "p_124bac5f",
+        "player_name": "Misty",
+        "pin": "6580",
+        "slot": 3,
+        "bison_name": "Prairie Rocket",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_dafbd74f",
+        "player_name": "Hoeggs",
+        "pin": "2908",
+        "slot": 2,
+        "bison_name": "Cyber Steer",
+        "bet_amount": 15
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T19:05:47.760135",
+    "winner_slot": 2,
+    "multiplier": 2.0,
+    "total_wagers": 9,
+    "total_paid_out": 20,
+    "winners": [
+      {
+        "player_id": "p_124bac5f",
+        "player_name": "Misty",
+        "pin": "6580",
+        "slot": 2,
+        "bison_name": "Cyber Steer",
+        "bet_amount": 5,
+        "win_payout": 10,
+        "new_balance": 32
+      },
+      {
+        "player_id": "p_ff903eab",
+        "player_name": "Derrick Y.",
+        "pin": "6020",
+        "slot": 2,
+        "bison_name": "Cyber Steer",
+        "bet_amount": 5,
+        "win_payout": 10,
+        "new_balance": 12
+      }
+    ],
+    "losers": [
+      {
+        "player_id": "p_2065a615",
+        "player_name": "Michelle D",
+        "pin": "8211",
+        "slot": 5,
+        "bison_name": "Neon Goliath",
+        "bet_amount": 4
+      },
+      {
+        "player_id": "p_3cae576c",
+        "player_name": "LilHumanBean",
+        "pin": "5986",
+        "slot": 3,
+        "bison_name": "Prairie Rocket",
+        "bet_amount": 100
+      },
+      {
+        "player_id": "p_dafbd74f",
+        "player_name": "Hoeggs",
+        "pin": "2908",
+        "slot": 5,
+        "bison_name": "Neon Goliath",
+        "bet_amount": 20
+      },
+      {
+        "player_id": "p_f50797ba",
+        "player_name": "BigBotWolf",
+        "pin": "7440",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_591f48cf",
+        "player_name": "Feux",
+        "pin": "6564",
+        "slot": 1,
+        "bison_name": "Thunder Stampede",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_2620d1d5",
+        "player_name": "cindsta",
+        "pin": "1494",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_c2f0c4b6",
+        "player_name": "Loki",
+        "pin": "1833",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 1
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T19:19:50.990009",
+    "winner_slot": 3,
+    "multiplier": 2.0,
+    "total_wagers": 6,
+    "total_paid_out": 70,
+    "winners": [
+      {
+        "player_id": "p_dafbd74f",
+        "player_name": "Hoeggs",
+        "pin": "2908",
+        "slot": 3,
+        "bison_name": "Prairie Rocket",
+        "bet_amount": 25,
+        "win_payout": 50,
+        "new_balance": 185
+      },
+      {
+        "player_id": "p_f50797ba",
+        "player_name": "BigBotWolf",
+        "pin": "7440",
+        "slot": 3,
+        "bison_name": "Prairie Rocket",
+        "bet_amount": 10,
+        "win_payout": 20,
+        "new_balance": 42
+      }
+    ],
+    "losers": [
+      {
+        "player_id": "p_2065a615",
+        "player_name": "Michelle D",
+        "pin": "8211",
+        "slot": 4,
+        "bison_name": "Iron Horn",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_124bac5f",
+        "player_name": "Misty",
+        "pin": "6580",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_2620d1d5",
+        "player_name": "cindsta",
+        "pin": "1494",
+        "slot": 4,
+        "bison_name": "Iron Horn",
+        "bet_amount": 6
+      },
+      {
+        "player_id": "p_591f48cf",
+        "player_name": "Feux",
+        "pin": "6564",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 5
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T19:24:05.069675",
+    "winner_slot": 2,
+    "multiplier": 2.0,
+    "total_wagers": 5,
+    "total_paid_out": 0,
+    "winners": [],
+    "losers": [
+      {
+        "player_id": "p_2065a615",
+        "player_name": "Michelle D",
+        "pin": "8211",
+        "slot": 4,
+        "bison_name": "Iron Horn",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_dafbd74f",
+        "player_name": "Hoeggs",
+        "pin": "2908",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 20
+      },
+      {
+        "player_id": "p_591f48cf",
+        "player_name": "Feux",
+        "pin": "6564",
+        "slot": 4,
+        "bison_name": "Iron Horn",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_f50797ba",
+        "player_name": "BigBotWolf",
+        "pin": "7440",
+        "slot": 4,
+        "bison_name": "Iron Horn",
+        "bet_amount": 15
+      },
+      {
+        "player_id": "p_2620d1d5",
+        "player_name": "cindsta",
+        "pin": "1494",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 10
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T19:42:49.977686",
+    "winner_slot": 1,
+    "multiplier": 2.0,
+    "total_wagers": 4,
+    "total_paid_out": 0,
+    "winners": [],
+    "losers": [
+      {
+        "player_id": "p_2065a615",
+        "player_name": "Michelle D",
+        "pin": "8211",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 10
+      },
+      {
+        "player_id": "p_dafbd74f",
+        "player_name": "Hoeggs",
+        "pin": "2908",
+        "slot": 2,
+        "bison_name": "Cyber Steer",
+        "bet_amount": 10
+      },
+      {
+        "player_id": "p_f50797ba",
+        "player_name": "BigBotWolf",
+        "pin": "7440",
+        "slot": 2,
+        "bison_name": "Cyber Steer",
+        "bet_amount": 17
+      },
+      {
+        "player_id": "p_124bac5f",
+        "player_name": "Misty",
+        "pin": "6580",
+        "slot": 5,
+        "bison_name": "Neon Goliath",
+        "bet_amount": 5
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T19:49:01.040932",
+    "winner_slot": 6,
+    "multiplier": 2.0,
+    "total_wagers": 3,
+    "total_paid_out": 20,
+    "winners": [
+      {
+        "player_id": "p_dafbd74f",
+        "player_name": "Hoeggs",
+        "pin": "2908",
+        "slot": 6,
+        "bison_name": "Solar Flare",
+        "bet_amount": 10,
+        "win_payout": 20,
+        "new_balance": 265
+      }
+    ],
+    "losers": [
+      {
+        "player_id": "p_124bac5f",
+        "player_name": "Misty",
+        "pin": "6580",
+        "slot": 2,
+        "bison_name": "Cyber Steer",
+        "bet_amount": 3
+      },
+      {
+        "player_id": "p_f50797ba",
+        "player_name": "BigBotWolf",
+        "pin": "7440",
+        "slot": 3,
+        "bison_name": "Prairie Rocket",
+        "bet_amount": 10
+      }
+    ]
+  },
+  {
+    "settled_at": "2026-10-23T19:55:42.807183",
+    "winner_slot": 6,
+    "multiplier": 2.0,
+    "total_wagers": 2,
+    "total_paid_out": 0,
+    "winners": [],
+    "losers": [
+      {
+        "player_id": "p_2065a615",
+        "player_name": "Michelle D",
+        "pin": "8211",
+        "slot": 5,
+        "bison_name": "Neon Goliath",
+        "bet_amount": 5
+      },
+      {
+        "player_id": "p_dafbd74f",
+        "player_name": "Hoeggs",
+        "pin": "2908",
+        "slot": 1,
+        "bison_name": "Thunder Stampede",
+        "bet_amount": 10
+      }
+    ]
+  }
+]
